@@ -9,10 +9,9 @@ import axios from 'axios';
 import { ChevronLeft, CheckCircle, ExclamationTriangle, HourglassSplit, XCircle } from 'react-bootstrap-icons';
 var HEOCampaignFactory, ACCOUNTS, web3;
 
-class CreateCampaign2 extends React.Component {
+class EditCampaign extends React.Component {
     constructor(props) {
         super(props);
-
         this.state = {
             showLoader:false,
             loaderMessage:"Please wait",
@@ -28,20 +27,11 @@ class CreateCampaign2 extends React.Component {
             org:"",
             cn:"",
             vl:"",
-            donorsEarnPerDollar:1,
             title:"",
-            maxAmount:10000,
-            title:"",
-            description:"Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.",
-            raisedAmount:0,
-            tokensToBurn:0,
-            percentRaised: "0%",
+            description:"",
             mainImageURL: "",
             metaDataURL:"",
             mainImageFile:"",
-            currencyAddress:"",
-            currencyName:"",
-            coinOptions: [],
             waitToClose: false
         };
     }
@@ -64,8 +54,8 @@ class CreateCampaign2 extends React.Component {
         var that = this;
         let imgID = uuid();
         this.uploadImageS3(that, imgID).then(() => {
-                that.uploadMetaS3(that, imgID).then(() => {
-                    that.createCampaign(that);
+            that.uploadMetaS3(that, imgID).then(() => {
+                that.updateCampaign(that);
             }).catch((error) => {
                 console.log(error);
             });
@@ -74,9 +64,11 @@ class CreateCampaign2 extends React.Component {
         });
     }
 
-    async createCampaign(that) {
+    async updateCampaign(that) {
         console.log("Creating campaign");
         var that = this;
+
+        /*
         HEOCampaignFactory.methods.createCampaign(web3.utils.toWei(`${this.state.maxAmount}`),
             this.state.currencyAddress, this.state.metaDataURL, ACCOUNTS[0]).send({from:ACCOUNTS[0]}).on(
             'receipt', function(receipt) {
@@ -99,6 +91,7 @@ class CreateCampaign2 extends React.Component {
                     modalButtonVariant: "gold", waitToClose: true});
             });
         that.setState({showLoader:true, loaderMessage:"Please confirm transaction in MetaMask."})
+        */
     }
 
     //vl - video link(youtube)
@@ -329,4 +322,4 @@ class CreateCampaign2 extends React.Component {
 }
 
 
-export default CreateCampaign2;
+export default EditCampaign;
