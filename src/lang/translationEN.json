@@ -87,5 +87,7 @@
     "donateToYourSelf": "You cannot donate to yourself",
     "notAllowed": "Transaction not allowed",
     "thankYouDonation": "Thank you for your donation!",
-    "optional": "optional"
+    "optional": "optional",
+    "addLink" : "Please select word(s) to add/edit Link",
+    "removeLink" : "Please select word(s) to remove Link"
 }

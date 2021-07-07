@@ -67,5 +67,7 @@
     "campaignDeleted" : "Your campaign has been closed. (It might take up to 2 minutes for the campaign to be removed from the website.)",
     "failed" : "Failed",
     "shortDescription" : "Краткое описание кампании одной строкой",
-    "optional": "необязательно"
+    "optional": "необязательно",
+    "addLink" : "Please select word(s) to add/edit Link",
+    "removeLink" : "Please select word(s) to remove Link"
 }
