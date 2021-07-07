@@ -8,13 +8,16 @@ import { Link } from "react-router-dom";
 import { Trans } from 'react-i18next';
 import { initWeb3, initWeb3Modal } from '../util/Utilities';
 import i18n from '../util/i18n';
-import { Editor, EditorState, convertFromRaw } from "draft-js";
+import { Editor, EditorState, convertFromRaw, CompositeDecorator } from "draft-js";
 import '../css/campaignPage.css';
 import '../css/modal.css';
-
 import Web3Modal from 'web3modal';
 import Web3 from 'web3';
 import WalletConnectProvider from '@walletconnect/web3-provider';
+
+import bnbIcon from '../images/binance-coin-bnb-logo.png';
+import busdIcon from '../images/binance-usd-busd-logo.png';
+const IMG_MAP = {BUSD: busdIcon, BNB: bnbIcon};
 
 var HEOCampaign, ERC20Coin;
 const donationAmount="";
@@ -24,6 +27,7 @@ class CampaignPage extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            editorState: EditorState.createEmpty(),
             donationAmount:"10",
             campaign:{},
             address:"",
@@ -35,7 +39,6 @@ class CampaignPage extends Component {
             errorIcon:"",
             modalButtonMessage: "",
             modalButtonVariant: "",
-            editorState: EditorState.createEmpty()
         };
         
     }
@@ -51,8 +54,7 @@ class CampaignPage extends Component {
             //console.log(res.data);
             campaign = res.data;
             const contentState = convertFromRaw(campaign.descriptionEditor);
-            this.state.editorState = EditorState.createWithContent(contentState);
-
+            this.state.editorState = EditorState.createWithContent(contentState, createDecorator());
         }).catch(err => {
             if (err.response) {
                 modalMessage = 'technicalDifficulties'}
@@ -119,7 +121,7 @@ class CampaignPage extends Component {
                     });
                 } catch (err) {
                     this.setState({
-                        showModal: true, modalTitle: 'Failed', modalMessage: 'blockChainTransactionFailed',
+                        showModal: true, modalTitle: 'failed', modalMessage: 'blockChainTransactionFailed',
                         errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
                         modalButtonVariant: '#E63C36', waitToClose: false
                     });
@@ -166,9 +168,10 @@ class CampaignPage extends Component {
                     });
                 } catch (err) {
                     this.setState({
-                        showModal: true, modalTitle: 'Failed',
+                        showModal: true, modalTitle: 'failed',
                         errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
-                        modalButtonVariant: '#E63C36', waitToClose: false
+                        modalButtonVariant: '#E63C36', waitToClose: false,
+                        modalMessage: 'blockChainTransactionFailed'
                     });
                     console.log(err);
                 }
@@ -176,7 +179,7 @@ class CampaignPage extends Component {
         } catch (err) {
             console.log(err);
             this.setState({
-                showModal: true, modalTitle: 'Failed',
+                showModal: true, modalTitle: 'failed',
                 errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
                 modalButtonVariant: '#E63C36', waitToClose: false,
                 modalMessage: 'blockChainConnectFailed'
@@ -221,12 +224,14 @@ class CampaignPage extends Component {
                                 <p id='title'>{this.state.campaign.title}</p>
                             </Row>
                             <Row id='progressRow'>
-                                <p id='progressBarLabel'><span id='progressBarLabelStart'>{`$${this.state.campaign.raisedAmount}`}</span>{i18n.t('raised')}{this.state.campaign.maxAmount} {i18n.t('goal')}</p>
+                                <p id='progressBarLabel'><span id='progressBarLabelStart'><img src={IMG_MAP[this.state.campaign.currencyName]} width={16} height={16} style={{marginRight:5}} />{`${this.state.campaign.raisedAmount}`}</span>{i18n.t('raised')}{this.state.campaign.maxAmount} {i18n.t('goal')}</p>
                                 <ProgressBar id='progressBar' now={this.state.campaign.percentRaised}/>
                             </Row>
                             <Row id='acceptingRow'>
                                 <div id='acceptingDiv'>
-                                    <p><Trans i18nKey='accepting'/>: <span className='coinRewardInfo'>{this.state.campaign.currencyName}</span></p>
+                                    <p><Trans i18nKey='accepting'/>: <span className='coinRewardInfo'>
+                                        <img src={IMG_MAP[this.state.campaign.currencyName]} width={16} height={16} style={{marginRight:5}} />
+                                        {this.state.campaign.currencyName} </span><span class="coinHelper">(<a target="_blank" href="https://crypto.com"><Trans i18nKey='watIsCoin' values={{currencyName: this.state.campaign.currencyName }} /></a>)</span></p>
                                 </div>
                             </Row>
                             <Row id='donateRow'>
@@ -251,7 +256,7 @@ class CampaignPage extends Component {
                     </Row>
                     <Row id='descriptionRow'>
                         <Container>
-                            <Editor editorState={this.state.editorState} readOnly={true}/>  
+                            <Editor editorState={this.state.editorState} readOnly={true} decorators={true}/>  
                         </Container>
                     </Row>
                 </Container>
@@ -270,6 +275,40 @@ class CampaignPage extends Component {
         HEOCampaign = (await import("../remote/"+ config.get("CHAIN") + "/HEOCampaign")).default;
         ERC20Coin = (await import("../remote/"+ config.get("CHAIN") + "/ERC20")).default;
     }
+    
 }
+
+function createDecorator(){
+    const decorator = new CompositeDecorator([
+        {
+          strategy: findLinkEntities,
+          component: editorLink,
+        },
+    ]);
+
+    return decorator;
+}
+
+function findLinkEntities(contentBlock, callback, contentState) {
+    contentBlock.findEntityRanges(
+      (character) => {
+        const entityKey = character.getEntity();
+        return (
+          entityKey !== null &&
+          contentState.getEntity(entityKey).getType() === 'LINK'
+        );
+      },
+      callback
+    );
+  }
+
+  const editorLink = (props) => {
+    const {url} = props.contentState.getEntity(props.entityKey).getData();
+    return (
+      <a href={url} >
+        {props.children}
+      </a>
+    );
+  };
 
 export default CampaignPage;
