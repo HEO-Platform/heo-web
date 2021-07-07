@@ -183,6 +183,15 @@ class CreateCampaign extends React.Component {
             modalMessage: 'uploadingImageWait', modalIcon: 'HourglassSplit',
             modalButtonVariant: "gold", waitToClose: true
             });
+        if(!this.state.mainImageFile || !this.state.mainImageFile.type) {
+            this.setState(
+                {showModal:true, modalTitle: 'coverImageRequiredTitle',
+                    modalMessage: 'coverImageRequired', modalIcon: 'ExclamationTriangle',
+                    modalButtonVariant: "gold", waitToClose: false,
+                    modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
+                });
+            return false;
+        }
         let fileType = this.state.mainImageFile.type.split("/")[1];
         const formData = new FormData();
         formData.append(
@@ -193,7 +202,16 @@ class CreateCampaign extends React.Component {
         try {
             let res = await axios.post('/api/uploadimage', formData);
             this.setState({showModal:false, mainImageURL: res.data});
-            return res.data;
+            if(res.data) {
+                return res.data;
+            } else {
+                console.log('error uploading image: res.data is empty');
+                this.setState({showModal: true, goHome: false,
+                    modalTitle: 'imageUploadFailed',
+                    modalIcon: 'XCircle', modalButtonMessage: 'returnHome',
+                    modalButtonVariant: "#E63C36", waitToClose: false});
+                return false;
+            }
         }  catch(err) {
             if (err.response) {
                 console.log('response error in uploading main image- ' + err.response.status);
@@ -234,7 +252,7 @@ class CreateCampaign extends React.Component {
                         <p className='modalMessage'><Trans i18nKey={this.state.modalMessage}>
                             Your account has not been cleared to create campaigns.
                             Please fill out this
-                            <Link  as='a' target='_blank' to='https://docs.google.com/forms/d/e/1FAIpQLSdTo_igaNjF-1E51JmsjJgILv68RN2v5pisTcqTLvZvuUvLDQ/viewform'>form</Link>
+                            <a target='_blank' href='https://docs.google.com/forms/d/e/1FAIpQLSdTo_igaNjF-1E51JmsjJgILv68RN2v5pisTcqTLvZvuUvLDQ/viewform'>form</a>
                             to ne granted permission to fundraise on HEO Platform
                         </Trans></p>
                         {!this.state.waitToClose &&
@@ -260,6 +278,7 @@ class CreateCampaign extends React.Component {
                                                 console.log(err);
                                                 this.setState({showModal:true,
                                                     goHome: true,
+                                                    waitToClose: false,
                                                     isLoggedIn: false,
                                                     modalTitle: 'authFailedTitle',
                                                     modalMessage: 'authFailedMessage',
@@ -316,11 +335,15 @@ class CreateCampaign extends React.Component {
                             <Form.Group as={Col}>
                                 <Form.Label><Trans i18nKey='selectCoin'/></Form.Label>
                                 <Form.Control as="select" name='currencyAddress'
-                                    value={this.state.currencyAddress} onChange={this.handleChange}>
+                                    value={this.state.currencyAddress} onChange={this.handleChange}
+                                    aria-describedby="currencyHelpBlock">
                                     {this.state.coinOptions.map((data) =>
                                         <option value={data.value}>{data.text}</option>
                                     )}
                                 </Form.Control>
+                                <Form.Text id="currencyHelpBlock" muted>
+                                    <a target="_blank" href="https://crypto.com"><Trans i18nKey='helpCryptoCurrencies' /></a>
+                                </Form.Text>
                             </Form.Group>
                         </Form.Row>
                         <hr/>
@@ -432,6 +455,7 @@ class CreateCampaign extends React.Component {
     }
 
     async componentDidMount() {
+        setEditorState({}, false);
         await initWeb3Modal();
         let options = (config.get("chainconfigs")[config.get("CHAIN")]["currencyOptions"]);
         let currencyOptions = (config.get("chainconfigs")[config.get("CHAIN")]["currencies"]);
