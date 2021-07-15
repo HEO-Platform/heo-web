@@ -92,7 +92,5 @@
     "helpCryptoCurrencies": "What is a crypto-currency?",
     "watIsCoin": "what is {{currencyName}}?",
     "coverImageRequired": "Please select a file for the cover image",
-    "coverImageRequiredTitle": "Missing cover image",
-    "addLink" : "Please select word(s) to add/edit Link",
-    "removeLink" : "Please select word(s) to remove Link"
+    "coverImageRequiredTitle": "Missing cover image"
 }
