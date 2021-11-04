@@ -40,6 +40,7 @@ class CreateCampaign extends React.Component {
             vl:"",
             title:"",
             maxAmount:10000,
+            beneficiaryAddress:"",
             title:"",
             description:"",
             raisedAmount:0,
@@ -198,7 +199,7 @@ class CreateCampaign extends React.Component {
             var HEOCampaignFactory = new this.state.web3.eth.Contract(abi, address);
             if(window.web3Modal.cachedProvider == "binancechainwallet") {
                 HEOCampaignFactory.methods.createCampaign(
-                    this.state.web3.utils.toWei(`${this.state.maxAmount}`), this.state.currencyAddress, this.state.accounts[0], compressed_meta)
+                    this.state.web3.utils.toWei(`${this.state.maxAmount}`), this.state.currencyAddress, this.state.beneficiaryAddress, compressed_meta)
                     .send({from:this.state.accounts[0]})
                     .once('transactionHash', function(transactionHash) {
                         that.setState({showModal:true, modalTitle: 'processingWait',
@@ -213,7 +214,7 @@ class CreateCampaign extends React.Component {
                     });
             } else {
                 let result = await HEOCampaignFactory.methods.createCampaign(
-                    this.state.web3.utils.toWei(`${this.state.maxAmount}`), this.state.currencyAddress, this.state.accounts[0], compressed_meta)
+                    this.state.web3.utils.toWei(`${this.state.maxAmount}`), this.state.currencyAddress, this.state.accounts[0], this.state.title)
                     .send({from:this.state.accounts[0]})
                     .on('transactionHash',
                         function(transactionHash) {
@@ -394,6 +395,13 @@ class CreateCampaign extends React.Component {
                                           className="createFormPlaceHolder"
                                           value={this.state.maxAmount} placeholder={this.state.maxAmount}
                                           name='maxAmount' onChange={this.handleChange} onwheel="this.blur()" />
+
+                            <Form.Label><Trans i18nKey='beneficiaryAddress'/><span
+                                className='redAsterisk'>*</span></Form.Label>
+                            <Form.Control ria-describedby="currencyHelpBlock" required type="number"
+                                          className="createFormPlaceHolder"
+                                          value={this.state.beneficiaryAddress} placeholder={this.state.beneficiaryAddress}
+                                          name='beneficiaryAddress' onChange={this.handleChange} onwheel="this.blur()" />
                         </Form.Group>
                         <Form.Group>
                             <Form.Label><Trans i18nKey='selectCoverImage'/><span className='redAsterisk'>*</span></Form.Label>

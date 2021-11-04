@@ -18,7 +18,8 @@ import WalletConnectProvider from '@walletconnect/web3-provider';
 
 import bnbIcon from '../images/binance-coin-bnb-logo.png';
 import busdIcon from '../images/binance-usd-busd-logo.png';
-const IMG_MAP = {BUSD: busdIcon, BNB: bnbIcon};
+import usdcIcon from '../images/usd-coin-usdc-logo.png';
+const IMG_MAP = {BUSD: busdIcon, BNB: bnbIcon, USDC: usdcIcon};
 
 var HEOCampaign, ERC20Coin;
 const donationAmount="";
@@ -307,7 +308,7 @@ class CampaignPage extends Component {
                                 <div id='acceptingDiv'>
                                     <p><Trans i18nKey='accepting'/>: <span className='coinRewardInfo'>
                                         <img src={IMG_MAP[this.state.campaign.currencyName]} width={16} height={16} style={{marginRight:5}} />
-                                        {this.state.campaign.currencyName} </span><span class="coinHelper">(<a target="_blank" href="https://academy.binance.com/en/articles/what-is-busd"><Trans i18nKey='watIsCoin' values={{currencyName: this.state.campaign.currencyName }} /></a>)</span></p>
+                                        {this.state.campaign.currencyName} </span></p>
                                 </div>
                             </Row>
                             <Row id='donateRow'>

@@ -11,8 +11,8 @@ import i18n from '../util/i18n';
 import countryMap from '../countryMap';
 import bnbIcon from '../images/binance-coin-bnb-logo.png';
 import busdIcon from '../images/binance-usd-busd-logo.png';
-
-const IMG_MAP = {BUSD: busdIcon, BNB: bnbIcon};
+import usdcIcon from '../images/usd-coin-usdc-logo.png';
+const IMG_MAP = {BUSD: busdIcon, BNB: bnbIcon, USDC: usdcIcon};
 
 class CampaignList extends Component {
     constructor(props) {

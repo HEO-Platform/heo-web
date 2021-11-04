@@ -147,9 +147,6 @@ const initWeb3Modal = async() => {
                         bridge: config.get("WC_BRIDGE_URL"),
                         network: config.get("WC_CHAIN_NAME")
                     }
-                },
-                binancechainwallet: {
-                    package:true
                 }
             }
         });

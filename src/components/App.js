@@ -111,10 +111,6 @@ class App extends Component {
                                     <option value='ru'>{i18n.t('russian')}</option>
                                 </select>
                                     <Nav.Link target="_blank" as='a' href={lang == "ru" ? "https://docs.heo.finance/v/russian/" : "https://docs.heo.finance/"} className='upperNavText' id='helpBtn'><Trans i18nKey='help'/></Nav.Link>
-                                    <Nav.Link className='upperNavText' id='loginBtn' onClick={ () => this.setLoggedIn()}>
-                                        {!this.state.isLoggedIn && <Trans i18nKey='login'/>}
-                                        {this.state.isLoggedIn && <Trans i18nKey='logout'/>}
-                                    </Nav.Link>
                                 </Navbar.Collapse>
                             </Container>
                         </Navbar>
@@ -135,20 +131,6 @@ class App extends Component {
                                 <Navbar.Collapse id="basic-navbar-nav">
                                     <Nav className="mr-auto" bg="light">
                                         <Nav.Link as={Link} eventKey="1" className='mainNavText' to="/"><Trans i18nKey='browse'/></Nav.Link>
-                                        <Nav.Link as={Link} eventKey="2" className='mainNavText' to={{pathname:"/new",
-                                            state:{
-                                                isLoggedIn: this.state.isLoggedIn,
-                                                accounts: this.state.accounts
-                                            }}} >
-                                            <Trans i18nKey='startFundraiser'/>
-                                        </Nav.Link>
-                                        <Nav.Link as={Link} eventKey="3" className='mainNavText' to={{pathname:"/myCampaigns",
-                                            state:{
-                                                isLoggedIn: this.state.isLoggedIn,
-                                                accounts: this.state.accounts
-                                            }}} >
-                                            <Trans i18nKey='myFundraisers'/>
-                                        </Nav.Link>
                                         <Nav.Link eventKey="4" className='mainNavText' as='a' target='_blank' href='https://heo.finance'><Trans i18nKey='about'/></Nav.Link>
                                     </Nav>
                                 </Navbar.Collapse>

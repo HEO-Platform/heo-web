@@ -31,6 +31,14 @@ const config = {
             "currencies":{
                 "0xe9e7cea3dedca5984780bafc599bd69add087d56":"BUSD"
             }
+        },
+        "eth":{
+            "currencyOptions":[
+                {"text":"USDC", "value":"0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"}
+            ],
+            "currencies":{
+                "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48":"USDC"
+            }
         }
     }
 };
