@@ -72,12 +72,16 @@ class CampaignPage extends Component {
         return campaign;
     }
 
-    updateRaisedAmount = async (accounts, campaignInstance, web3) => {
+    updateRaisedAmount = async (accounts, campaignInstance, web3, decimals) => {
         var campaign = this.state.campaign;
         var that = this;
         campaignInstance.methods.raisedAmount().call({from:accounts[0]}, function(err, result) {
             if(!err) {
-                campaign.raisedAmount = parseFloat(web3.utils.fromWei(result));
+                if(decimals == 18) {
+                    campaign.raisedAmount = parseFloat(web3.utils.fromWei(result));    
+                } else {
+                    campaign.raisedAmount = parseFloat(result/Math.pow(10, decimals));
+                }
                 that.setState({campaign:campaign});
                 console.log(that.state.raisedAmount)
             } else {
@@ -106,10 +110,12 @@ class CampaignPage extends Component {
                 });
                 return;
             }
-            var toDonate = web3.utils.toWei(this.state.donationAmount);
+
             var that = this;
             //for native donations
             if(coinAddress == "0x0000000000000000000000000000000000000000") {
+                var toDonate = web3.utils.toWei(this.state.donationAmount);
+                var decimals = 18;
                 this.setState({
                     showModal: true, modalTitle: 'processingWait',
                     modalMessage: "confirmDonation",
@@ -127,9 +133,9 @@ class CampaignPage extends Component {
                             web3.eth.getTransaction(transactionHash).then(
                                 function(txnObject) {
                                     if(txnObject) {
-                                        checkDonationTransaction(txnObject, that);
+                                        checkDonationTransaction(txnObject, decimals, that);
                                     } else {
-                                        checkDonationTransaction({hash:transactionHash}, that);
+                                        checkDonationTransaction({hash:transactionHash}, decimals, that);
                                     }
                                 }
                             );
@@ -158,7 +164,7 @@ class CampaignPage extends Component {
                         console.log("donateNative transaction failed");
                         console.log(err);
                     }
-                    await this.updateRaisedAmount(accounts, campaignInstance, web3);
+                    await this.updateRaisedAmount(accounts, campaignInstance, web3, 18);
                     this.setState({
                         showModal: true, modalTitle: 'complete',
                         modalMessage: 'thankYouDonation',
@@ -166,7 +172,6 @@ class CampaignPage extends Component {
                         modalButtonVariant: '#588157', waitToClose: false
                     });
                 }
-
             } else {
                 //for ERC20 donations
                 var coinInstance = new web3.eth.Contract(ERC20Coin, coinAddress);
@@ -176,37 +181,52 @@ class CampaignPage extends Component {
                     errorIcon: 'HourglassSplit', modalButtonVariant: "#E63C36", waitToClose: false,
                     modalButtonMessage: 'abortBtn',
                 });
+
                 try {
+                    var decimals = 6;
+                    var toDonate = this.state.donationAmount * 1000000;
                     if(window.web3Modal.cachedProvider != "injected") {
                         // Binance Chain Extension Wallet does not support network events
                         // so we have to poll for transaction status instead of using
                         // event listeners and promises.
-                        coinInstance.methods.approve(this.state.campaign._id, toDonate).send(
-                            {from:accounts[0]}
-                        ).once('transactionHash', function(transactionHash){
-                            that.setState({modalMessage: "waitingForNetowork"});
-                            web3.eth.getTransaction(transactionHash).then(
-                                function(txnObject) {
-                                    if(txnObject) {
-                                        checkApprovalTransaction(txnObject, that);
-                                    } else {
-                                        console.log(`getTransaction returned null. Using transaction hash`);
-                                        checkApprovalTransaction({hash:transactionHash}, that);
+                        coinInstance.methods.decimals().call({from:accounts[0]}, function(err, result) {
+                            if(err) {
+                                console.log(`Failed to fetch decimals from ${coinAddress} `);
+                                console.log(err);
+                            } else {
+                                decimals = result;
+                                console.log(`${coinAddress} has ${result} decimals`);
+                                toDonate = that.state.donationAmount * Math.pow(10, decimals);
+                            }
+                            coinInstance.methods.approve(that.state.campaign._id, toDonate).send(
+                                {from:accounts[0]}
+                            ).once('transactionHash', function(transactionHash){
+                                that.setState({modalMessage: "waitingForNetowork"});
+                                web3.eth.getTransaction(transactionHash).then(
+                                    function(txnObject) {
+                                        if(txnObject) {
+                                            checkApprovalTransaction(txnObject, decimals, that);
+                                        } else {
+                                            console.log(`getTransaction returned null. Using transaction hash`);
+                                            checkApprovalTransaction({hash:transactionHash}, decimals, that);
+                                        }
                                     }
-                                }
-                            );
-                        }).on('error', function(error){
-                            that.setState({
-                                showModal: true, modalTitle: 'failed',
-                                errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
-                                modalButtonVariant: '#E63C36', waitToClose: false,
-                                modalMessage: 'blockChainTransactionFailed'
+                                );
+                            }).on('error', function(error){
+                                that.setState({
+                                    showModal: true, modalTitle: 'failed',
+                                    errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
+                                    modalButtonVariant: '#E63C36', waitToClose: false,
+                                    modalMessage: 'blockChainTransactionFailed'
+                                });
+                                //clearWeb3Provider(that)
+                                console.log('error handler invoked in approval transaction')
+                                console.log(error);
                             });
-                            //clearWeb3Provider(that)
-                            console.log('error handler invoked in approval transaction')
-                            console.log(error);
                         });
                     } else {
+                        decimals = await coinInstance.methods.decimals().call();
+                        toDonate = this.state.donationAmount * Math.pow(10, decimals);
                         console.log(`Using provider ${window.web3Modal.cachedProvider}`);
                         let result = await coinInstance.methods.approve(this.state.campaign._id, toDonate).send(
                             {from:accounts[0]}
@@ -226,7 +246,7 @@ class CampaignPage extends Component {
                             that.setState({modalMessage: "waitingForNetowork"})
                         });
                         console.log(`Done with transactions`);
-                        await this.updateRaisedAmount(accounts, campaignInstance, web3);
+                        await this.updateRaisedAmount(accounts, campaignInstance, web3, decimals);
                         this.setState({
                             showModal: true, modalTitle: 'complete',
                             modalMessage: 'thankYouDonation',
@@ -388,13 +408,13 @@ function findLinkEntities(contentBlock, callback, contentState) {
     );
   };
 
-function checkDonationTransaction(txnObject, that) {
+function checkDonationTransaction(txnObject, decimals, that) {
     if(txnObject.blockNumber) {
         console.log(`Donation transaction successful in block ${txnObject.blockNumber}`);
         let accounts = that.state.accounts;
         let web3 = that.state.web3;
         let campaignInstance = new web3.eth.Contract(HEOCampaign, that.state.address);
-        that.updateRaisedAmount(accounts, campaignInstance, web3);
+        that.updateRaisedAmount(accounts, campaignInstance, web3, decimals);
         that.setState({
             showModal: true, modalTitle: 'complete',
             modalMessage: 'thankYouDonation',
@@ -404,16 +424,16 @@ function checkDonationTransaction(txnObject, that) {
     } else {
         that.state.web3.eth.getTransaction(txnObject.hash).then(function(txnObject2) {
             if(txnObject2) {
-                checkDonationTransaction(txnObject2, that);
+                checkDonationTransaction(txnObject2, decimals, that);
             } else {
                 console.log(`Empty txnObject2. Using transaction hash to check status.`);
-                checkDonationTransaction({hash:txnObject.hash}, that);
+                checkDonationTransaction({hash:txnObject.hash}, decimals, that);
             }
         });
     }
 }
 
-function checkApprovalTransaction(txnObject, that) {
+function checkApprovalTransaction(txnObject, decimals, that) {
     if(txnObject && txnObject.blockNumber) {
         //successful, can make a donation now
         let web3 = that.state.web3;
@@ -432,10 +452,10 @@ function checkApprovalTransaction(txnObject, that) {
             web3.eth.getTransaction(transactionHash).then(
                 function(txnObject2) {
                     if(txnObject2) {
-                        checkDonationTransaction(txnObject2, that);
+                        checkDonationTransaction(txnObject2, decimals, that);
                     } else {
                         console.log(`Empty txnObject2. Using transaction hash to check donation status.`);
-                        checkDonationTransaction({hash:transactionHash}, that);
+                        checkDonationTransaction({hash:transactionHash}, decimals, that);
                     }
                 }
             );
@@ -455,10 +475,10 @@ function checkApprovalTransaction(txnObject, that) {
             that.state.web3.eth.getTransaction(txnObject.hash).then(function(txnObject2) {
                 if(txnObject2) {
                     console.log(`Got updated txnObject for approval transaction`);
-                    checkApprovalTransaction(txnObject2, that);
+                    checkApprovalTransaction(txnObject2, decimals, that);
                 } else {
                     console.log(`txnObject2 is null. Using txnObject with transaction hash`);
-                    checkApprovalTransaction(txnObject, that);
+                    checkApprovalTransaction(txnObject, decimals, that);
                 }
             });
         } else {

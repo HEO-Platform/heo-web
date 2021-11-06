@@ -39,6 +39,22 @@ const config = {
             "currencies":{
                 "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48":"USDC"
             }
+        },
+        "rinkeby":{
+            "currencyOptions":[
+                {"text":"USDC", "value":"0xeb8f08a975ab53e34d8a0330e0d34de942c95926"}
+            ],
+            "currencies":{
+                "0xeb8f08a975ab53e34d8a0330e0d34de942c95926":"USDC"
+            }
+        },
+        "goerli":{
+            "currencyOptions":[
+                {"text":"USDC", "value":"0x07865c6E87B9F70255377e024ace6630C1Eaa37F"}
+            ],
+            "currencies":{
+                "0x07865c6E87B9F70255377e024ace6630C1Eaa37F":"USDC"
+            }
         }
     }
 };
