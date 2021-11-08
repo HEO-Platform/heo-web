@@ -197,6 +197,7 @@ class CampaignPage extends Component {
                                 decimals = result;
                                 console.log(`${coinAddress} has ${result} decimals`);
                                 toDonate = that.state.donationAmount * Math.pow(10, decimals);
+                                console.log(`Adjusted donation amount is ${toDonate}`);
                             }
                             coinInstance.methods.approve(that.state.campaign._id, toDonate).send(
                                 {from:accounts[0]}
@@ -439,7 +440,7 @@ function checkApprovalTransaction(txnObject, decimals, that) {
         let web3 = that.state.web3;
         let accounts = that.state.accounts;
         let campaignInstance = new web3.eth.Contract(HEOCampaign, that.state.address);
-        let toDonate = web3.utils.toWei(that.state.donationAmount);
+        let toDonate = that.state.donationAmount * Math.pow(10, decimals);
         that.setState({
             showModal: true, modalTitle: 'processingWait',
             modalMessage: "approveDonate",
