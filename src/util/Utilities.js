@@ -14,9 +14,6 @@ const clearWeb3Provider= async (that) => {
     if(that.state.web3 && that.state.web3.currentProvider && that.state.web3.currentProvider.close) {
         await that.state.web3.currentProvider.close();
     }
-    if(window.web3Modal) {
-        await window.web3Modal.clearCachedProvider();
-    }
 }
 
 const LogIn = async (accountAdd, web3, that) => {
@@ -29,29 +26,18 @@ const LogIn = async (accountAdd, web3, that) => {
         });
     let res = await axios.get('/api/auth/msg');
     let dataToSign = res.data.dataToSign;
-    if(window.web3Modal.cachedProvider == "binancechainwallet") {
-        let signature = await window.BinanceChain.bnbSign(accountAdd,dataToSign);
-        let authRes = await axios.post('/api/auth/jwt',
-            {signature: signature, addr: accountAdd},
-            {headers: {"Content-Type": "application/json"}});
-        that.setState({
-            isLoggedIn: true, showModal: true, modalMessage: 'logInSuccess', modalTitle: 'success',
-            modalIcon: 'CheckCircle', modalButtonVariant: "#588157", waitToClose: false,
-            modalButtonMessage: 'closeBtn'
-        });
-        return authRes.data.success;
-    } else {
-        let signature = await web3.eth.personal.sign(dataToSign, accountAdd);
-        let authRes = await axios.post('/api/auth/jwt',
-            {signature: signature, addr: accountAdd},
-            {headers: {"Content-Type": "application/json"}});
-        that.setState({
-            isLoggedIn: true, showModal: true, modalMessage: 'logInSuccess', modalTitle: 'success',
-            modalIcon: 'CheckCircle', modalButtonVariant: "#588157", waitToClose: false,
-            modalButtonMessage: 'closeBtn'
-        });
-        return authRes.data.success;
-    }
+
+    let signature = await web3.eth.personal.sign(dataToSign, accountAdd);
+    let authRes = await axios.post('/api/auth/jwt',
+        {signature: signature, addr: accountAdd},
+        {headers: {"Content-Type": "application/json"}});
+    that.setState({
+        isLoggedIn: true, showModal: true, modalMessage: 'logInSuccess', modalTitle: 'success',
+        modalIcon: 'CheckCircle', modalButtonVariant: "#588157", waitToClose: false,
+        modalButtonMessage: 'closeBtn'
+    });
+    return authRes.data.success;
+
 }
 
 function DescriptionPreview(description) {
@@ -83,20 +69,45 @@ function GetLanguage() {
 }
 
 const initWeb3 = async (that) => {
-    let provider = await window.web3Modal.connect();
-    provider.on("disconnect", (code: number, reason: string) => {
-        that.setState({web3:null, accounts: null});
-    });
-    //Workaround for web3-provider bug. See https://github.com/WalletConnect/walletconnect-monorepo/issues/496
-    if(window.web3Modal.cachedProvider == "injected") {
-        delete provider.__proto__.request;
-        provider.hasOwnProperty("request") && delete provider.request;
+    var web3;
+    if (window.ethereum) {
+        web3 = new Web3(window.ethereum);
+        console.log("Injected web3 detected.");
     }
-    //end workaround
-
-    let web3 = new Web3(provider);
-    let accounts = await web3.eth.getAccounts();
-    that.setState({web3:web3, accounts: accounts});
+    var chainId = config.get("WEB3_HEX_CHAIN_ID");
+    var currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+    if(currentChainId != chainId) {
+        try {
+            await window.ethereum.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: chainId }],
+            });
+        } catch (switchError) {
+            // This error code indicates that the chain has not been added to MetaMask.
+            if (switchError.code === 4902) {
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: chainId,
+                            rpcUrls: [config.get("WEB3_RPC_NODE_URL")],
+                            chainName: config.get("CHAIN_NAME"),
+                            blockExplorerUrls:[config.get("WEB3_BLOCK_EXPLORER_URL")]
+                        }],
+                    });
+                } catch (addError) {
+                    console.log(`Failed to add provider for ${chainId} and ${config.get("WEB3_RPC_NODE_URL")}`)
+                    console.log(addError);
+                }
+            } else {
+                console.log(`Failed to switch provider to ${chainId} and ${config.get("WEB3_RPC_NODE_URL")}`)
+                console.log(switchError);
+            }
+        }
+    }
+    let accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    await that.setState({web3:web3, accounts: accounts});
+    console.log(`Detected ${accounts.length} accounts: ${accounts}`);
 }
 
 const checkAuth = async (that, skipError=false) => {

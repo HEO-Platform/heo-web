@@ -327,8 +327,7 @@ class EditCampaign extends React.Component {
     async componentDidMount() {
         let toks = this.props.location.pathname.split("/");
         let address = toks[toks.length -1];
-
-        await initWeb3Modal();
+        
         let options = (config.get("chainconfigs")[config.get("CHAIN")]["currencyOptions"]);
         let currencyOptions = (config.get("chainconfigs")[config.get("CHAIN")]["currencies"]);
         this.setState({currencies: currencyOptions,

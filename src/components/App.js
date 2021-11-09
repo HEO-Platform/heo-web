@@ -46,7 +46,6 @@ class App extends Component {
     async componentDidMount() {
         let lang = GetLanguage();
         this.setState({language : lang});
-        await initWeb3Modal();
         await checkAuth(this, true);
     }
 
@@ -58,6 +57,8 @@ class App extends Component {
     async setSwitchBlockchain(chain) {
         if(chain == "bsc") {
             window.location="https://app.heo.finance"
+        } else if(chain == "eth") {
+            window.location="https://eth.heo.finance"
         }
     }
     async setLoggedIn() {
@@ -112,6 +113,7 @@ class App extends Component {
                                 <Navbar.Toggle />
                                 <Navbar.Collapse className="justify-content-end">
                                     <select value={this.state.language} id="languages" onChange={(e)=>this.setSwitchBlockchain(e.target.value)}>
+                                        <option value='aurora'>Aurora</option>
                                         <option value='eth'>Ethereum</option>
                                         <option value='bsc'>Binance Smart Chain</option>
                                     </select>
@@ -140,6 +142,20 @@ class App extends Component {
                                 <Navbar.Collapse id="basic-navbar-nav">
                                     <Nav className="mr-auto" bg="light">
                                         <Nav.Link as={Link} eventKey="1" className='mainNavText' to="/"><Trans i18nKey='browse'/></Nav.Link>
+                                        <Nav.Link as={Link} eventKey="2" className='mainNavText' to={{pathname:"/new",
+                                            state:{
+                                                isLoggedIn: this.state.isLoggedIn,
+                                                accounts: this.state.accounts
+                                            }}} >
+                                            <Trans i18nKey='startFundraiser'/>
+                                        </Nav.Link>
+                                        <Nav.Link as={Link} eventKey="3" className='mainNavText' to={{pathname:"/myCampaigns",
+                                            state:{
+                                                isLoggedIn: this.state.isLoggedIn,
+                                                accounts: this.state.accounts
+                                            }}} >
+                                            <Trans i18nKey='myFundraisers'/>
+                                        </Nav.Link>
                                         <Nav.Link eventKey="4" className='mainNavText' as='a' target='_blank' href='https://heo.finance'><Trans i18nKey='about'/></Nav.Link>
                                     </Nav>
                                 </Navbar.Collapse>

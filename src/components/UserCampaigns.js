@@ -92,7 +92,6 @@ class UserCampaigns extends Component {
     }
 
     async componentDidMount() {
-        await initWeb3Modal(this);
         // is the user logged in?
         if(!this.state.isLoggedIn) {
             await checkAuth(this);

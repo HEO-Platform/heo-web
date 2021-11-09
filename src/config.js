@@ -55,6 +55,14 @@ const config = {
             "currencies":{
                 "0x07865c6E87B9F70255377e024ace6630C1Eaa37F":"USDC"
             }
+        },
+        "auroratest":{
+            "currencyOptions":[
+                {"text":"ETH", "value":"0x0000000000000000000000000000000000000000"}
+            ],
+            "currencies":{
+                "0x0000000000000000000000000000000000000000":"ETH"
+            }
         }
     }
 };
