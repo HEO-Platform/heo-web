@@ -56,8 +56,8 @@ class App extends Component {
     }
 
     async setSwitchBlockchain(chain) {
-        if(chain == "eth") {
-            window.location="https://eth.heo.finance"
+        if(chain == "bsc") {
+            window.location="https://app.heo.finance"
         }
     }
     async setLoggedIn() {
@@ -112,8 +112,8 @@ class App extends Component {
                                 <Navbar.Toggle />
                                 <Navbar.Collapse className="justify-content-end">
                                     <select value={this.state.language} id="languages" onChange={(e)=>this.setSwitchBlockchain(e.target.value)}>
-                                        <option value='bsc'>Binance Smart Chain</option>
                                         <option value='eth'>Ethereum</option>
+                                        <option value='bsc'>Binance Smart Chain</option>
                                     </select>
                                     <select value={this.state.language} id="languages" onChange={(e)=>this.setLanguage(e.target.value)}>
                                         <option value='en'>{i18n.t('english')}</option>
