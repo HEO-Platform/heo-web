@@ -178,7 +178,7 @@ APP.post('/api/campaign/loadUserCampaigns',
     (req, res) => {
     if(req.user && req.user.address) {
         const DB = CLIENT.db(DBNAME);
-        DB.collection("campaigns").find({"beneficiaryId" : {$eq: req.user.address}}).toArray(function(err, result) {
+        DB.collection("campaigns").find({"ownerId" : {$eq: req.user.address}}).toArray(function(err, result) {
             if (err) {
                 console.log(err);
                 res.sendStatus(500);
@@ -201,7 +201,7 @@ APP.get('/api/env', (req,res) => {
             WC_BRIDGE_URL: process.env.WC_BRIDGE_URL,
             WC_CHAIN_NAME: process.env.WC_CHAIN_NAME,
             WEB3_HEX_CHAIN_ID: process.env.WEB3_HEX_CHAIN_ID,
-            WEB3_BLOCK_EXPLORER_URL: process.eng.WEB3_BLOCK_EXPLORER_URL
+            WEB3_BLOCK_EXPLORER_URL: process.env.WEB3_BLOCK_EXPLORER_URL
         });
 });
 
