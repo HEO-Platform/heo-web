@@ -437,15 +437,16 @@ class CreateCampaign extends React.Component {
             let address = (await import("../remote/" + config.get("CHAIN") + "/HEOParameters")).address;
             var HEOParameters = new this.state.web3.eth.Contract(abi, address);
             let wlEnabled = await HEOParameters.methods.intParameterValue(11).call();
+            let accounts = await this.state.web3.eth.getAccounts();
+            this.setState({accounts: accounts});
             if(wlEnabled > 0) {
                 //is user white listed?
-                let accounts = await this.state.web3.eth.getAccounts();
-                this.setState({accounts: accounts});
                 let whiteListed = await HEOParameters.methods.addrParameterValue(5, accounts[0].toLowerCase()).call();
                 if(whiteListed > 0) {
                     this.setState({
                         isLoggedIn : true,
                         whiteListed: true,
+                        beneficiaryAddress: accounts[0],
                         showModal: false,
                         goHome: false
                     });
@@ -468,7 +469,8 @@ class CreateCampaign extends React.Component {
                     isLoggedIn : true,
                     whiteListed: true,
                     goHome: false,
-                    showModal: false
+                    showModal: false,
+                    beneficiaryAddress: accounts[0]
                 });
             }
         } catch (err) {
