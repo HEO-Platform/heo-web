@@ -19,7 +19,8 @@ import WalletConnectProvider from '@walletconnect/web3-provider';
 import bnbIcon from '../images/binance-coin-bnb-logo.png';
 import busdIcon from '../images/binance-usd-busd-logo.png';
 import usdcIcon from '../images/usd-coin-usdc-logo.png';
-const IMG_MAP = {BUSD: busdIcon, BNB: bnbIcon, USDC: usdcIcon};
+import ethIcon from '../images/eth-diamond-purple.png';
+const IMG_MAP = {BUSD: busdIcon, BNB: bnbIcon, USDC: usdcIcon, ETH: ethIcon};
 
 var HEOCampaign, ERC20Coin;
 const donationAmount="";
