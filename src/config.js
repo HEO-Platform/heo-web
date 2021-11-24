@@ -63,6 +63,14 @@ const config = {
             "currencies":{
                 "0x0000000000000000000000000000000000000000":"ETH"
             }
+        },
+        "aurora":{
+            "currencyOptions":[
+                {"text":"USDC", "value":"0xb12bfca5a55806aaf64e99521918a4bf0fc40802"}
+            ],
+            "currencies":{
+                "0xb12bfca5a55806aaf64e99521918a4bf0fc40802":"USDC"
+            }
         }
     }
 };
