@@ -59,6 +59,8 @@ class App extends Component {
             window.location="https://app.heo.finance"
         } else if(chain == "eth") {
             window.location="https://eth.heo.finance"
+        } else if(chain == "aurora") {
+            window.location="https://aurora.heo.finance"
         }
     }
     async setLoggedIn() {
