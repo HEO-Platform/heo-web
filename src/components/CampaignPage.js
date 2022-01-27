@@ -47,8 +47,27 @@ const PAYMENT_ERROR_MESSAGES = {
     payment_not_supported_by_issuer: "cardPaymentFailed_payment_not_supported_by_issuer",
     card_not_honored: "cardPaymentFailed_card_not_honored"
 };
+
+const CC_INFO_FIELDS_ERRORS = {
+    name: 'checkCCName',
+    number: 'checkCCNumber',
+    expMonth: 'checkCCExpMonth',
+    expYear: 'checkCCExpYear',
+    cvv: 'checkCCcvv',
+    email: 'checkCCemail',
+    line1: 'checkCCstreet',
+    line2: 'checkCCstreet2',
+    city: 'checkCCcity',
+    country: 'checkCCcountry',
+    district: 'checkCCdistrict',
+    postalCode: 'checkCCpostalCode',
+    phoneNumber: 'checkCCphoneNumber',
+    default: 'checkCCdefault'
+} 
+
 ReactGA.initialize("G-C657WZY5VT");
 var HEOCampaign, ERC20Coin;
+
 class CampaignPage extends Component {
     constructor(props) {
         super(props);
@@ -69,6 +88,7 @@ class CampaignPage extends Component {
             chains:[],
             ccinfo:{},
             showCCinfoModal: false,
+            tryAgainCC: false,
         };
         this.handleGetCCInfo = this.handleGetCCInfo.bind(this);
         this.handleCCInfoCancel = this.handleCCInfoCancel.bind(this);
@@ -128,6 +148,7 @@ class CampaignPage extends Component {
             }
         });
     }
+
     handleDonateFiat = async () => {
         //TODO: check that this.state.donationAmount is larger than 0
         let cardKeyData = await getPCIPublicKey();
@@ -158,7 +179,7 @@ class CampaignPage extends Component {
         try {
             this.setState({
                 showModal: true, modalTitle: 'processingWait',
-                modalMessage: "confirmDonation",
+                modalMessage: "plzWait",
                 errorIcon: 'HourglassSplit', modalButtonVariant: "gold", waitToClose: true
             });
             let resp = await axios.post('/api/donatefiat', data, {headers: {"Content-Type": "application/json"}});
@@ -168,21 +189,53 @@ class CampaignPage extends Component {
                     showModal: true, modalTitle: 'complete',
                     modalMessage: 'thankYouDonation',
                     errorIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
-                    modalButtonVariant: '#588157', waitToClose: false
+                    modalButtonVariant: '#588157', waitToClose: false, tryAgainCC: false, ccinfo: {}
                 });
             } else {
                 this.setState({
                     showModal: true, modalTitle: 'failed', modalMessage: PAYMENT_ERROR_MESSAGES[resp.data.paymentStatus],
-                    errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
-                    modalButtonVariant: '#E63C36', waitToClose: false
+                    errorIcon: 'XCircle', modalButtonMessage: 'tryAgain',
+                    modalButtonVariant: '#E63C36', waitToClose: false, tryAgainCC: true
                 });
+                this.setState(prevState => ({
+                    ccinfo: {
+                        ...prevState.ccinfo,
+                        ccError : PAYMENT_ERROR_MESSAGES[resp.data.paymentStatus]
+                    }
+                }));
             }
         } catch (err) {
+            console.log(err.response.data);
+            let errorFound = false;
+            Object.keys(CC_INFO_FIELDS_ERRORS).every((key)=>{
+                if(err.response.data.paymentStatus.message.includes(key)){
+                    this.setState({modalMessage: CC_INFO_FIELDS_ERRORS[key]});
+                    this.setState(prevState => ({
+                        ccinfo: {
+                            ...prevState.ccinfo,
+                            ccError: CC_INFO_FIELDS_ERRORS[key],
+                            ccErrorType: `${key}Input` 
+                        }
+                    }));
+                    errorFound = true;
+                    return false;
+                } 
+                return true;
+            })
             this.setState({
-                showModal: true, modalTitle: 'failed', modalMessage: 'cardPaymentGatewayFailure',
-                errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
-                modalButtonVariant: '#E63C36', waitToClose: false
+                showModal: true, modalTitle: 'failed',
+                errorIcon: 'XCircle', modalButtonMessage: 'tryAgain',
+                modalButtonVariant: '#E63C36', waitToClose: false, tryAgainCC: true
             });
+            if(!errorFound){
+                this.setState(prevState => ({
+                    ccinfo: {
+                        ...prevState.ccinfo,
+                        ccError: CC_INFO_FIELDS_ERRORS['default'],
+                        ccErrorType: 'default'
+                    }
+                }));
+            }
         }
 
     }
@@ -441,6 +494,12 @@ class CampaignPage extends Component {
             });
         }
     }
+    
+    onModalClose() {
+        if(this.state.tryAgainCC){
+            this.setState({showCCinfoModal:true});
+        }
+    }
 
     render() {
         return (
@@ -461,9 +520,7 @@ class CampaignPage extends Component {
                         <Button className='myModalButton'
                             style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
                             onClick={ () => {
-                                    if(this.state.onModalClose) {
-                                        this.state.onModalClose();
-                                    }
+                                    this.onModalClose();
                                     this.setState({showModal: false, onModalClose: false});
                                     ReactGA.event({
                                         category: "button_click",
@@ -482,7 +539,7 @@ class CampaignPage extends Component {
                     <p className='backToCampaigns'><Link className={"backToCampaignsLink"} to="/"><ChevronLeft id='backToCampaignsChevron'/><Trans i18nKey='backToCampaigns'/></Link></p>
                 </Container>
                 <Container id='mainContainer'>
-                    {this.state.showCCinfoModal && <CCData handleCCInfoCancel = {this.handleCCInfoCancel} handleGetCCInfo = {this.handleGetCCInfo}/>}
+                    {this.state.showCCinfoModal && <CCData handleCCInfoCancel = {this.handleCCInfoCancel} handleGetCCInfo = {this.handleGetCCInfo} currentCCInfo = {this.state.ccinfo}/>}
                     <Row id='topRow'>
                         <Col id='imgCol'>
                             <Image src={this.state.campaign.mainImageURL} id='mainImage'/>
