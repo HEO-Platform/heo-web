@@ -44,7 +44,7 @@ class CampaignList extends Component {
         });
         console.log(this.state.campaigns);
     }
-
+    /* this is a test comment */
     async getCampaigns(){
         var campaigns = [];
         var errorMessage = 'Failed to load campaigns';
