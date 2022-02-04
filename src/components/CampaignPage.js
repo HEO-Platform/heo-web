@@ -174,7 +174,7 @@ class CampaignPage extends Component {
             campaignId: this.state.campaignId,
             amount: this.state.donationAmount,
             currency: this.state.ccinfo.currency,
-            verification: "cvv"
+            verification: this.state.ccinfo.verification,
         };
         try {
             this.setState({
@@ -183,8 +183,10 @@ class CampaignPage extends Component {
                 errorIcon: 'HourglassSplit', modalButtonVariant: "gold", waitToClose: true
             });
             let resp = await axios.post('/api/donatefiat', data, {headers: {"Content-Type": "application/json"}});
-            console.log(resp);
-            if(resp.data.paymentStatus == "success") {
+            if(resp.data.paymentStatus === 'action_required'){
+                this.setState({showModal: false});
+                window.open(resp.data.redirectUrl, '_self');
+            } else if(resp.data.paymentStatus === "success") {
                 this.setState({
                     showModal: true, modalTitle: 'complete',
                     modalMessage: 'thankYouDonation',
@@ -646,6 +648,28 @@ class CampaignPage extends Component {
         console.log(`this.state.chains is ${this.state.chains}`);
         console.log(this.state.chains);
         ReactGA.send({ hitType: "pageview", page: this.props.location.pathname });
+
+        const params = new Proxy(new URLSearchParams(window.location.search), {
+            get: (searchParams, prop) => searchParams.get(prop),
+        });
+
+        if(params.fp){
+            if(params.fp === 's'){
+                this.setState({
+                    showModal: true, modalTitle: 'complete',
+                    modalMessage: 'thankYouDonation',
+                    errorIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
+                    modalButtonVariant: '#588157', waitToClose: false, tryAgainCC: false, ccinfo: {}
+                });
+            } else if(params.fp === 'f') {
+                this.setState({
+                    showModal: true, modalTitle: 'failed', modalMessage: 'failed3ds',
+                    errorIcon: 'XCircle', modalButtonMessage: 'tryAgain',
+                    modalButtonVariant: '#E63C36', waitToClose: false, tryAgainCC: true,
+                    donationAmount: params.am
+                });
+            }
+        }
     }
 
 }
