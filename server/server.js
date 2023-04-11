@@ -16,6 +16,7 @@ const Tracing = require("@sentry/tracing");
 const ServerLib = require('./serverLib');
 const CircleLib = require('./circleLib');
 const PayadmitLib = require('./payadmitLib');
+const StripeLib = require('./stripeLib');
 const PORT = process.env.PORT || 5000;
 
 
@@ -26,6 +27,7 @@ const APP = EXPRESS();
 const serverLib = new ServerLib();
 const circleLib = new CircleLib();
 const payadmitLib = new PayadmitLib();
+const stripeLib = new StripeLib();
 
 Sentry.init({
     dsn: process.env.SENTRY_DSN,
@@ -52,6 +54,22 @@ APP.use(Sentry.Handlers.tracingHandler());
 
 APP.use(FILE_UPLOAD());
 APP.use(CORS());
+
+APP.post('/api/stripenotifications', EXPRESS.raw({type: 'application/json'}),async (req, res) => {
+    const DB = CLIENT.db(DBNAME);
+    let fiatPayment;
+    try {
+        fiatPayment = await serverLib.handleGetFiatPaymentSettings(DB, Sentry);
+    } catch (err) {Sentry.captureException(new Error(err));}
+
+    if (fiatPayment && fiatPayment === 'stripeLib') {
+        stripeLib.handleNotification(req, res, STRIPE_API_KEY, STRIPE_WH_SECRET, CLIENT, DBNAME, Sentry);
+        res.sendStatus(200);
+    } else {
+        res.status(503).send('serviceNotAvailable');
+    }
+});
+
 APP.use(EXPRESS.json());
 
 const URL = `mongodb+srv://${process.env.MONGO_LOGIN}:${process.env.MONGODB_PWD}${process.env.MONGO_URL}`;
@@ -63,6 +81,8 @@ const CIRCLEARN = /^arn:aws:sns:.*:908968368384:(sandbox|prod)_platform-notifica
 const validator = new MessageValidator();
 const PAYADMIT_API_KEY = process.env.PAYADMIT_API_KEY;
 const PAYADMIT_API_URL = process.env.PAYADMIT_API_URL;
+const STRIPE_API_KEY = process.env.STRIPE_API_KEY;
+const STRIPE_WH_SECRET = process.env.STRIPE_WH_SECRET;
 
 CLIENT.connect(err => {
     if(err) {
@@ -79,7 +99,7 @@ const S3 = new AWS.S3({
     secretAccessKey: process.env.SERVER_APP_ACCESS_KEY
 });
 
-getId = async(DB, key) =>{
+async function getId(DB, key){
     try {
         const myCollection = await DB.collection('campaigns');
         let result = await myCollection.findOne({"key" : key});
@@ -118,6 +138,7 @@ APP.post('/api/circlenotifications', async (req, res) => {
         circleLib.handleCircleNotifications(req, res, CIRCLEARN, CIRCLE_API_KEY, validator, CLIENT, DBNAME, Sentry);
     } else {res.status(503).send('serviceNotAvailable');}
 });
+
 
 APP.post('/api/uploadimage', (req,res) => {
     if(serverLib.authenticated(req, res, Sentry)) serverLib.handleUploadImage(req, res, S3, Sentry);
@@ -311,6 +332,7 @@ APP.post('/api/donatefiat', async (req, res) => {
     const DB = CLIENT.db(DBNAME);
     let fiatPayment;
     try {
+        console.log("Looking up fiat library");
         fiatPayment = await serverLib.handleGetFiatPaymentSettings(DB, Sentry);
     } catch (err) {
         Sentry.captureException(new Error(err));
@@ -320,7 +342,11 @@ APP.post('/api/donatefiat', async (req, res) => {
         circleLib.handleDonateFiat(req, res, CIRCLE_API_URL, CIRCLE_API_KEY, Sentry, CLIENT, DBNAME);
     } else if (fiatPayment && fiatPayment === 'payadmitLib') {
         payadmitLib.handleDonateFiat(req, res, PAYADMIT_API_URL, PAYADMIT_API_KEY, Sentry, CLIENT, DBNAME);
-    } else {res.status(503).send('serviceNotAvailable');}
+    } else if (fiatPayment && fiatPayment === 'stripeLib') {
+        console.log("Handing fiat via Stripe");
+        stripeLib.handleDonateFiat(req, res, STRIPE_API_KEY, Sentry);
+    }
+    else {res.status(503).send('serviceNotAvailable');}
 
 });
 
