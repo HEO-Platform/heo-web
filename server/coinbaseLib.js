@@ -117,6 +117,7 @@ class CoinbaseLib {
     /**
      *  Helper function to verify webhook payload using the shared secret
      * */
+
     verifyWebhookPayload(signature, payload, sharedSecret, Sentry) {
         try {
             Sentry.addBreadcrumb({
@@ -132,7 +133,6 @@ class CoinbaseLib {
         } catch (error) {
             Sentry.captureException(new Error(error));
         }
-        return true;
         return true;
     }
 }
