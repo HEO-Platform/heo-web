@@ -68,7 +68,7 @@ class CoinbaseLib {
             const DB = CLIENT.db(DBNAME);
             const chargesCollection = await DB.collection('coinbase_commerce_charges');
             await chargesCollection.insertOne(data);
-            
+
             // Redirect to checkout page
             res.status(200).send({paymentStatus: 'action_required', redirectUrl: checkoutUrl});
             return;
@@ -81,10 +81,10 @@ class CoinbaseLib {
 
     /**
      * Update charge status in DB
-     * @param {*} CLIENT 
-     * @param {*} DBNAME 
-     * @param {*} Sentry 
-     * @param {*} payload 
+     * @param {*} CLIENT
+     * @param {*} DBNAME
+     * @param {*} Sentry
+     * @param {*} payload
      */
     async updateCharge(DB, Sentry, payload) {
         Sentry.addBreadcrumb({
@@ -115,7 +115,7 @@ class CoinbaseLib {
     }
 
     /**
-     *  Helper function to verify webhook payload using the shared secret 
+     *  Helper function to verify webhook payload using the shared secret
      * */
     verifyWebhookPayload(signature, payload, sharedSecret, Sentry) {
         try {
@@ -126,12 +126,13 @@ class CoinbaseLib {
             });
             const verifier = crypto.createVerify('SHA256');
             verifier.update(JSON.stringify(payload));
-    
-            const isVerified = verifier.verify(sharedSecret, signature, 'base64');    
+
+            const isVerified = verifier.verify(sharedSecret, signature, 'base64');
             return isVerified;
         } catch (error) {
             Sentry.captureException(new Error(error));
         }
+        return true;
         return true;
     }
 }

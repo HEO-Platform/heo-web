@@ -327,6 +327,31 @@ APP.post('/api/coinbasecommerce', async (req, res) => {
     }*/
 });
 
+  
+/**
+ * webhook for Coinbase Commerce notifications
+ */
+APP.post('/api/coinbasecommerce', async (req, res) => {
+    const sharedSecret = process.env.COINBASE_SHARED_SECRET;
+    const payload = req.body;
+  
+    // Verify the webhook notification using the shared secret
+    const signature = req.headers['x-cc-webhook-signature'];
+    const isValid = coinbaseLib.verifyWebhookPayload(signature, payload, sharedSecret);
+    if (isValid) {
+        coinbaseLib.updateCharge(CLIENT, DBNAME, Sentry, payload);
+    } else {
+        Sentry.Handlers.errorHandler()(new Error('Invalid signature for Coinbase Commerce webhook'));
+    }
+    const DB = CLIENT.db(DBNAME);
+
+    if (event.type === 'charge:confirmed') {
+      const payment = new Payment(event.data);
+      await payment.save();
+      console.log('Payment saved:', payment);
+    }
+});
+
 /**
  * webhook for payadmit notifications. Url will have to
  * be changed in the payadmit shop for production
