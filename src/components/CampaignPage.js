@@ -222,7 +222,6 @@ class CampaignPage extends Component {
         }
     }
 
-
     handleDonateFiat = async () => {
         //TODO: check that this.state.donationAmount is larger than 0
         let cardKeyData, encryptedCardData, encryptedSecurityData;
@@ -1054,6 +1053,7 @@ class CampaignPage extends Component {
                                                     this.handleDonateCoinbaseCommerce();
                                                 }
                                             } ><img src={ethIcon} width={20} height={20} style={{marginRight:5, marginLeft:5}} />ETH</Dropdown.Item>
+
                                             <Dropdown.Item className='coinRewardInfo' onClick={
                                                 () => {
                                                     this.handleDonateCoinbaseCommerce();
@@ -1069,6 +1069,7 @@ class CampaignPage extends Component {
                                                     this.handleDonateCoinbaseCommerce();
                                                 }
                                             } >USDC (ERC20)</Dropdown.Item>
+
                                             <Dropdown.Item className='coinRewardInfo' onClick={
                                                 () => {
                                                     this.handleDonateCoinbaseCommerce();

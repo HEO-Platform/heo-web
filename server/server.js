@@ -308,14 +308,12 @@ APP.get('/api/circle/publickey', async (req, res) => {
     }
 });
 
-
-  
 /**
  * webhook for Coinbase Commerce notifications
  */
 APP.post('/api/coinbasecommerce', async (req, res) => {
     const sharedSecret = process.env.COINBASE_SHARED_SECRET;
-  
+
     // Verify the webhook notification using the shared secret
 //    const signature = req.headers['x-cc-webhook-signature'];
 //    const isValid = coinbaseLib.verifyWebhookPayload(signature, req.body, sharedSecret, Sentry);
