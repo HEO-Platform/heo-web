@@ -117,7 +117,6 @@ class CoinbaseLib {
     /**
      *  Helper function to verify webhook payload using the shared secret
      * */
-
     verifyWebhookPayload(signature, payload, sharedSecret, Sentry) {
         try {
             Sentry.addBreadcrumb({
@@ -127,7 +126,6 @@ class CoinbaseLib {
             });
             const verifier = crypto.createVerify('SHA256');
             verifier.update(JSON.stringify(payload));
-
             const isVerified = verifier.verify(sharedSecret, signature, 'base64');
             return isVerified;
         } catch (error) {
