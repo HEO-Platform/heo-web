@@ -1,6 +1,5 @@
 const Coinbase = require('coinbase-commerce-node');
 const CoinbaseClient = Coinbase.Client;
-const Sentry = require("@sentry/node");
 const crypto = require('crypto');
 
 class CoinbaseLib {
