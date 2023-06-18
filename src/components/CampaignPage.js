@@ -13,7 +13,10 @@ import {
     initWeb3Modal,
     clearWeb3Provider,
     encryptCardData,
-    getPCIPublicKey
+    getPCIPublicKey,
+    clearTronProvider,
+    initTronadapter,
+    initTron
 } from '../util/Utilities';
 import i18n from '../util/i18n';
 import { Editor, EditorState, convertFromRaw, CompositeDecorator } from "draft-js";
@@ -31,8 +34,8 @@ import daiLogo from '../images/dai-logo.png';
 import ltcLogo from '../images/ltc-logo.png'
 import visaMcLogo from '../images/visa-mc-logo.png';
 import usdtLogo from '../images/usdt-logo.png';
-
 import CCData from '../components/CCData';
+//import TronWeb from "tronweb";
 
 const IMG_MAP = {"BUSD": busdIcon,
     "BNB": bnbIcon,
@@ -92,6 +95,7 @@ class CampaignPage extends Component {
             waitToClose:false,
             raisedAmount:0,
             showModal: false,
+            showCoinbaseModal: false,
             modalMessage:"",
             modalTitle:"",
             errorIcon:"",
@@ -110,10 +114,12 @@ class CampaignPage extends Component {
         };
         this.handleGetCCInfo = this.handleGetCCInfo.bind(this);
         this.handleCCInfoCancel = this.handleCCInfoCancel.bind(this);
+
     }
     async handleGetCCInfo(info) {
         await this.setState({ccinfo : info});
         this.handleDonateFiat();
+
     }
     handleCCInfoCancel() {
         this.setState({showCCinfoModal : false});
@@ -348,24 +354,43 @@ class CampaignPage extends Component {
         }
     }
 
+    showCoinbaseCommerce = async() => {
+        this.setState({showCoinbaseModal: true});
+    }
+
     saveDonateToDb = async (value, decimals, transactionHash, chainId, coinAddress) => {
         let accounts = this.state.accounts;
-        if(decimals == 18) {
-            value = parseFloat(web3.utils.fromWei(value));
-        } else {
-            value = parseFloat(value/Math.pow(10, decimals));
+        if (window.blockChainOrt == "ethereum"){
+            if(decimals == 18) {
+                value = parseFloat(web3.utils.fromWei(value));
+            } else {
+                value = parseFloat(value/Math.pow(10, decimals));
+            }
         }
-        let donateData = {
-                          campaignID : this.state.campaignId,
-                          donatorID: accounts[0],
-                          raisedAmount: value,
-                          transactionHash: transactionHash,
-                          chainId: chainId,
-                          coinAddress: coinAddress
-                        };
+        else if (window.blockChainOrt == "tron"){
+            value = parseFloat(window.tronWeb.fromSun(value));
+        }
+        let donateData
+        if (window.blockChainOrt == "ethereum"){
+            donateData = {
+                campaignID : this.state.campaignId,
+                donatorID: accounts[0],
+                raisedAmount: value,
+                transactionHash: transactionHash,
+                chainId: chainId,
+                coinAddress: coinAddress
+              };
+        } else if (window.blockChainOrt == "tron"){
+            donateData = {
+                campaignID : this.state.campaignId,
+                donatorID: window.tronAdapter.address,
+                raisedAmount: value,
+                transactionHash: transactionHash,
+                chainId: chainId,
+                coinAddress: coinAddress
+              };
+        }
         let result = await axios.post('/api/donate/adddanate', {mydata: donateData}, {headers: {"Content-Type": "application/json"}});
-
-        console.log(result);
         this.setState({showModal:true, goHome: true,
             modalMessage: 'campaignCreateSuccess',
             modalTitle: 'success',
@@ -376,13 +401,107 @@ class CampaignPage extends Component {
         await this.updateRaisedAmount();
     }
 
-    handleDonateClick = async(chain_name, coin_address) =>{
-        console.log("Метка 1");
-      if (this.state.campaign.new == false)
-       await this.handleDonateOld(chain_name, coin_address);
-      else await this.handleDonateNew(chain_name, coin_address);
+    handleDonateClick = async(chain_name, coin_address, blockChainOrt) =>{
+      if(blockChainOrt == "ethereum"){
+        window.blockChainOrt = "ethereum";
+        if (this.state.campaign.new == false) await this.handleDonateOld(chain_name, coin_address);
+       else await this.handleDonateNew(chain_name, coin_address);
+      }
+      else if(blockChainOrt == "tron"){
+        window.blockChainOrt = "tron";
+        await this.handleDonateTron(chain_name, coin_address);
+      }
     }
 
+    handleDonateTron = async (chainId, coinAddress) =>{
+        try{
+            await clearTronProvider();
+            await initTronadapter();
+            await initTron(chainId, this);
+            let TRC20Coin = (await import("../remote/"+ chainId + "/TRC20")).default;
+            let HEOCampaign = (await import("../remote/"+ chainId + "/HEOCampaign")).default;
+            let campaignAddress = this.state.campaign.addresses[chainId];
+            let campaignInstance = await window.tronWeb.contract(HEOCampaign, window.tronWeb.address.fromHex(campaignAddress));
+            var toDonate = window.tronWeb.toSun(this.state.donationAmount);
+            var coinInstance = await window.tronWeb.contract(TRC20Coin, window.tronWeb.address.fromHex(coinAddress));
+            var decimals = coinInstance.methods.decimals().call();
+            ReactGA.event({
+                category: "donation",
+                action: "donate_button_click",
+                value: parseInt(this.state.donationAmount), // optional, must be a number
+                nonInteraction: false
+            });
+            //check if donating to oneself
+            let beneficiaryAdres = await campaignInstance.methods.beneficiary().call();
+            if(window.tronWeb.address.toHex(window.tronAdapter.address).toLowerCase() == beneficiaryAdres.toLowerCase()) {
+                this.setState({
+                    showModal: true, modalTitle: 'notAllowed',
+                    modalMessage: 'donateToYourSelf',
+                    errorIcon: 'ExclamationTriangle', modalButtonMessage: 'closeBtn',
+                    modalButtonVariant: '#E63C36', waitToClose: false
+                });
+                ReactGA.event({
+                    category: "donation",
+                    action: "self_donation_blocked",
+                    nonInteraction: false
+                });
+                console.log("Tronadapter address" + window.tronAdapter.address);
+                console.log("Beneficiary" + beneficiaryAdres);
+                return;
+            }
+            let result = await coinInstance.methods.transfer(campaignAddress, toDonate)
+            .send({from:window.tronAdapter.address,callValue:0,feeLimit:15000000000,shouldPollResponse:false});
+            this.setState({showModal:true,
+                modalMessage: 'waitingForNetwork', errorIcon:'HourglassSplit',
+                modalButtonVariant: "gold", waitToClose: true});
+            let txnObject;
+            let m = 1;
+            do{
+                console.log("Waiting for transaction record");
+                txnObject = await window.tronWeb.trx.getTransactionInfo(result);
+                if(txnObject){
+                  if (txnObject.receipt)  break;
+                }
+            }while(m != 2);
+            if (txnObject.receipt.result == "SUCCESS"){
+               this.setState({
+                   showModal: true, modalTitle: 'complete',
+                   modalMessage: 'thankYouDonation',
+                   errorIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
+                   modalButtonVariant: '#588157', waitToClose: false
+                });
+                this.saveDonateToDb(toDonate,decimals, txnObject.txID, chainId, coinAddress);
+            }else {
+                this.setState({
+                    showModal: true, modalTitle: 'failed',
+                    errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
+                    modalButtonVariant: '#E63C36', waitToClose: false,
+                    modalMessage: 'blockChainTransactionFailed'
+                });
+                ReactGA.event({
+                    category: "error",
+                    action: "transaction_error",
+                    label: `Tronlink transaction failed`,
+                    nonInteraction: false
+                });
+            }
+        } catch (err) {
+            this.setState({
+              showModal: true, modalTitle: 'failed',
+              errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
+              modalButtonVariant: '#E63C36', waitToClose: false,
+              modalMessage: 'blockChainTransactionFailed'
+            });
+            ReactGA.event({
+              category: "error",
+              action: "transaction_error",
+              label: (err && err.message ? err.message : "blockChainTransactionFailed"), // optional, must be a number
+              nonInteraction: false
+            });
+            clearWeb3Provider(this);
+            console.log(err);
+        }
+    }
 
     handleDonateOld = async (chainId, coinAddress) => {
         //TODO: check that this.state.donationAmount is larger than
@@ -644,6 +763,8 @@ class CampaignPage extends Component {
             });
         }
     }
+
+
 
     handleDonateNew = async (chainId, coinAddress) => {
         //TODO: check that this.state.donationAmount is larger than
@@ -1007,14 +1128,14 @@ class CampaignPage extends Component {
                                     <p><Trans i18nKey='accepting'/>:
                                         {this.state.fiatPaymentEnabled && this.state.campaign.stripeURL && <span className='coinRewardInfo'><img src={visaMcLogo} witdth={21} height={20} style={{marginRight:5, marginLeft:5}} /> </span> }
                                         {this.state.chains_coins.map((item, i) =>
-                                            <span key={item.coin.name} className='coinRewardInfo'><img src={IMG_MAP[item.coin.name]} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span>
-                                        )}
-                                        <span className='coinRewardInfo'><img src={ethIcon} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span>
-                                        <span className='coinRewardInfo'><img src={btcLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span>
-                                        <span className='coinRewardInfo'><img src={daiLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span>
-                                        <span className='coinRewardInfo'><img src={usdcIcon} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span>
-                                        <span className='coinRewardInfo'><img src={usdtLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span>
-                                        <span className='coinRewardInfo'><img src={ltcLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span>
+                                            <span className='coinRewardInfo'><img src={IMG_MAP[item.coin.name]} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span>
+                                            )}
+                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={ethIcon} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={btcLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={daiLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={usdcIcon} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={usdtLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={ltcLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span> }
                                     </p>
                                 </div>
                             </Row>
@@ -1046,7 +1167,7 @@ class CampaignPage extends Component {
                                             }><img src={visaMcLogo} width={17} height={16} style={{marginRight:5}} />USD</Dropdown.Item> }
 
                                             {this.state.chains_coins.map((item, i) =>
-                                                    <Dropdown.Item key={item.chain.address} as="button" onClick={() => this.handleDonateClick(item.chain, item.coin.address)}><img src={IMG_MAP[item.coin.name]} width={16} height={16} style={{marginRight:5}} />{item.coin.name} ({item.chain_name })</Dropdown.Item>
+                                                    <Dropdown.Item key={item.chain.address} as="button" onClick={() => this.handleDonateClick(item.chain, item.coin.address, item.blockChainOrt)}><img src={IMG_MAP[item.coin.name]} width={16} height={16} style={{marginRight:5}} />{item.coin.name} ({item.chain_name })</Dropdown.Item>
                                                 )}
                                             <Dropdown.Item className='coinRewardInfo' onClick={
                                                 () => {
@@ -1081,6 +1202,7 @@ class CampaignPage extends Component {
                                                 }
                                             } ><img src={ltcLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} />LTC</Dropdown.Item>
                                         </DropdownButton>
+
                                     </InputGroup.Append>
                                 </InputGroup>
                             </Row>
