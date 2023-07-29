@@ -995,7 +995,7 @@ class CampaignPage extends Component {
                                     />
                                     <InputGroup.Append>
                                         <DropdownButton id='donateButton' title={i18n.t('donate')}>
-                                            {this.state.fiatPaymentEnabled && <Dropdown.Item key="_fiat" as="button" onClick={
+                                            {this.state.fiatPaymentEnabled && this.state.campaign.stripeURL && <Dropdown.Item key="_fiat" as="button" onClick={
                                             () => {
                                                 if(this.state.fiatPaymentProvider ==='stripe') {
                                                     //skip the card info form for PayAdmin and use hosted payment dialog
