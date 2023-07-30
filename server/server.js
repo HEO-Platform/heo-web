@@ -377,7 +377,7 @@ APP.post('/api/donatefiat', async (req, res) => {
         payadmitLib.handleDonateFiat(req, res, PAYADMIT_API_URL, PAYADMIT_API_KEY, Sentry, CLIENT, DBNAME);
     } else if (fiatPayment && fiatPayment === 'stripeLib') {
         console.log("Handing fiat via Stripe");
-        stripeLib.handleDonateFiat(req, res, STRIPE_API_KEY, Sentry);
+        stripeLib.handleDonateFiat(req, res, STRIPE_API_KEY, CLIENT, DBNAME, Sentry);
     }
     else {res.status(503).send('serviceNotAvailable');}
 
