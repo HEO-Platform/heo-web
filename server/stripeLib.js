@@ -59,7 +59,6 @@ class StripeLib {
                                 paymentAmount: sessionObj.amount_total/100,
                                 referenceId: sessionObj.payment_intent,
                                 campaignId: sessionObj.metadata.campaign_id,
-                                paymentCreationDate: new Date().toISOString(),
                                 provider: 'stripe'
                             }
                             try {
