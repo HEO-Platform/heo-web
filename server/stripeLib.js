@@ -118,11 +118,11 @@ class StripeLib {
                             });
                         }
                     } else {
-                        Sentry.addBreadcrumb({
-                            category: "stripe",
-                            message: `Could not find campaign Id in metadata`,
-                            level: "debug",
-                        });
+                        Sentry.captureException(new Error(`Could not find campaign Id in metadata`));
+                        //fetch payment object from Stripe API
+                        const paymentIntent = await stripe.paymentIntents.retrieve(sessionObj.payment_intent);
+                        // get items from payment object
+                        const items = paymentIntent.charges.data[0].invoice.lines.data;
                     }
                     break;
                 default:
@@ -145,7 +145,7 @@ class StripeLib {
             Sentry.captureException(new Error(err));
         }
     }
-    async handleDonateFiat(req, res, STRIPE_API_KEY, Sentry) {
+    async handleDonateFiat(req, res, STRIPE_API_KEY, CLIENT, DBNAME, Sentry) {
         const stripe = require('stripe')(STRIPE_API_KEY);
         console.log(`Initiated stripe API`)
         let reffId = uuidv4();
@@ -157,6 +157,10 @@ class StripeLib {
                 message: `Creating checkout session ${reffId} for ${req.body.campaignId}. Currency: ${req.body.currency}. Amount: ${req.body.amount}`,
                 level: "info",
             });
+            if(!req.body.campaignId || !req.body.currency || !req.body.amount || !req.body.campaignName) {
+                Sentry.captureException(new Error(`Missing parameters`));
+                return res.status(400).send('Missing parameters');
+            }
             console.log("Creating Stripe checkout session")
             const session = await stripe.checkout.sessions.create({
                 line_items: [
@@ -184,11 +188,42 @@ class StripeLib {
                 success_url: `${url}?fp=s&am=${req.body.amount}&ref=${reffId}`,
                 cancel_url: `${url}`
             });
+            try {
+                const data = {
+                    paymentStatus: "created",
+                    lastUpdated: new Date(),
+                    currency: req.body.currency,
+                    paymentAmount: req.body.amount,
+                    referenceId: session.payment_intent,
+                    campaignId: req.body.campaignId,
+                    paymentCreationDate: new Date().toISOString(),
+                    provider: 'stripe'
+                }
+                const DB = CLIENT.db(DBNAME);
+                const paymentRecordsCollection = await DB.collection('fiat_payment_records');
+                let paymentRecord = await paymentRecordsCollection.findOne({"referenceId" : session.payment_intent});
+                if(!paymentRecord) {
+                    await paymentRecordsCollection.insertOne(data);
+                    Sentry.addBreadcrumb({
+                        category: "stripe",
+                        message: `inserted record into fiat_payment_records. Record data: ${data}`,
+                        level: "debug",
+                    });
+                } else {
+                    Sentry.captureException(
+                        new Error(`Record already exists in fiat_payment_records. Record data: ${data}`)
+                    );
+                }
+            } catch (err) {
+                console.log(err);
+                Sentry.captureException(new Error(err));
+            }
             if(session && session.url) {
                 res.status(200).send({paymentStatus: 'action_required', redirectUrl: session.url});
                 return;
             } else {
                 console.log("Failed to create Stripe checkout session")
+                Sentry.captureException(new Error(`Failed to create Stripe checkout session for ${req.body.campaignId}`));
             }
         } catch (err) {
             console.log(err);
