@@ -56,7 +56,7 @@ class CreateCampaign extends React.Component {
             editorContent: {},
             chains:{},
             chainConfig:{},
-            tronChainConfig:{},            
+            tronChainConfig:{},
             chainId:"",
             tronChainId:"",
             defDonationAmount: 10,
@@ -76,7 +76,7 @@ class CreateCampaign extends React.Component {
 
     handleChange = e => {
         if(e.target.name === 'orgEn'){
-          let help_value = '';  
+          let help_value = '';
           for(let i = 0; i < e.target.value.length; i++){
            if ((/^[A-Za-z0-9]*$/.test(e.target.value[i]) === true)||(e.target.value[i] == ' '))
             help_value += e.target.value[i];
@@ -123,7 +123,7 @@ class CreateCampaign extends React.Component {
             }
             if(!this.state.cn) {
                 this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle', 
+                    {showModal:true, modalTitle: 'requiredFieldsTitle',
                         modalMessage: 'cnRequired', modalIcon: 'ExclamationTriangle',
                         waitToClose: false,
                         modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
@@ -162,18 +162,27 @@ class CreateCampaign extends React.Component {
             if(this.state.qrCodeImageURL) {
               qrImgUrl = await this.uploadImageS3('qrCode', qrImgID);
             }
-            
+
             if(imgUrl) {
                 let campaignData;
-                
+
                 if (String(window.blockChainOrt) === "ethereum"){
-                  if(window.web3Modal.cachedProvider !== "binancechainwallet"){
+                  if (window.web3Modal.cachedProvider !== "binancechainwallet") {
                         campaignData = await this.createCampaign(imgUrl, qrImgUrl);
-                  } else {this.createCampaign(imgUrl);}
-                } 
-                else if (String(window.blockChainOrt) === "tron") campaignData = await this.createCampaignTron(imgUrl, qrImgUrl);
-                if (campaignData)  await this.addCampaignToDb(campaignData);
-                
+                  } else {
+                      this.createCampaign(imgUrl);
+                  }
+                } else if (String(window.blockChainOrt) === "tron") {
+                    console.log(`Adding campaign to tron`);
+                    campaignData = await this.createCampaignTron(imgUrl, qrImgUrl);
+                    console.log(`Added campaign to tron with address ${campaignData.address}`)
+                }
+
+                // now add campaign to db
+                if (campaignData) {
+                    console.log(`Adding campaign to DB with address ${campaignData.address}`)
+                    await this.addCampaignToDb(campaignData);
+                }
             }
         } catch(error)  {
             console.log(error);
@@ -185,8 +194,11 @@ class CreateCampaign extends React.Component {
             campaignData.title = {"default": this.state.title};
             campaignData.title[i18n.language] = this.state.title;
             campaignData.addresses = {};
-            if (window.blockChainOrt == "ethereum") campaignData.addresses[this.state.chainId] = campaignData.address;
-            else if (window.blockChainOrt == "tron") campaignData.addresses[this.state.tronChainId] = campaignData.address;
+            if (window.blockChainOrt == "ethereum") {
+                campaignData.addresses[this.state.chainId] = campaignData.address;
+            } else if (window.blockChainOrt == "tron") {
+                campaignData.addresses[this.state.tronChainId] = campaignData.address;
+            }
             campaignData.description = {"default": this.state.description};
             campaignData.description[i18n.language] = this.state.description;
             campaignData.mainImageURL = this.state.mainImageURL;
@@ -228,7 +240,7 @@ class CreateCampaign extends React.Component {
         }
     }
 
-    
+
 
     async createCampaignTron(imgUrl, qrImgUrl) {
         var titleObj = {"default": this.state.title};
@@ -264,10 +276,10 @@ class CreateCampaign extends React.Component {
                 modalButtonVariant: "#E63C36", waitToClose: false});
             let abi = (await import("../remote/" + this.state.tronChainId + "/HEOCampaignFactory")).abi;
             var address = (await import("../remote/" + this.state.tronChainId + "/HEOCampaignFactory")).address;
-            address = window.tronWeb.address.toHex(address); 
+            address = window.tronWeb.address.toHex(address);
             var HEOCampaignFactory = await window.tronWeb.contract(abi, address);
             try {
-                let result = await HEOCampaignFactory.methods.createCampaign(window.tronWeb.toSun(this.state.maxAmount), 
+                let result = await HEOCampaignFactory.methods.createCampaign(window.tronWeb.toSun(this.state.maxAmount),
                     this.state.beneficiaryAddress, compressed_meta)
                 .send({from:this.state.beneficiaryAddress,callValue:0,feeLimit:15000000000,shouldPollResponse:false});
                 this.setState({showModal:true,
@@ -275,28 +287,32 @@ class CreateCampaign extends React.Component {
                     modalButtonVariant: "gold", waitToClose: true});
                 let txnObject;
                 let m = 1;
-                do{
+                do {
                     console.log("Waiting for transaction record");
                     txnObject = await window.tronWeb.trx.getTransactionInfo(result);
-                    if(txnObject){
-                      if (txnObject.receipt)  break;   
+                    if(txnObject && txnObject.receipt) {
+                        break;
                     }
-                }while(m != 2);  
-                if (txnObject.receipt.result == "SUCCESS"){
+                } while(m != 2);
+
+                if (txnObject.receipt.result == "SUCCESS") {
                   m = 1;
                   let transEvent;
-                  do{
+                  do {
                      console.log("Waiting for event to be recorded per transaction");
                      transEvent = await window.tronWeb.getEventByTransactionID(result);
-                     if (transEvent){
-                       if (transEvent.length > 0) break; 
+                     if (transEvent && transEvent.length > 0) {
+                         break;
                      }
-                  }while(m != 2);   
-                  return{
+                  } while(m != 2);
+
+                  console.log(`createCampaign transaction successful ${transEvent}`);
+                  return {
                     address: transEvent[0].result.campaignAddress,
                     beneficiaryId: this.state.beneficiaryAddress
                   };
                 } else {
+                  console.log(`createCampaign transaction failed ${txnObject.receipt.result}`);
                   this.setState({showModal: true, goHome: true,
                     modalTitle: 'addToDbFailedTitle',
                     modalMessage: 'addToDbFailedMessage',
@@ -359,7 +375,7 @@ class CreateCampaign extends React.Component {
             if((!this.state.web3 || !this.state.accounts)) {
                 await initWeb3(this.state.chainId, this);
             }
-            
+
             var that = this;
             var web3 = this.state.web3;
             let abi = (await import("../remote/" + this.state.chainId + "/HEOCampaignFactory")).abi;
@@ -448,7 +464,7 @@ class CreateCampaign extends React.Component {
         }
         try {
             let res;
-            //if (window.blockChainOrt == "ethereum") 
+            //if (window.blockChainOrt == "ethereum")
             res = await axios.post('/api/uploadimage', formData);
             //else if (window.blockChainOrt == "tron") res = await axios.post('/api/uploadimage_tron', formData);
             if(type === 'main') {
@@ -494,10 +510,10 @@ class CreateCampaign extends React.Component {
     }
 
     render() {
-        
+
         return (
             <div>
-               
+
                <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' centered>
                     <Modal.Body><p className='modalIcon'>
                         {this.state.modalIcon == 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
@@ -554,11 +570,11 @@ class CreateCampaign extends React.Component {
                                                 try {
                                                     if(!window.tronWeb) {
                                                         await initTron(this.state.tronChainId , this);
-                                                    } 
-                                                    await  LogInTron(this); 
+                                                    }
+                                                    await  LogInTron(this);
                                                     if(this.state.isLoggedInTron) {
                                                     await this.checkWLTron(this.state.tronChainId);
-                                                    }  
+                                                    }
                                                 } catch (err) {
                                                     console.log(err);
                                                     this.setState({showModal:true,
@@ -572,9 +588,9 @@ class CreateCampaign extends React.Component {
                                                     );
                                                 }
                                             }
-                                           } 
-                                       
-                                        
+                                           }
+
+
                                     }}>
                                     <Trans i18nKey={this.state.modalButtonMessage} />
                                 </Button>
@@ -598,9 +614,9 @@ class CreateCampaign extends React.Component {
                         <UserContext.Consumer>
                             {() => (
                                 <Modal.Dialog>
-                                <Row lg = {2}> 
-                                <Col md = '6'>       
-                                 <Button className='myModalButton'  
+                                <Row lg = {2}>
+                                <Col md = '6'>
+                                 <Button className='myModalButton'
                                     style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
                                     onClick={ async () => {
                                         window.blockChainOrt = "ethereum";
@@ -633,7 +649,7 @@ class CreateCampaign extends React.Component {
                                     Ethereum
                                 </Button>
                                 </Col>
-                                <Col  md = '6'> 
+                                <Col  md = '6'>
                                 <Button className='myModalButton'
                                 style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
                                 onClick={ async () => {
@@ -645,11 +661,11 @@ class CreateCampaign extends React.Component {
                                         try {
                                             if(!window.tronWeb) {
                                                 await initTron(this.state.tronChainId , this);
-                                            } 
-                                            await  LogInTron(this); 
+                                            }
+                                            await  LogInTron(this);
                                             if(this.state.isLoggedInTron) {
                                             await this.checkWLTron(this.state.tronChainId);
-                                            }  
+                                            }
                                         } catch (err) {
                                             console.log(err);
                                             this.setState({showModal:true,
@@ -667,14 +683,14 @@ class CreateCampaign extends React.Component {
                             Tron
                             </Button>
                             </Col>
-                            </Row> 
+                            </Row>
                             </Modal.Dialog>
                             )}
                         </UserContext.Consumer>
                         }
                    </Modal.Body>
                 </Modal>
-                
+
                 <Container className='backToCampaignsDiv'>
                     <p className='backToCampaigns'><Link class={"backToCampaignsLink"} to="/"><ChevronLeft id='backToCampaignsChevron'/> <Trans i18nKey='backToCampaigns'/></Link></p>
                 </Container>
@@ -725,19 +741,19 @@ class CreateCampaign extends React.Component {
                                 className='redAsterisk'></span></Form.Label>
                             <Form.Control required type="number" className="createFormPlaceHolder"
                                           value={this.state.defDonationAmount} placeholder={this.state.defDonationAmount}
-                                          name='defDonationAmount' onChange={this.handleChange} onwheel="this.blur()" />    
+                                          name='defDonationAmount' onChange={this.handleChange} onwheel="this.blur()" />
                             <Row>
-                            <Col xs="auto">                 
+                            <Col xs="auto">
                             <Form.Label><Trans i18nKey='fiatPayments'/><span
                                 className='redAsterisk'></span></Form.Label>
-                            </Col> 
-                            <Col xs lg="1">     
+                            </Col>
+                            <Col xs lg="1">
                             <Form.Check type="checkbox" checked={this.state.fiatPayments}
-                                        value={this.state.fiatPayments} placeholder={this.state.fiatPayments} 
+                                        value={this.state.fiatPayments} placeholder={this.state.fiatPayments}
                                         name='fiatPayments' onChange={this.handleChange} onwheel="this.blur()"/>
-                            </Col>             
+                            </Col>
                             </Row>
-                            
+
                         </Form.Group>
                         <Form.Group>
                             <Form.Label><Trans i18nKey='selectCoverImage'/><span className='redAsterisk'>*</span></Form.Label>
@@ -974,7 +990,7 @@ class CreateCampaign extends React.Component {
                 modalIcon: 'XCircle', modalButtonMessage: 'login',
                 modalButtonVariant: "#E63C36", waitToClose: false});
         }
-        
+
         if ((window.tron)&&(window.ethereum)) this.setState({showModalDialog : true,showModal:false});
         else this.setState({showModalDialog : false, showModal : true});
     }
