@@ -7,11 +7,10 @@ import ReactGA from "react-ga4";
 import { createMessage, encrypt, readKey } from 'openpgp';
 import {TronLinkAdapter} from '@tronweb3/tronwallet-adapter-tronlink';
 
-const TronWeb = require('tronweb');
 ReactGA.initialize("G-C657WZY5VT");
 
 class Utilities {
-  
+
 }
 
 const clearWeb3Provider= async (that) => {
@@ -24,8 +23,8 @@ const clearWeb3Provider= async (that) => {
 }
 
 const clearTronProvider = async () => {
-  if(window.tronAdapter)  
-    await window.tronAdapter.disconnect();  
+  if(window.tronAdapter)
+    await window.tronAdapter.disconnect();
 }
 
 const LogInTron = async (that) => {
@@ -46,17 +45,14 @@ const LogInTron = async (that) => {
     that.setState({accounts: accounts});
     that.setState({beneficiaryAddress:window.tronWeb.address.toHex(window.tronAdapter.address)});
     let signedStr = await window.tronWeb.trx.sign(strHash);
-    let authRes = await axios.post('/api/auth/jwt_tron',
+    await axios.post('/api/auth/jwt_tron',
             {signature: signedStr, addr: window.tronWeb.address.toHex(window.tronAdapter.address)},
             {headers: {"Content-Type": "application/json"}});
     signedStr = signedStr.replace(/^0x/, '');
     var tail = signedStr.substring(128, 130);
-    if(tail == '01')
-    {
+    if(tail === '01') {
       signedStr = signedStr.substring(0,128)+'1c';
-    }
-    else if(tail == '00')
-    {
+    } else if(tail === '00') {
       signedStr = signedStr.substring(0,128)+'1b';
     }
     res = await window.tronWeb.trx.verifyMessage(strHash,signedStr,window.tronAdapter.address);
@@ -66,10 +62,10 @@ const LogInTron = async (that) => {
             modalButtonMessage: 'closeBtn'
         });
     return res;
-} 
+}
 
 const LogIn = async (accountAdd, web3, that) => {
-    if (window.blockChainOrt == "tron") return;
+    if (window.blockChainOrt === "tron") return;
     that.setState({showModal:true, modalTitle: '',
         modalMessage: 'signThePhrase', modalIcon: 'HourglassSplit',
         modalButtonVariant: "#E63C36", waitToClose: false, modalButtonMessage: 'abortBtn',
@@ -79,7 +75,7 @@ const LogIn = async (accountAdd, web3, that) => {
         });
     let res = await axios.get('/api/auth/msg');
     let dataToSign = res.data.dataToSign;
-    if(window.web3Modal.cachedProvider == "binancechainwallet") {
+    if(window.web3Modal.cachedProvider === "binancechainwallet") {
         let signature = await window.BinanceChain.bnbSign(accountAdd,dataToSign);
         let authRes = await axios.post('/api/auth/jwt',
             {signature: signature, addr: accountAdd},
@@ -125,6 +121,9 @@ function DescriptionPreview(description, lang) {
         } else {
             text = description["default"];
         }
+        if(!text) {
+            text = "";
+        }
         let preview = text.trim();
         var firstSpace = preview.indexOf(" ");
         if(firstSpace >= 200){
@@ -164,7 +163,7 @@ const getTronWeb = async () => {
 }
 
 const initTron = async (chainId, that) => {
-    
+
     if(!window.tronAdapter){
         await initTronadapter();
     }
@@ -195,7 +194,7 @@ const initTron = async (chainId, that) => {
                     label: chainConfig["CHAIN_NAME"],
                     nonInteraction: false
                 });
-               
+
             } catch (addError) {
                 console.log(`Failed to add provider for ${chainId} and ${chainConfig["WEB3_RPC_NODE_URL"]}`)
                 console.log(addError);
@@ -214,7 +213,7 @@ const initTron = async (chainId, that) => {
 }
 
 const initWeb3 = async (chainId, that) => {
-    
+
     //if(!window.web3Modal) {
         await initWeb3Modal(chainId);
    // }
@@ -408,6 +407,6 @@ const encryptCardData = async(keyData, cardData) => {
     const encrypted = await encrypt({message, encryptionKeys: decodedPublicKey});
     return btoa(encrypted);
 }
-export {DescriptionPreview, i18nString, GetLanguage, LogIn, initWeb3, checkAuth, initWeb3Modal, clearWeb3Provider,clearTronProvider, 
+export {DescriptionPreview, i18nString, GetLanguage, LogIn, initWeb3, checkAuth, initWeb3Modal, clearWeb3Provider,clearTronProvider,
     getPCIPublicKey, encryptCardData, LogInTron, initTronadapter, checkAuthTron, initTron };
 export default Utilities;

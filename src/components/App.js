@@ -1,5 +1,4 @@
 import {Component, Suspense} from 'react';
-import axios from 'axios';
 import React from 'react';
 import CampaignPage from './CampaignPage';
 import CreateCampaign from './CreateCampaign';
@@ -98,7 +97,7 @@ class App extends Component {
                                         <option value='en'>{i18n.t('english')}</option>
                                         <option value='ru'>{i18n.t('russian')}</option>
                                     </select>
-                                    <Nav.Link target="_blank" as='a' href={lang == "ru" ? "https://docs.heo.finance/v/russian/" : "https://docs.heo.finance/"} className='upperNavText' id='helpBtn'><Trans i18nKey='help'/></Nav.Link>
+                                    <Nav.Link target="_blank" as='a' href={lang === "ru" ? "https://docs.heo.finance/v/russian/" : "https://docs.heo.finance/"} className='upperNavText' id='helpBtn'><Trans i18nKey='help'/></Nav.Link>
                                 </Navbar.Collapse>
                             </Container>
                         </Navbar>
@@ -107,10 +106,10 @@ class App extends Component {
                         <Modal onHide={()=>{}} show={this.state.showModal} className='myModal' centered>
                             <Modal.Body>
                                 <p className='modalIcon'>
-                                    {this.state.modalIcon == 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
-                                    {this.state.modalIcon == 'ExclamationTriangle' && <ExclamationTriangle/>}
-                                    {this.state.modalIcon == 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
-                                    {this.state.modalIcon == 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
+                                    {this.state.modalIcon === 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
+                                    {this.state.modalIcon === 'ExclamationTriangle' && <ExclamationTriangle/>}
+                                    {this.state.modalIcon === 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
+                                    {this.state.modalIcon === 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
                                 </p>
                                 <p className='modalTitle'><Trans i18nKey={this.state.modalTitle} /></p>
                                 <p className='modalMessage'><Trans i18nKey={this.state.modalMessage} /></p>

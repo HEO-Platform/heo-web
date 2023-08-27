@@ -7,7 +7,7 @@ import countries from '../countries';
 import states from '../states';
 
 const COUNTRIES_FOR_3DS = [
-'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 
+'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU',
 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE',
 ]
 
@@ -61,12 +61,12 @@ class CCData extends Component {
                 //no specific focus, unknown error
             } else {
                 if(this.props.currentCCInfo.ccErrorType) {
-                    this[this.props.currentCCInfo.ccErrorType].focus(); 
-                }               
+                    this[this.props.currentCCInfo.ccErrorType].focus();
+                }
             }
         }
     }
-      
+
     handleInputChange = (e) => {
         var { name, value } = e.target;
         if(value) {
@@ -77,7 +77,7 @@ class CCData extends Component {
                         value = [value.slice(0,4), ' ', value.slice(4,8), ' ', value.slice(8,12), ' ', value.slice(12)].join('');
                     } else if(e.nativeEvent.inputType === 'deleteContentBackward') {
                         break;
-                    } else {                       
+                    } else {
                         if((/[0-9]/).test(value.charAt(value.length-1))) {
                             if(value.length === 4 || value.length === 9 || value.length === 14) {
                                 value = value + ' ';
@@ -94,7 +94,7 @@ class CCData extends Component {
                         return
                     }
                     break;
-                case 'expYear': 
+                case 'expYear':
                     if(!(/[0-9]/).test(value.charAt(value.length-1)) ||  value.length > 4) {
                         return;
                     }
@@ -139,6 +139,8 @@ class CCData extends Component {
                 case 'threeDs':
                     this.setState({threeDs: !this.state.threeDs})
                     break;
+                default:
+                    break;
             }
         }
         this.setState(prevState => ({
@@ -151,14 +153,14 @@ class CCData extends Component {
 
     handleSubmit = async (e) => {
         e.preventDefault();
-        if(this.state.ccinfo.phoneNumber, this.state.ccinfo.country) {
+        if(this.state.ccinfo.phoneNumber && this.state.ccinfo.country) {
             if(!isValidPhoneNumber(this.state.ccinfo.phoneNumber, this.state.ccinfo.country)) {
                 this.setState({errorMessage : 'validPhone'});
                 this.phoneNumberInput.focus();
                 return;
             } else {
                 this.setState({errorMessage: ''});
-            }  
+            }
         }
         let data = this.state.ccinfo;
         data.number = (data.number).replace(/ /g, '');
@@ -166,20 +168,20 @@ class CCData extends Component {
         phoneNumberE164.format('E.164');
         this.setState({errorMessage: ''});
         data.phoneNumber = phoneNumberE164.number;
-        if(this.state.threeDs) { 
+        if(this.state.threeDs) {
             data.verification = 'three_d_secure';
         } else {
             data.verification = 'cvv';
         }
-        this.props.handleGetCCInfo(data); 
+        this.props.handleGetCCInfo(data);
         this.props.handleCCInfoCancel();
-        
+
     }
 
     handleCancel = () => {
         this.props.handleCCInfoCancel();
     }
-  
+
     render() {
         return (
             <div>
@@ -208,8 +210,8 @@ class CCData extends Component {
                                         ref={(input) => this.expYearInput = input} autoComplete='cc-exp-year'
                                     />
                                     <Form.Control type="text" name="cvc" placeholder={i18n.t('cvc')} required className='cvcInput'
-                                    pattern="[0-9]{3}" title={i18n.t('cvc3digit')} value={this.state.ccinfo.cvc} onChange={this.handleInputChange}   
-                                    ref={(input) => this.cvvInput = input} autoComplete='cc-csc'/> 
+                                    pattern="[0-9]{3}" title={i18n.t('cvc3digit')} value={this.state.ccinfo.cvc} onChange={this.handleInputChange}
+                                    ref={(input) => this.cvvInput = input} autoComplete='cc-csc'/>
                                 </div>
                                 <div className="ccInfoTitles">{i18n.t('billingInfo')}</div>
                                 <Form.Control type="text" name="email" placeholder={i18n.t('email')} required className='ccInfoFormPlaceHolder'
@@ -230,13 +232,13 @@ class CCData extends Component {
                                 <Form.Control as="select" name='country' required className='countryZip' value='' onChange={this.handleInputChange}
                                  ref={(input) => this.countryInput = input} autoComplete='country' >
                                     <option value={this.state.ccinfo.country ? this.state.ccinfo.country : ''}>{this.state.ccinfo.country ? this.state.ccinfo.country : i18n.t('country')}</option>
-                                    {countries.map((data) => <option value={data.value}>{data.text}</option>)} 
+                                    {countries.map((data) => <option value={data.value}>{data.text}</option>)}
                                 </Form.Control>
                                 <Form.Control type="text" name="postalCode" placeholder={i18n.t('postalCode')} required className='countryZip' autoComplete='postal-code'
                                     value={this.state.ccinfo.postalCode} onChange={this.handleInputChange}  ref={(input) => this.postalCodeInput = input}
                                 />
                                 {this.state.knownStates && <Form.Control as="select" name="district" required className='ccInfoFormPlaceHolder' onChange={this.handleInputChange}
-                                    ref={(input)=> this.districtInput = input}> 
+                                    ref={(input)=> this.districtInput = input}>
                                     <option value=''>{i18n.t('state')}</option>
                                     {states[this.state.ccinfo.country].map((data) => <option value={data.value}>{data.text}</option>)}
                                 </Form.Control>}
@@ -255,9 +257,9 @@ class CCData extends Component {
                                 <br/>
                                 <br/>
                                 <Button id="CCdonateBtn" type="Submit">{i18n.t('donate')}</Button>
-                                <Button id="CCcancelBtn" onClick={()=>this.handleCancel()}>{i18n.t('cancel')}</Button> 
+                                <Button id="CCcancelBtn" onClick={()=>this.handleCancel()}>{i18n.t('cancel')}</Button>
                                 <br/>
-                                <br/>                          
+                                <br/>
                             </Form>
                         </Container>
                     </div>
@@ -266,5 +268,5 @@ class CCData extends Component {
         );
     }
 }
-    
+
 export default CCData;
