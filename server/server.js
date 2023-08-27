@@ -16,6 +16,7 @@ const Tracing = require("@sentry/tracing");
 const ServerLib = require('./serverLib');
 const CircleLib = require('./circleLib');
 const PayadmitLib = require('./payadmitLib');
+
 const StripeLib = require('./stripeLib');
 const CoinbaseLib = require('./coinbaseLib');
 
@@ -29,6 +30,7 @@ const APP = EXPRESS();
 const serverLib = new ServerLib();
 const circleLib = new CircleLib();
 const payadmitLib = new PayadmitLib();
+
 const stripeLib = new StripeLib();
 const coinbaseLib = new CoinbaseLib();
 
@@ -57,22 +59,6 @@ APP.use(Sentry.Handlers.tracingHandler());
 
 APP.use(FILE_UPLOAD());
 APP.use(CORS());
-
-APP.post('/api/stripenotifications', EXPRESS.raw({type: 'application/json'}),async (req, res) => {
-    const DB = CLIENT.db(DBNAME);
-    let fiatPayment;
-    try {
-        fiatPayment = await serverLib.handleGetFiatPaymentSettings(DB, Sentry);
-    } catch (err) {Sentry.captureException(new Error(err));}
-
-    if (fiatPayment && fiatPayment === 'stripeLib') {
-        stripeLib.handleNotification(req, res, STRIPE_API_KEY, STRIPE_WH_SECRET, CLIENT, DBNAME, Sentry);
-        res.sendStatus(200);
-    } else {
-        res.status(503).send('serviceNotAvailable');
-    }
-});
-
 APP.use(EXPRESS.json());
 
 const URL = `mongodb+srv://${process.env.MONGO_LOGIN}:${process.env.MONGODB_PWD}${process.env.MONGO_URL}`;
@@ -84,10 +70,13 @@ const CIRCLEARN = /^arn:aws:sns:.*:908968368384:(sandbox|prod)_platform-notifica
 const validator = new MessageValidator();
 const PAYADMIT_API_KEY = process.env.PAYADMIT_API_KEY;
 const PAYADMIT_API_URL = process.env.PAYADMIT_API_URL;
+<<<<<<< HEAD
 const STRIPE_API_KEY = process.env.STRIPE_API_KEY;
 const STRIPE_WH_SECRET = process.env.STRIPE_WH_SECRET;
 const COINBASE_API_KEY = process.env.COINBASE_API_KEY;
 const COINBASE_SHARED_SECRET = process.env.COINBASE_SHARED_SECRET;
+=======
+>>>>>>> vlad_30_05_2023
 
 CLIENT.connect(err => {
     if(err) {
@@ -104,7 +93,7 @@ const S3 = new AWS.S3({
     secretAccessKey: process.env.SERVER_APP_ACCESS_KEY
 });
 
-async function getId(DB, key){
+getId = async(DB, key) =>{
     try {
         const myCollection = await DB.collection('campaigns');
         let result = await myCollection.findOne({"key" : key});
@@ -144,9 +133,8 @@ APP.post('/api/circlenotifications', async (req, res) => {
     } else {res.status(503).send('serviceNotAvailable');}
 });
 
-
 APP.post('/api/uploadimage', (req,res) => {
-    if(serverLib.authenticated(req, res, Sentry)) serverLib.handleUploadImage(req, res, S3, Sentry);
+ if(serverLib.authenticated(req, res, Sentry)) serverLib.handleUploadImage(req, res, S3, Sentry);
 });
 
 APP.post('/api/deleteimage', (req, res) => {
@@ -188,11 +176,6 @@ APP.post('/api/campaign/deactivate', (req, res) => {
     }
 });
 
-APP.post('/api/campaign/loadFinishedCampaigns', (req, res) => {
-    const DB = CLIENT.db(DBNAME);
-    serverLib.handleLoadFinishedCampaigns(req, res, Sentry, DB);
-});
-
 APP.post('/api/campaign/loadAll', (req, res) => {
     const DB = CLIENT.db(DBNAME);
     serverLib.handleLoadAllCampaigns(req, res, Sentry, DB);
@@ -231,18 +214,28 @@ APP.post('/api/campaign/loadOne', (req, res) => {
 APP.post('/api/campaign/loadUserCampaigns', (req, res) => {
     if(serverLib.authenticated(req, res, Sentry)) {
         const DB = CLIENT.db(DBNAME);
-
         serverLib.handleLoadUserCampaigns(req, res, Sentry, DB);
     }
 });
 
 APP.get('/api/env', (req, res) => {
     const DB = CLIENT.db(DBNAME);
-    serverLib.handleLoadEnv(res, process.env.CHAIN, Sentry, DB);
+    serverLib.handleLoadEnv(res, process.env.CHAIN, process.env.TRON_CHAIN, Sentry, DB);
 });
 
 APP.get('/api/auth/msg', (req, res) => {
     res.json({dataToSign:`Today is ${(new Date()).toDateString()}`});
+});
+
+APP.post('/api/auth/jwt_tron', async(req, res) =>{
+    try{
+        let token = jsonwebtoken.sign({ address:req.body.addr.toLowerCase() }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        res.cookie('authToken', token, { httpOnly: true }).send({success:true});
+    } catch (err) {
+        console.log(err);
+        Sentry.captureException(new Error(err));
+        res.sendStatus(401);
+    }
 });
 
 APP.post('/api/auth/jwt', async(req, res) => {
@@ -309,13 +302,13 @@ APP.get('/api/circle/publickey', async (req, res) => {
 });
 
 
-  
+
 /**
  * webhook for Coinbase Commerce notifications
  */
 APP.post('/api/coinbasecommerce', async (req, res) => {
     const sharedSecret = process.env.COINBASE_SHARED_SECRET;
-  
+
     // Verify the webhook notification using the shared secret
 //    const signature = req.headers['x-cc-webhook-signature'];
 //    const isValid = coinbaseLib.verifyWebhookPayload(signature, req.body, sharedSecret, Sentry);
@@ -365,7 +358,6 @@ APP.post('/api/donatefiat', async (req, res) => {
     const DB = CLIENT.db(DBNAME);
     let fiatPayment;
     try {
-        console.log("Looking up fiat library");
         fiatPayment = await serverLib.handleGetFiatPaymentSettings(DB, Sentry);
     } catch (err) {
         Sentry.captureException(new Error(err));
@@ -378,9 +370,9 @@ APP.post('/api/donatefiat', async (req, res) => {
     } else if (fiatPayment && fiatPayment === 'stripeLib') {
         console.log("Handing fiat via Stripe");
         stripeLib.handleDonateFiat(req, res, STRIPE_API_KEY, CLIENT, DBNAME, Sentry);
+    } else {
+        res.status(503).send('serviceNotAvailable');
     }
-    else {res.status(503).send('serviceNotAvailable');}
-
 });
 
 // Handles crypto payment initiation via coinbase commerce
@@ -454,7 +446,7 @@ APP.use(function onError(err, req, res, next) {
      * and optionally displayed to the user for support.
      */
     res.statusCode = 500;
-    res.send(res.sentry + "\n");
+    res.end(res.sentry + "\n");
 });
 
 APP.listen(PORT);
