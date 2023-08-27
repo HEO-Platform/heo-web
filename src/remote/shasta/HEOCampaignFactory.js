@@ -118,6 +118,6 @@ const abi=[
         "type": "function"
     }
 ];
-const address = "TVRDVuFxuFY2gXCDxUrBDLU1rvcgfiBkBn";
+const address = "TScC45rURm47pPiG5MZb6skscSXUS47Sen";
 
 export {abi, address};
