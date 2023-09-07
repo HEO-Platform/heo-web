@@ -6,6 +6,7 @@ import WalletConnectProvider from '@walletconnect/web3-provider';
 import ReactGA from "react-ga4";
 import { createMessage, encrypt, readKey } from 'openpgp';
 import {TronLinkAdapter} from '@tronweb3/tronwallet-adapter-tronlink';
+import TronWeb from 'tronweb';
 
 ReactGA.initialize("G-C657WZY5VT");
 
@@ -35,7 +36,9 @@ const LogInTron = async (that) => {
     if(!window.tronAdapter){
         await initTronadapter();
     }
+    console.log("Метка 1");
     let res = await axios.get('/api/auth/msg');
+    console.log("Метка 2");
     let dataToSign = res.data.dataToSign;
     let hexStrWithout0x = window.tronWeb.toHex(dataToSign).replace(/^0x/, '');
     let byteArray = window.tronWeb.utils.code.hexStr2byteArray(hexStrWithout0x);
@@ -167,12 +170,7 @@ const initTron = async (chainId, that) => {
     if(!window.tronAdapter){
         await initTronadapter();
     }
-    let provider = await window.tronAdapter.connect();
-    /*
-    provider.on("disconnect", (code, reason) => {
-        that.setState({accounts: null});
-    });
-    */
+    await window.tronAdapter.connect();
     let chainConfig = config.get("CHAINS")[chainId];
     if(!chainConfig) {
       throw(`Unsupported blockchain: ${chainId}`);
@@ -214,9 +212,7 @@ const initTron = async (chainId, that) => {
 
 const initWeb3 = async (chainId, that) => {
 
-    //if(!window.web3Modal) {
-        await initWeb3Modal(chainId);
-   // }
+    await initWeb3Modal(chainId);
     let provider = await window.web3Modal.connect();
     provider.on("disconnect", (code, reason) => {
         that.setState({web3:null, accounts: null});
@@ -407,6 +403,7 @@ const encryptCardData = async(keyData, cardData) => {
     const encrypted = await encrypt({message, encryptionKeys: decodedPublicKey});
     return btoa(encrypted);
 }
+
 export {DescriptionPreview, i18nString, GetLanguage, LogIn, initWeb3, checkAuth, initWeb3Modal, clearWeb3Provider,clearTronProvider,
     getPCIPublicKey, encryptCardData, LogInTron, initTronadapter, checkAuthTron, initTron };
 export default Utilities;

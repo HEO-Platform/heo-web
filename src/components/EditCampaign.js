@@ -267,7 +267,11 @@ class EditCampaign extends React.Component {
                       if (txnObject.receipt)  break;   
                     }
                 }while(m != 2);  
-            if(txnObject.receipt.result != "SUCCESS") return false;
+            if(txnObject.receipt.result != "SUCCESS"){
+                this.setState({currentError : 'checkMetamask'});
+                console.log("updating Tron transaction failed"); 
+                return false;   
+            }
             let dataForDB = {address: this.state.campaignId, dataToUpdate: data};
             try {
                await axios.post('/api/campaign/update', {mydata : dataForDB},
