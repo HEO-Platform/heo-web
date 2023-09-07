@@ -295,7 +295,7 @@ class CreateCampaign extends React.Component {
                     }
                 } while(m != 2);
 
-                if (txnObject.receipt.result == "SUCCESS") {
+                if (txnObject.receipt.result === "SUCCESS") {
                   m = 1;
                   let transEvent;
                   do {
@@ -314,12 +314,13 @@ class CreateCampaign extends React.Component {
                 } else {
                   console.log(`createCampaign transaction failed ${txnObject.receipt.result}`);
                   this.setState({showModal: true, goHome: true,
-                    modalTitle: 'addToDbFailedTitle',
-                    modalMessage: 'addToDbFailedMessage',
-                    modalIcon: 'CheckCircle',
+                    modalTitle: 'blockChainTransactionFailed',
+                    modalMessage: 'checkMetamask',
+                    modalIcon: 'XCircle',
                     modalButtonMessage: 'returnHome',
-                    modalButtonVariant: "#588157", waitToClose: false
+                    modalButtonVariant: "#E63C36", waitToClose: false
                   });
+                  console.log("createCampaign transaction failed");
                   return false;
                 }
             } catch (err) {
