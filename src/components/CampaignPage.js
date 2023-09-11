@@ -452,6 +452,7 @@ class CampaignPage extends Component {
             let result = await coinInstance.methods.transfer(campaignAddress, toDonate)
             .send({from:window.tronAdapter.address,callValue:0,feeLimit:15000000000,shouldPollResponse:false});
             this.setState({showModal:true,
+                modalTitle: 'processingWait',
                 modalMessage: 'waitingForNetwork', errorIcon:'HourglassSplit',
                 modalButtonVariant: "gold", waitToClose: true});
             let txnObject;
