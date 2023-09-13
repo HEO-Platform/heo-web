@@ -79,7 +79,7 @@ APP.use(EXPRESS.json());
 
 const URL = `mongodb+srv://${process.env.MONGO_LOGIN}:${process.env.MONGODB_PWD}${process.env.MONGO_URL}`;
 const DBNAME = process.env.MONGO_DB_NAME;
-const CLIENT = new MongoClient(URL);
+const CLIENT = new MongoClient(URL, { useUnifiedTopology: true });
 const CIRCLE_API_URL = process.env.CIRCLE_API_URL;
 const CIRCLE_API_KEY = process.env.CIRCLE_API_KEY;
 const CIRCLEARN = /^arn:aws:sns:.*:908968368384:(sandbox|prod)_platform-notifications-topic$/;
@@ -176,6 +176,11 @@ APP.post('/api/donate/adddanate', async (req, res) => {
     }
 });
 
+APP.post('/api/email/sendemail', (req, res) => {
+        const DB = CLIENT.db(DBNAME);
+        serverLib.handleSendEmail(req, res, Sentry, DB);
+});
+
 APP.post('/api/campaign/update', (req, res) => {
     if(serverLib.authenticated(req, res, Sentry)) {
         const DB = CLIENT.db(DBNAME);
@@ -246,6 +251,7 @@ APP.post('/api/auth/jwt_tron', async(req, res) =>{
         let token = jsonwebtoken.sign({ address:req.body.addr.toLowerCase() }, process.env.JWT_SECRET, { expiresIn: '7d' });
         res.cookie('authToken', token, { httpOnly: true }).send({success:true});
     } catch (err) {
+        console.log("Ошибка авторизации:"); 
         console.log(err);
         Sentry.captureException(new Error(err));
         res.sendStatus(401);

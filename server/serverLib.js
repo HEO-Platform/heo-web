@@ -2,6 +2,8 @@ const { registerRequestInstrumentation } = require('@sentry/tracing');
 const { default: axios } = require('axios');
 const { ObjectId } = require('mongodb');
 const {Web3} = require('web3');
+const nodemailer = require('nodemailer');
+
 
 class ServerLib {
     constructor() {
@@ -41,6 +43,32 @@ class ServerLib {
                 res.send('complete');
             }
         });
+    }
+
+    async handleSendEmail(req, res, Sentry, DB){
+       try{
+        const emailCollection = await DB.collection('email_config');
+        let result = await emailCollection.findOne({"_id" : req.body.key});  
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+              user: result.user,
+              pass: result.pass
+            }
+          });
+         await transporter.sendMail({
+            from: result.from, // sender address
+            to: result.to, // list of receivers
+            subject: result.subject, // Subject line
+            text: req.body.text // html body
+          }).then(info => {
+            console.log({info});
+          }).catch(console.error); 
+       } catch (err) {
+        Sentry.captureException(new Error(err));
+        res.sendStatus(500);
+       }
+
     }
 
     async handleAddDanate(req, res, Sentry, DB){
@@ -93,7 +121,7 @@ class ServerLib {
             lastDonationTime: 0,
             coins: req.body.mydata.coins,
             addresses: req.body.mydata.addresses,
-            active: true,
+            active: false,
             new: true
         }
         try {
@@ -112,7 +140,7 @@ class ServerLib {
             const myCollection = await DB.collection('campaigns');
             result = await myCollection.findOne({"_id" : req.body.mydata.address});
         } catch (err) {
-            Sentry.captureException(new Error(error));
+            Sentry.captureException(new Error(err));
         }
 
         if(!result || result.ownerId != req.user.address.toLowerCase()) {
@@ -151,10 +179,23 @@ class ServerLib {
 
     async handleLoadAllCampaigns(req, res, Sentry, DB) {
         try{
+           
+            const emailCollection = await DB.collection('email_config');
+            /*
+            let result1 = await emailCollection.findOne({"_id" : "New Campaign Alert"});
+            let user = result1.user;
+            let pass = result1.pass;
+            let from = result1.from;
+            let to = result1.to;
+            let subject = result1.subject;
+            let text = "There is a new campaign. Please review."
+            */
+             
             const myCollection = await DB.collection('campaigns');
             const campaigns = await myCollection.find({active: true});
             const sortedCampaigns = await campaigns.sort({"lastDonationTime" : -1});
             const result = await sortedCampaigns.toArray();
+
             res.send(result);
         } catch (err) {
             Sentry.captureException(new Error(err));

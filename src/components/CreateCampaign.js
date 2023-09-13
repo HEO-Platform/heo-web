@@ -61,7 +61,8 @@ class CreateCampaign extends React.Component {
             tronChainId:"",
             defDonationAmount: 10,
             fiatPayments: true,
-            key: ""
+            key: "",
+            showModalPrevent: "false"
         }
     };
 
@@ -222,19 +223,25 @@ class CreateCampaign extends React.Component {
             let res = await axios.post('/api/campaign/add', {mydata : campaignData},
                 {headers: {"Content-Type": "application/json"}});
             this.setState({showModal:true, goHome: true,
-                modalMessage: 'campaignCreateSuccess',
+                modalMessage: 'campaignwWillBePublished',
                 modalTitle: 'success',
                 modalIcon: 'CheckCircle',
                 modalButtonMessage: 'returnHome',
                 modalButtonVariant: "#588157", waitToClose: false
             });
+            let text = "There is a new campaign. Please review. " + "Сampaign title - " + campaignData.title["default"] +
+             ". Сampaign name " + campaignData.org["default"] + ". Сampaign ID - " +  campaignData.address + ". Сampaign beneficiary - " + 
+             campaignData.beneficiaryId + ".";
+            let data = {key : "New Campaign Alert",text: text};
+            axios.post('/api/email/sendemail', data, {headers: {"Content-Type": "application/json"}});
+
         } catch (err) {
             this.setState({showModal: true, goHome: true,
-                modalTitle: 'addToDbFailedTitle',
-                modalMessage: 'addToDbFailedMessage',
+                modalTitle: 'failed',
+                modalMessage: 'errorWritingCampaignToDB"',
                 modalIcon: 'CheckCircle',
                 modalButtonMessage: 'returnHome',
-                modalButtonVariant: "#588157", waitToClose: false
+                modalButtonVariant: "#E63C36", waitToClose: false
             });
             console.log('error adding campaign to the database ' + err.message);
         }
@@ -514,7 +521,43 @@ class CreateCampaign extends React.Component {
 
         return (
             <div>
-
+               <Modal show={this.state.showModalPrevent} onHide={()=>{}} className='myModal'>
+               <Modal.Header>
+                <p className='modalTitle'><Trans i18nKey={'preventionTitle'}/></p>   
+                </Modal.Header> 
+                <Modal.Body className='createFormPlaceHolder'> 
+                <Container fluid>
+                <Row>
+                 <Col xs lg="1"><p>1</p></Col> 
+                 <Col><p><Trans i18nKey={'prevention1'}/></p></Col>  
+                </Row> 
+                <Row>
+                 <Col xs lg="1">2</Col> 
+                 <Col><p><Trans i18nKey={'prevention2'}/></p></Col>  
+                </Row> 
+                <Row>
+                 <Col xs lg="1">3</Col> 
+                 <Col><p><Trans i18nKey={'prevention3'}/></p></Col>  
+                </Row> 
+                <Row>
+                 <Col xs lg="1"> </Col> 
+                 <Col><p><Trans i18nKey={'preventionNB'}/></p></Col>  
+                </Row>
+                <Row>
+                 <Col xs lg="1">4</Col>
+                 <Col><p><Trans i18nKey={'prevention4'}/></p></Col>  
+                </Row>
+                </Container>
+                <Button className='myModalButton' 
+                  style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
+                  onClick={ async () => {this.setState({showModalPrevent:false});
+                  if ((window.tron)&&(window.ethereum)) this.setState({showModalDialog : true,showModal:false});
+                  else this.setState({showModalDialog : false, showModal : true});
+                  }} >
+                  <Trans i18nKey={'ok'} />  
+                 </Button> 
+                 </Modal.Body>
+                </Modal>  
                <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' centered>
                     <Modal.Body><p className='modalIcon'>
                         {this.state.modalIcon == 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
@@ -992,8 +1035,10 @@ class CreateCampaign extends React.Component {
                 modalButtonVariant: "#E63C36", waitToClose: false});
         }
 
-        if ((window.tron)&&(window.ethereum)) this.setState({showModalDialog : true,showModal:false});
-        else this.setState({showModalDialog : false, showModal : true});
+        //if ((window.tron)&&(window.ethereum)) this.setState({showModalDialog : true,showModal:false});
+        //else this.setState({showModalDialog : false, showModal : true});
+        this.setState({showModalDialog : false, showModal : false});
+        this.setState({showModalPrevent: true});
     }
 }
 
