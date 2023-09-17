@@ -45,10 +45,12 @@ class ServerLib {
         });
     }
 
-    async handleSendEmail(req, res, Sentry, DB){
+    async handleSendEmail(req, res, Sentry, key, text, DB){
        try{
-        const emailCollection = await DB.collection('email_config');
-        let result = await emailCollection.findOne({"_id" : req.body.key});  
+        const emailCollection = await DB.collection('global_configs');
+        let result = await emailCollection.findOne({"_id" : key}); 
+        console.log("result");
+        console.log(result);
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -60,15 +62,15 @@ class ServerLib {
             from: result.from, // sender address
             to: result.to, // list of receivers
             subject: result.subject, // Subject line
-            text: req.body.text // html body
+            text: text // html body
           }).then(info => {
             console.log({info});
+            res.send('success');
           }).catch(console.error); 
        } catch (err) {
         Sentry.captureException(new Error(err));
         res.sendStatus(500);
        }
-
     }
 
     async handleAddDanate(req, res, Sentry, DB){
@@ -127,10 +129,10 @@ class ServerLib {
         try {
             const myCollection = await DB.collection('campaigns');
             await myCollection.insertOne(ITEM);
-            res.send('success');
+            return true
         } catch (err) {
             Sentry.captureException(new Error(err));
-            res.sendStatus(500);
+            return false;
         }
     }
 
@@ -142,7 +144,6 @@ class ServerLib {
         } catch (err) {
             Sentry.captureException(new Error(err));
         }
-
         if(!result || result.ownerId != req.user.address.toLowerCase()) {
             Sentry.captureException(new Error(`Campaign's ownerId (${result.ownerId}) does not match the user (${req.user.address})`));
             res.sendStatus(500);
@@ -181,21 +182,10 @@ class ServerLib {
         try{
            
             const emailCollection = await DB.collection('email_config');
-            /*
-            let result1 = await emailCollection.findOne({"_id" : "New Campaign Alert"});
-            let user = result1.user;
-            let pass = result1.pass;
-            let from = result1.from;
-            let to = result1.to;
-            let subject = result1.subject;
-            let text = "There is a new campaign. Please review."
-            */
-             
             const myCollection = await DB.collection('campaigns');
             const campaigns = await myCollection.find({active: true});
             const sortedCampaigns = await campaigns.sort({"lastDonationTime" : -1});
             const result = await sortedCampaigns.toArray();
-
             res.send(result);
         } catch (err) {
             Sentry.captureException(new Error(err));

@@ -165,7 +165,13 @@ APP.post('/api/campaign/add', async (req, res) => {
                 walletId = await circleLib.createCircleWallet(req.body.mydata.address, CIRCLE_API_KEY, Sentry)
             }
         } catch (err) {Sentry.captureException(new Error(err));}
-        serverLib.handleAddCampaign(req, res, Sentry, DB, walletId);
+       if (serverLib.handleAddCampaign(req, res, Sentry, DB, walletId)){
+        const text = "There is a new campaign. Please review. " + "Сampaign title - " + req.body.mydata.title["default"] +
+        ". Сampaign name " + req.body.mydata.org["default"] + ". Сampaign ID - " +  req.body.mydata.address + ". Сampaign beneficiary - " + 
+        req.body.mydata.beneficiaryId + ". Сampaign owner - " + req.user.address + ".";
+        serverLib.handleSendEmail(req, res, Sentry, 'New Campaign Alert', text, DB);
+       }
+       else res.sendStatus(500);
     }
 });
 

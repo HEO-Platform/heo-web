@@ -229,12 +229,6 @@ class CreateCampaign extends React.Component {
                 modalButtonMessage: 'returnHome',
                 modalButtonVariant: "#588157", waitToClose: false
             });
-            let text = "There is a new campaign. Please review. " + "Сampaign title - " + campaignData.title["default"] +
-             ". Сampaign name " + campaignData.org["default"] + ". Сampaign ID - " +  campaignData.address + ". Сampaign beneficiary - " + 
-             campaignData.beneficiaryId + ".";
-            let data = {key : "New Campaign Alert",text: text};
-            axios.post('/api/email/sendemail', data, {headers: {"Content-Type": "application/json"}});
-
         } catch (err) {
             this.setState({showModal: true, goHome: true,
                 modalTitle: 'failed',
