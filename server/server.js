@@ -72,7 +72,7 @@ APP.use(EXPRESS.json());
 
 const URL = `mongodb+srv://${process.env.MONGO_LOGIN}:${process.env.MONGODB_PWD}${process.env.MONGO_URL}`;
 const DBNAME = process.env.MONGO_DB_NAME;
-const CLIENT = new MongoClient(URL);
+const CLIENT = new MongoClient(URL, { useUnifiedTopology: true });
 const CIRCLE_API_URL = process.env.CIRCLE_API_URL;
 const CIRCLE_API_KEY = process.env.CIRCLE_API_KEY;
 const CIRCLEARN = /^arn:aws:sns:.*:908968368384:(sandbox|prod)_platform-notifications-topic$/;
@@ -158,7 +158,13 @@ APP.post('/api/campaign/add', async (req, res) => {
                 walletId = await circleLib.createCircleWallet(req.body.mydata.address, CIRCLE_API_KEY, Sentry)
             }
         } catch (err) {Sentry.captureException(new Error(err));}
-        serverLib.handleAddCampaign(req, res, Sentry, DB, walletId);
+       if (serverLib.handleAddCampaign(req, res, Sentry, DB, walletId)){
+        const text = "There is a new campaign. Please review. " + "Сampaign title - " + req.body.mydata.title["default"] +
+        ". Сampaign name " + req.body.mydata.org["default"] + ". Сampaign ID - " +  req.body.mydata.address.toLowerCase() + ". Сampaign beneficiary - " + 
+        req.body.mydata.beneficiaryId.toLowerCase() + ". Сampaign owner - " + req.user.address.toLowerCase() + ". Сampaign key - " + req.body.mydata.key + ".";
+        serverLib.handleSendEmail(req, res, Sentry, 'New Campaign Alert', text, DB);
+       }
+       else res.sendStatus(500);
     }
 });
 
@@ -168,6 +174,7 @@ APP.post('/api/donate/adddanate', async (req, res) => {
        serverLib.handleAddDanate(req, res, Sentry, DB);
     }
 });
+
 
 APP.post('/api/campaign/update', (req, res) => {
     if(serverLib.authenticated(req, res, Sentry)) {
@@ -239,6 +246,7 @@ APP.post('/api/auth/jwt_tron', async(req, res) =>{
         let token = jsonwebtoken.sign({ address:req.body.addr.toLowerCase() }, process.env.JWT_SECRET, { expiresIn: '7d' });
         res.cookie('authToken', token, { httpOnly: true }).send({success:true});
     } catch (err) {
+        console.log("Ошибка авторизации:"); 
         console.log(err);
         Sentry.captureException(new Error(err));
         res.sendStatus(401);

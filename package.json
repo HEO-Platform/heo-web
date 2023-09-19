@@ -34,7 +34,7 @@
     "libphonenumber-js": "^1.9.49",
     "luxon": "^1.26.0",
     "mongodb": "^3.6.5",
-    "nodemailer": "^6.9.4",
+    "nodemailer": "^6.9.5",
     "npm-which": "^3.0.1",
     "openpgp": "^5.2.0",
     "react": "^17.0.1",
