@@ -167,8 +167,8 @@ APP.post('/api/campaign/add', async (req, res) => {
         } catch (err) {Sentry.captureException(new Error(err));}
        if (serverLib.handleAddCampaign(req, res, Sentry, DB, walletId)){
         const text = "There is a new campaign. Please review. " + "Сampaign title - " + req.body.mydata.title["default"] +
-        ". Сampaign name " + req.body.mydata.org["default"] + ". Сampaign ID - " +  req.body.mydata.address + ". Сampaign beneficiary - " + 
-        req.body.mydata.beneficiaryId + ". Сampaign owner - " + req.user.address + ".";
+        ". Сampaign name " + req.body.mydata.org["default"] + ". Сampaign ID - " +  req.body.mydata.address.toLowerCase() + ". Сampaign beneficiary - " + 
+        req.body.mydata.beneficiaryId.toLowerCase() + ". Сampaign owner - " + req.user.address.toLowerCase() + ". Сampaign key - " + req.body.mydata.key + ".";
         serverLib.handleSendEmail(req, res, Sentry, 'New Campaign Alert', text, DB);
        }
        else res.sendStatus(500);
