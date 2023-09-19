@@ -182,10 +182,6 @@ APP.post('/api/donate/adddanate', async (req, res) => {
     }
 });
 
-APP.post('/api/email/sendemail', (req, res) => {
-        const DB = CLIENT.db(DBNAME);
-        serverLib.handleSendEmail(req, res, Sentry, DB);
-});
 
 APP.post('/api/campaign/update', (req, res) => {
     if(serverLib.authenticated(req, res, Sentry)) {
