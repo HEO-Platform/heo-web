@@ -9,7 +9,8 @@ import i18n from '../util/i18n';
 import { ChevronLeft, CheckCircle, ExclamationTriangle, HourglassSplit, XCircle } from 'react-bootstrap-icons';
 import { Link } from 'react-router-dom';
 import { compress, decompress } from 'shrink-string';
-import TextEditor, { setEditorState, getEditorState, editorStateHasChanged } from '../components/TextEditor';
+import { getEditorStateEn, getEditorStateRu, TextEditorEn, TextEditorRu, setEditorStateEn, setEditorStateRu, editorStateHasChangedRu,
+        editorStateHasChangedEn } from '../components/TextEditor';
 import { initWeb3, checkAuth, initWeb3Modal, initTronadapter, checkAuthTron, initTron } from '../util/Utilities';
 import '../css/createCampaign.css';
 import '../css/modal.css';
@@ -48,13 +49,15 @@ class EditCampaign extends React.Component {
             fn:"",
             ln:"",
             orgEn:"",
-            org:"",
+            orgRu:"",
             ogOrg:{},
             cn:"",
             vl:"",
-            title:"",
+            titleEn:"",
+            titleRu:"",
             ogTitle:{},
-            description:"",
+            descriptionEn:"",
+            descriptionRu:"",
             ogDescription:{},
             mainImageURL: "",
             imgID:"",
@@ -65,7 +68,8 @@ class EditCampaign extends React.Component {
             updateMeta: false,
             campaignId: "",
             currentError:"",
-            updatedEditorState: false,
+            updatedEditorStateEn: false,
+            updatedEditorStateRu: false,
             chains:{},
             chainId:"",
             addresses: {},
@@ -121,14 +125,14 @@ class EditCampaign extends React.Component {
             }
         }
         //check if this campaign belongs to this user
-        if(editorStateHasChanged()) {
+        if(editorStateHasChangedEn()|| editorStateHasChangedRu()) {
             this.state.updateMeta = true;
         }
 
-        if(!this.state.org) {
+        if(!this.state.orgEn) {
             this.setState(
                 {showModal:true, modalTitle: 'requiredFieldsTitle',
-                    modalMessage: 'orgRequired', modalIcon: 'ExclamationTriangle',
+                    modalMessage: 'orgRequiredEn', modalIcon: 'ExclamationTriangle',
                     waitToClose: false,
                     modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
                 });
@@ -143,7 +147,7 @@ class EditCampaign extends React.Component {
                 });
             return false;
         }
-        if(!this.state.title) {
+        if(!this.state.titleEn) {
             this.setState(
                 {showModal:true, modalTitle: 'requiredFieldsTitle',
                     modalMessage: 'titleRequired', modalIcon: 'ExclamationTriangle',
@@ -152,7 +156,7 @@ class EditCampaign extends React.Component {
                 });
             return false;
         }
-        if(!this.state.description) {
+        if(!this.state.descriptionEn) {
             this.setState(
                 {showModal:true, modalTitle: 'requiredFieldsTitle',
                     modalMessage: 'shortDescRequired', modalIcon: 'ExclamationTriangle',
@@ -161,10 +165,12 @@ class EditCampaign extends React.Component {
                 });
             return false;
         }
-        let editorState = getEditorState();
-        if(!editorState || editorState.length < 2) {
-            console.log(`Editor state is empty ${editorState}`);
-            console.log(editorState);
+        
+        let n = 0; 
+        for (let i = 0; i < getEditorStateEn().blocks.length; i++){
+          n = n + getEditorStateEn().blocks[i].text.length; 
+        }
+        if (n < 3) {
             this.setState(
                 {showModal:true, modalTitle: 'requiredFieldsTitle',
                     modalMessage: 'longDescRequired', modalIcon: 'ExclamationTriangle',
@@ -172,6 +178,19 @@ class EditCampaign extends React.Component {
                     modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
                 });
             return false;
+        }
+        for (let i = 0; i < getEditorStateEn().blocks.length; i++){
+            for(let j = 0; j < getEditorStateEn().blocks[i].text.length; j++){
+              if (/^[А-Яа-я]*$/.test(getEditorStateEn().blocks[i].text[j]) === true){
+                  this.setState(
+                    {showModal:true, modalTitle: 'requiredFieldsTitle',
+                     modalMessage: 'longDescEnIncludRu', modalIcon: 'ExclamationTriangle',
+                     waitToClose: false,
+                     modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
+                  });
+                  return false;
+              }
+            } 
         }
         this.setState({showModal:true, modalTitle: 'processingWait',
                 modalMessage: 'waitingForNetwork',
@@ -236,13 +255,17 @@ class EditCampaign extends React.Component {
                 fiatPayments: this.state.fiatPayments
             };
             data.description = this.state.ogDescription;
-            data.description[i18n.language] = data.description["default"] = this.state.description;
+            data.description["en"] = data.description["default"] = this.state.descriptionEn;
+            data.description["ru"] = this.state.descriptionRu;
             data.title = this.state.ogTitle;
-            data.title[i18n.language] = data.title["default"] = this.state.title;
+            data.title["default"] = this.state.titleEn;
+            data.title["en"] = this.state.titleEn;
+            data.title["ru"] = this.state.titleRu;
             data.descriptionEditor = this.state.ogDescriptionEditor;
-            data.descriptionEditor[i18n.language] = data.descriptionEditor["default"] = getEditorState();
+            data.descriptionEditor["en"] = data.descriptionEditor["default"] = getEditorStateEn();
+            data.descriptionEditor["ru"] = getEditorStateRu();
             data.org = this.state.ogOrg;
-            data.org[i18n.language] = data.org["default"] = this.state.org;
+            data.org[i18n.language] = data.org["default"] = this.state.orgEn;
             console.log(`Updating title to`);
             console.log(data.title);
             console.log(`Updating org to`);
@@ -267,11 +290,7 @@ class EditCampaign extends React.Component {
                       if (txnObject.receipt)  break;   
                     }
                 }while(m != 2);  
-            if(txnObject.receipt.result != "SUCCESS"){
-                this.setState({currentError : 'checkMetamask'});
-                console.log("updating Tron transaction failed"); 
-                return false;   
-            }
+            if(txnObject.receipt.result != "SUCCESS") return false;
             let dataForDB = {address: this.state.campaignId, dataToUpdate: data};
             try {
                await axios.post('/api/campaign/update', {mydata : dataForDB},
@@ -312,13 +331,15 @@ class EditCampaign extends React.Component {
                 fiatPayments: this.state.fiatPayments
             };
             data.description = this.state.ogDescription;
-            data.description[i18n.language] = data.description["default"] = this.state.description;
+            data.description["en"] = data.description["default"] = this.state.descriptiont;
             data.title = this.state.ogTitle;
-            data.title[i18n.language] = data.title["default"] = this.state.title;
+            data.title["en"] = data.title["default"] = this.state.titleEn;
             data.descriptionEditor = this.state.ogDescriptionEditor;
-            data.descriptionEditor[i18n.language] = data.descriptionEditor["default"] = getEditorState();
+            data.descriptionEditor["en"] = data.descriptionEditor["default"] = getEditorStateEn();
+            data.descriptionEditor["ru"] = getEditorStateRu();
             data.org = this.state.ogOrg;
-            data.org[i18n.language] = data.org["default"] = this.state.org;
+            data.org["en"] = data.org["default"] = this.state.orgEn;
+            data.org["ru"] = this.state.orgRu;
             console.log(`Updating title to`);
             console.log(data.title);
             console.log(`Updating org to`);
@@ -453,8 +474,24 @@ class EditCampaign extends React.Component {
                         <div className='titles'> <Trans i18nKey='aboutYou'/> </div>
                         <Form.Group >
                             <Form.Label><Trans i18nKey='organization'/><span className='redAsterisk'>*</span></Form.Label>
+                            <Row>
+                            <Col>  
+                            <Form.Label><Trans i18nKey='english'/><span className='redAsterisk'>*</span></Form.Label>
+                            </Col>
+                            <Col> 
+                            <Form.Label><Trans i18nKey='russian'/><span className='redAsterisk'></span></Form.Label> 
+                            </Col>
+                            </Row>
+                            <Row>
+                            <Col>  
                             <Form.Control required type="text" className="createFormPlaceHolder" placeholder={i18n.t('on')}
-                                name='org' value={this.state.org} onChange={this.handleChange} />
+                                name='orgEn' value={this.state.orgEn} onChange={this.handleChange}/>
+                            </Col>
+                            <Col> 
+                            <Form.Control required type="text" className="createFormPlaceHolder" placeholder={i18n.t('on')}
+                                name='orgRu' value={this.state.orgRu} onChange={this.handleChange}/>  
+                            </Col>
+                            </Row>     
                         </Form.Group>
                         <hr/>
                         <Form.Row>
@@ -516,15 +553,68 @@ class EditCampaign extends React.Component {
                         { this.state.vl != "" && <ReactPlayer url={this.state.vl} id='createCampaignVideoPlayer' />}
                         <Form.Group>
                             <Form.Label><Trans i18nKey='title'/><span className='redAsterisk'>*</span></Form.Label>
-                            <Form.Control required type="text" className="createFormPlaceHolder" placeholder={i18n.t('campaignTitle')}
-                                name='title' value={this.state.title} onChange={this.handleChange}/>
+                            <Row>
+                            <Col>  
+                            <Form.Label><Trans i18nKey='english'/><span className='redAsterisk'>*</span></Form.Label>
+                            </Col>
+                            <Col> 
+                            <Form.Label><Trans i18nKey='russian'/><span className='redAsterisk'></span></Form.Label> 
+                            </Col>
+                            </Row>
+                            <Row>
+                            <Col>
+                            <Form.Control required type="text" className="createFormPlaceHolder"
+                                          placeholder={i18n.t('campaignTitle')}
+                                          name='titleEn' value={this.state.titleEn} onChange={this.handleChange}/>
+                            </Col>
+                            <Col>
+                            <Form.Control required type="text" className="createFormPlaceHolder"
+                                          placeholder={i18n.t('campaignTitle')}
+                                          name='titleRu' value={this.state.titleRu} onChange={this.handleChange}/>
+                            </Col>
+                            </Row>              
                         </Form.Group>
                         <Form.Group>
-                            <Form.Label><Trans i18nKey='shortDescription'/><span className='redAsterisk'>*</span></Form.Label>
-                            <Form.Control required as="textarea" rows={5} className="createFormPlaceHolder" placeholder={i18n.t('descriptionOfCampaign')}
-                                name='description' value={this.state.description} onChange={this.handleTextArea} />
+                        <Form.Label><Trans i18nKey='shortDescription'/><span className='redAsterisk'>*</span></Form.Label>
+                            <Row>
+                            <Col>  
+                            <Form.Label><Trans i18nKey='english'/><span className='redAsterisk'>*</span></Form.Label>
+                            </Col>
+                            <Col> 
+                            <Form.Label><Trans i18nKey='russian'/><span className='redAsterisk'></span></Form.Label> 
+                            </Col>
+                            </Row>
+                            <Row>
+                            <Col>
+                            <Form.Control required as="textarea" rows={3} className="createFormPlaceHolder"
+                                          placeholder={i18n.t('descriptionOfCampaign')}
+                                          name='descriptionEn' value={this.state.descriptionEn}
+                                          maxLength='195' onChange={this.handleChange}/>
+                            </Col>    
+                            <Col>
+                            <Form.Control required as="textarea" rows={3} className="createFormPlaceHolder"
+                                          placeholder={i18n.t('descriptionOfCampaign')}
+                                          name='descriptionRu' value={this.state.descriptionRu}
+                                          maxLength='195' onChange={this.handleChange}/>
+                            </Col>  
+                            </Row>
                             <Form.Label><Trans i18nKey='campaignDescription'/><span className='redAsterisk'>*</span></Form.Label>
-                            {this.state.updatedEditorState && <TextEditor  />}
+                            <Row>
+                            <Col>  
+                            <Form.Label><Trans i18nKey='english'/><span className='redAsterisk'>*</span></Form.Label>
+                            </Col>
+                            <Col> 
+                            <Form.Label><Trans i18nKey='russian'/><span className='redAsterisk'></span></Form.Label> 
+                            </Col>
+                            </Row> 
+                            <Row>
+                            <Col>
+                            {this.state.updatedEditorStateEn && <TextEditorEn  />}
+                            </Col>  
+                            <Col>
+                            {this.state.updatedEditorStateRu && <TextEditorRu  />}
+                            </Col>   
+                            </Row>
                         </Form.Group>
                         <DropdownButton title={i18n.t('saveCampaignBtn')} id='createCampaignBtn' name='ff3'>
                         {Object.keys(this.state.chains).map((chain, i) =>
@@ -623,36 +713,30 @@ class EditCampaign extends React.Component {
         }
         var orgObj = {};
         if(typeof metaData.org == "string") {
-            orgObj.default = metaData.org;
-            orgObj[i18n.language] = metaData.org;
+            if ( metaData.org.en) orgObj["en"] =  metaData.org.en;
+            else  orgObj["en"] = "";
+            if ( metaData.org.en) orgObj["ru"] =  metaData.org.en;
+            else  orgObj["ru"] = "";
         } else {
             orgObj = metaData.org;
         }
         var titleObj = {};
         if(typeof metaData.title == "string") {
-            console.log(`metaData.title is a string (${metaData.title})`);
-            titleObj.default = metaData.title;
-            titleObj[i18n.language] = metaData.title;
+            if ( metaData.title.en) titleObj["en"] =  metaData.title.en;
+            else  titleObj["en"] = "";
+            if ( metaData.title.ru) titleObj["ru"] =  metaData.title.ru;
+            else  titleObj["ru"] = "";
         } else {
             titleObj = metaData.title;
         }
         var descriptionObj = {};
         if(typeof metaData.description == "string") {
-            descriptionObj.default = metaData.description;
-            descriptionObj[i18n.language] = metaData.description;
+            if ( metaData.description.en) descriptionObj["en"] =  metaData.description.en;
+            else  descriptionObj["en"] = "";
+            if ( metaData.description.ru) descriptionObj["ru"] =  metaData.description.ru;
+            else  descriptionObj["ru"] = "";
         } else {
             descriptionObj = metaData.description;
-        }
-        var descriptionEditorObj = {};
-        if(metaData.descriptionEditor && (metaData.descriptionEditor[i18n.language] || metaData.descriptionEditor["default"])) {
-            console.log("This campaign is multi-lingual on blockchain")
-            descriptionEditorObj = metaData.descriptionEditor;
-        } else if(metaData.descriptionEditor) {
-            console.log("This campaign has not been updated to multi-lingual on blockchain")
-            descriptionEditorObj = {"default": metaData.descriptionEditor};
-            descriptionEditorObj[i18n.language] = metaData.descriptionEditor;
-        } else {
-            console.log('No description editor state in metadata object');
         }
         this.setState({
             campaignId : id,
@@ -661,14 +745,16 @@ class EditCampaign extends React.Component {
             cn : metaData.cn,
             vl : metaData.vl,
             imgID: metaData.imgID,
-            org: orgObj[i18n.language],
-            orgEn:orgObj["default"],
+            orgRu: orgObj["ru"],
+            orgEn:orgObj["en"],
             ogOrg: orgObj,
-            title: titleObj[i18n.language],
+            titleRu: titleObj["ru"],
+            titleEn: titleObj["en"],
             ogTitle: titleObj,
-            description: descriptionObj[i18n.language],
+            descriptionRu: descriptionObj["ru"],
+            descriptionEn: descriptionObj["en"],
             ogDescription: descriptionObj,
-            ogDescriptionEditor: descriptionEditorObj,
+           // ogDescriptionEditor: descriptionEditorObj,
             mainImageURL: metaData.mainImageURL,
             maxAmount : maxAmount,
             chains: chains,
@@ -678,19 +764,27 @@ class EditCampaign extends React.Component {
             defDonationAmount: dbCampaignObj.defaultDonationAmount,
             fiatPayments: dbCampaignObj.fiatPayments
         });
+        if(metaData.descriptionEditor.en){
+            setEditorStateEn(metaData.descriptionEditor.en, true);
+            this.setState({updatedEditorStateEn : true});  
+        } 
+        else{
+            setEditorStateEn({}, false);
+            this.setState({updatedEditorStateEn : true}); 
+        } 
+        if(metaData.descriptionEditor.ru){
+            setEditorStateRu(metaData.descriptionEditor.ru, true);
+            this.setState({updatedEditorStateRu : true}); 
+        } 
+        else{
+            setEditorStateRu({}, false);
+            this.setState({updatedEditorStateRu : true}); 
+        } 
         console.log(`Set title to`);
         console.log(this.state.ogTitle);
         console.log(`Set org to`);
         console.log(this.state.ogOrg);
-        if(descriptionEditorObj[i18n.language]) {
-            setEditorState(descriptionEditorObj[i18n.language], true);
-            this.setState({updatedEditorState : true});
-        } else {
-            setEditorState({}, false);
-            this.setState({updatedEditorState : true});
-        }
     }
-
 }
 
 export default EditCampaign;
