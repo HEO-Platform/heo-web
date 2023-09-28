@@ -72,11 +72,11 @@
     "typescript": "^3.9.9"
   },
   "scripts": {
-    "start-react": "react-scripts start",
-    "start": "cd server && node server.js",
-    "install-all": "npm --loglevel=error install && cd server && npm --loglevel=error install",
-    "build": "react-scripts build && mv build/index.html build/_index.html",
-    "test": "react-scripts test",
+    "start-react": "export NODE_OPTIONS=--openssl-legacy-provider && react-scripts start",
+    "start": "export NODE_OPTIONS=--openssl-legacy-provider && cd server && node server.js",
+    "install-all": "export NODE_OPTIONS=--openssl-legacy-provider  && npm --loglevel=error install && cd server && npm --loglevel=error install",
+    "build": "export NODE_OPTIONS=--openssl-legacy-provider && react-scripts build && mv build/index.html build/_index.html",
+    "test": "export NODE_OPTIONS=--openssl-legacy-provider && react-scripts test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
