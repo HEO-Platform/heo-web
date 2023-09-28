@@ -10,7 +10,7 @@ import { Trans } from 'react-i18next';
 import i18n from '../util/i18n';
 import {UserContext} from './UserContext';
 import { LogIn, initWeb3, checkAuth, initWeb3Modal, LogInTron, initTronadapter, checkAuthTron, initTron } from '../util/Utilities';
-import TextEditor, { getEditorState, setEditorState } from '../components/TextEditor';
+import {getEditorStateEn, getEditorStateRu, TextEditorEn, TextEditorRu, setEditorStateEn, setEditorStateRu} from '../components/TextEditor';
 import { ChevronLeft, CheckCircle, ExclamationTriangle, HourglassSplit, XCircle } from 'react-bootstrap-icons';
 import { compress } from 'shrink-string';
 import '../css/createCampaign.css';
@@ -35,15 +35,17 @@ class CreateCampaign extends React.Component {
             modalButtonVariant: "",
             fn:"",
             ln:"",
-            org:"",
             orgEn:"",
+            orgRu:"",
             cn:"",
             vl:"",
-            title:"",
+            titleEn:"",
+            titleRu:"",
             maxAmount:10000,
             beneficiaryAddress:"",
             coinbaseCommerceURL:"",
-            description:"",
+            descriptionEn :"",
+            descriptionRu :"",
             raisedAmount:0,
             percentRaised: "0%",
             mainImageURL: "",
@@ -56,12 +58,14 @@ class CreateCampaign extends React.Component {
             editorContent: {},
             chains:{},
             chainConfig:{},
-            tronChainConfig:{},
+            tronChainConfig:{},            
             chainId:"",
             tronChainId:"",
             defDonationAmount: 10,
             fiatPayments: true,
             key: "",
+            editorStateEn: "",
+            editorStateRu: "",
             showModalPrevent: "false"
         }
     };
@@ -76,19 +80,19 @@ class CreateCampaign extends React.Component {
     };
 
     handleChange = e => {
-        if(e.target.name === 'orgEn'){
-          let help_value = '';
-          for(let i = 0; i < e.target.value.length; i++){
-           if ((/^[A-Za-z0-9]*$/.test(e.target.value[i]) === true)||(e.target.value[i] == ' '))
-            help_value += e.target.value[i];
+        if((e.target.name === 'orgEn')||(e.target.name === 'titleEn')||(e.target.name === 'descriptionEn')||(e.target.name === 'descriptionEn')){
+            let help_value = '';  
+            for(let i = 0; i < e.target.value.length; i++){
+             if (/^[А-Яа-я]*$/.test(e.target.value[i]) === false)
+              help_value += e.target.value[i];
+            }
+            e.target.value = help_value;
+            this.setState({ [e.target.name]: e.target.value });
           }
-          e.target.value = help_value
+          else if(e.target.name === 'fiatPayments')
+           this.setState({fiatPayments: e.target.checked});
+          else
           this.setState({ [e.target.name]: e.target.value });
-        }
-        else if(e.target.name === 'fiatPayments')
-         this.setState({fiatPayments: e.target.checked});
-        else
-        this.setState({ [e.target.name]: e.target.value });
     };
 
     fileSelected = e => {
@@ -100,7 +104,7 @@ class CreateCampaign extends React.Component {
     };
 
     async handleClick (event) {
-        //this.showHtml();
+        
         let imgID = uuid();
         let qrImgID = uuid();
         try {
@@ -113,15 +117,7 @@ class CreateCampaign extends React.Component {
                     });
                 return false;
             }
-            if(!this.state.org) {
-                this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle',
-                        modalMessage: 'orgRequired', modalIcon: 'ExclamationTriangle',
-                        waitToClose: false,
-                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                    });
-                return false;
-            }
+            
             if(!this.state.cn) {
                 this.setState(
                     {showModal:true, modalTitle: 'requiredFieldsTitle',
@@ -131,7 +127,7 @@ class CreateCampaign extends React.Component {
                     });
                 return false;
             }
-            if(!this.state.title) {
+            if(!this.state.titleEn) {
                 this.setState(
                     {showModal:true, modalTitle: 'requiredFieldsTitle',
                         modalMessage: 'titleRequired', modalIcon: 'ExclamationTriangle',
@@ -140,7 +136,7 @@ class CreateCampaign extends React.Component {
                     });
                 return false;
             }
-            if(!this.state.description) {
+            if(!this.state.descriptionEn) {
                 this.setState(
                     {showModal:true, modalTitle: 'requiredFieldsTitle',
                         modalMessage: 'shortDescRequired', modalIcon: 'ExclamationTriangle',
@@ -149,7 +145,11 @@ class CreateCampaign extends React.Component {
                     });
                 return false;
             }
-            if(!getEditorState() || getEditorState().length < 2) {
+            let n = 0; 
+            for (let i = 0; i < getEditorStateEn().blocks.length; i++){
+             n = n + getEditorStateEn().blocks[i].text.length; 
+            }
+            if (n < 3) {
                 this.setState(
                     {showModal:true, modalTitle: 'requiredFieldsTitle',
                         modalMessage: 'longDescRequired', modalIcon: 'ExclamationTriangle',
@@ -158,6 +158,21 @@ class CreateCampaign extends React.Component {
                     });
                 return false;
             }
+
+            for (let i = 0; i < getEditorStateEn().blocks.length; i++){
+                for(let j = 0; j < getEditorStateEn().blocks[i].text.length; j++){
+                  if (/^[А-Яа-я]*$/.test(getEditorStateEn().blocks[i].text[j]) === true){
+                      this.setState(
+                        {showModal:true, modalTitle: 'requiredFieldsTitle',
+                         modalMessage: 'longDescEnIncludRu', modalIcon: 'ExclamationTriangle',
+                         waitToClose: false,
+                         modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
+                        });
+                      return false;
+                  }
+                } 
+            }
+
             let qrImgUrl = '';
             let imgUrl = await this.uploadImageS3('main', imgID);
             if(this.state.qrCodeImageURL) {
@@ -192,16 +207,15 @@ class CreateCampaign extends React.Component {
 
     async addCampaignToDb(campaignData) {
         try {
-            campaignData.title = {"default": this.state.title};
-            campaignData.title[i18n.language] = this.state.title;
+            campaignData.title = {"default": this.state.titleEn};
+            campaignData.title["en"] = this.state.titleEn;
+            campaignData.title["ru"] = this.state.titleRu;
             campaignData.addresses = {};
-            if (window.blockChainOrt == "ethereum") {
-                campaignData.addresses[this.state.chainId] = campaignData.address;
-            } else if (window.blockChainOrt == "tron") {
-                campaignData.addresses[this.state.tronChainId] = campaignData.address;
-            }
+            if (window.blockChainOrt == "ethereum") campaignData.addresses[this.state.chainId] = campaignData.address;
+            else if (window.blockChainOrt == "tron") campaignData.addresses[this.state.tronChainId] = campaignData.address;
             campaignData.description = {"default": this.state.description};
-            campaignData.description[i18n.language] = this.state.description;
+            campaignData.description["en"] = this.state.descriptionEn;
+            campaignData.description["ru"] = this.state.descriptionRu;
             campaignData.mainImageURL = this.state.mainImageURL;
             campaignData.qrCodeImageURL = this.state.qrCodeImageURL;
             campaignData.maxAmount = this.state.maxAmount;
@@ -210,16 +224,20 @@ class CreateCampaign extends React.Component {
             campaignData.ln = this.state.ln;
             campaignData.org = {};
             campaignData.org["default"] = this.state.orgEn;
-            campaignData.org[i18n.language] = this.state.org;
+            campaignData.org["en"] = this.state.orgEn;
+            campaignData.org["ru"] = this.state.orgRu;
             campaignData.cn = this.state.cn;
             campaignData.key = this.state.key;
             campaignData.fiatPayments = true;
-            let editorState = getEditorState();
-            campaignData.descriptionEditor = {"default": editorState};
-            campaignData.descriptionEditor[i18n.language] = editorState;
+            this.state.editorStateEn = getEditorStateEn();
+            this.state.editorStateRu = getEditorStateRu();
+            campaignData.descriptionEditor = {"default": this.state.editorStateEn};
+            campaignData.descriptionEditor["en"] = this.state.editorStateEn;
+            campaignData.descriptionEditor["ru"] = this.state.editorStateRu;
             campaignData.coinbaseCommerceURL = this.state.coinbaseCommerceURL;
             campaignData.defaultDonationAmount = parseInt(this.state.defDonationAmount,10);
             campaignData.fiatPayments = this.state.fiatPayments;
+
             let res = await axios.post('/api/campaign/add', {mydata : campaignData},
                 {headers: {"Content-Type": "application/json"}});
             this.setState({showModal:true, goHome: true,
@@ -241,20 +259,28 @@ class CreateCampaign extends React.Component {
         }
     }
 
-
-
     async createCampaignTron(imgUrl, qrImgUrl) {
-        var titleObj = {"default": this.state.title};
-        titleObj[i18n.language] = this.state.title;
+        var titleObj = {"default": this.state.titleEn};
+        titleObj["en"] = this.state.titleEn;
+        titleObj["ru"] = this.state.titleRu;
         var orgObj = {};
         orgObj["default"] = this.state.orgEn;
-        orgObj[i18n.language] = this.state.org;
-        var descriptionObj = {"default": this.state.description};
-        descriptionObj[i18n.language] = this.state.description;
-        let editorState = getEditorState();
-        var editorObj = {"default": editorState};
-        editorObj[i18n.language] = editorState;
-        let key = this.state.orgEn.toLowerCase().replaceAll(" ", "-");
+        orgObj["en"] = this.state.orgEn;
+        orgObj["ru"] = this.state.orgRu;
+        var descriptionObj = {"default": this.state.descriptionEn};
+        descriptionObj["en"] = this.state.descriptionEn;
+        descriptionObj["ru"] = this.state.descriptionRu;
+        let editorStateEn = getEditorStateEn();
+        let editorStateRu = getEditorStateRu();
+        var editorObj = {"default": editorStateEn};
+        editorObj["en"] = editorStateEn;
+        editorObj["ru"] = editorStateRu;
+        let help_value = '';  
+          for(let i = 0; i < this.state.orgEn.length; i++){
+           if ((/^[A-Za-z0-9]*$/.test(this.state.orgEn[i]) === true)||(this.state.orgEn[i] == ' '))
+            help_value += this.state.orgEn[i];
+          }
+        let key = help_value.toLowerCase().replaceAll(" ", "-");
         this.setState({"key": key});
         let compressed_meta = await compress(JSON.stringify(
             {   title: titleObj,
@@ -343,16 +369,26 @@ class CreateCampaign extends React.Component {
     }
 
     async createCampaign(imgUrl, qrImgUrl) {
-        var titleObj = {"default": this.state.title};
-        titleObj[i18n.language] = this.state.title;
+        var titleObj = {"default": this.state.titleEn};
+        titleObj["en"] = this.state.titleEn;
+        titleObj["ru"] = this.state.titleRu;
         var orgObj = {};
         orgObj["default"] = this.state.orgEn;
-        orgObj[i18n.language] = this.state.org;
-        var descriptionObj = {"default": this.state.description};
-        descriptionObj[i18n.language] = this.state.description;
-        let editorState = getEditorState();
-        var editorObj = {"default": editorState};
-        editorObj[i18n.language] = editorState;
+        orgObj["en"] = this.state.orgEn;
+        orgObj["ru"] = this.state.orgRu;
+        var descriptionObj = {"default": this.state.descriptionEn};
+        descriptionObj["en"] = this.state.descriptionEn;
+        descriptionObj["ru"] = this.state.descriptionRu;
+        let editorStateEn = getEditorStateEn();
+        let editorStateRu = getEditorStateRu();
+        var editorObj = {"default": editorStateEn};
+        editorObj["en"] = editorStateEn;
+        editorObj["ru"] = editorStateRu;
+        let help_value = '';  
+          for(let i = 0; i < this.state.orgEn.length; i++){
+           if ((/^[A-Za-z0-9]*$/.test(this.state.orgEn[i]) === true)||(this.state.orgEn[i] == ' '))
+            help_value += this.state.orgEn[i];
+          }
         let key = this.state.orgEn.toLowerCase().replaceAll(" ", "-");
         this.setState({"key": key});
         let compressed_meta = await compress(JSON.stringify(
@@ -737,12 +773,25 @@ class CreateCampaign extends React.Component {
                     <Form onSubmit={this.onSubmit}>
                         <div className='titles'><Trans i18nKey='aboutYou'/></div>
                         <Form.Group>
-                            <Form.Label><Trans i18nKey='organizationEn'/><span className='redAsterisk'>*</span></Form.Label>
-                            <Form.Control required type="text" className="createFormPlaceHolder" placeholder={i18n.t('onEn')}
-                                name='orgEn' value={this.state.orgEn} onChange={this.handleChange}/>
-                            <Form.Label><Trans i18nKey='organization'/><span className='redAsterisk'>*</span></Form.Label>
+                        <Form.Label><Trans i18nKey='organization'/><span className='redAsterisk'>*</span></Form.Label>
+                            <Row>
+                            <Col>  
+                            <Form.Label><Trans i18nKey='english'/><span className='redAsterisk'>*</span></Form.Label>
+                            </Col>
+                            <Col> 
+                            <Form.Label><Trans i18nKey='russian'/><span className='redAsterisk'></span></Form.Label> 
+                            </Col>
+                            </Row>
+                            <Row>
+                            <Col>  
                             <Form.Control required type="text" className="createFormPlaceHolder" placeholder={i18n.t('on')}
-                                name='org' value={this.state.org} onChange={this.handleChange}/>
+                                name='orgEn' value={this.state.orgEn} onChange={this.handleChange}/>
+                            </Col>
+                            <Col> 
+                            <Form.Control required type="text" className="createFormPlaceHolder" placeholder={i18n.t('on')}
+                                name='orgRu' value={this.state.orgRu} onChange={this.handleChange}/>  
+                            </Col>
+                            </Row>     
                         </Form.Group>
                         <Form.Row>
                             <Form.Group as={Col}>
@@ -812,19 +861,69 @@ class CreateCampaign extends React.Component {
                         </Form.Group>
                         {this.state.vl != "" && <ReactPlayer url={this.state.vl} id='createCampaignVideoPlayer'/>}
                         <Form.Group>
-                            <Form.Label><Trans i18nKey='title'/><span className='redAsterisk'>*</span></Form.Label>
+                        <Form.Label><Trans i18nKey='title'/><span className='redAsterisk'>*</span></Form.Label>
+                            <Row>
+                            <Col>  
+                            <Form.Label><Trans i18nKey='english'/><span className='redAsterisk'>*</span></Form.Label>
+                            </Col>
+                            <Col> 
+                            <Form.Label><Trans i18nKey='russian'/><span className='redAsterisk'></span></Form.Label> 
+                            </Col>
+                            </Row>
+                            <Row>
+                            <Col>
                             <Form.Control required type="text" className="createFormPlaceHolder"
                                           placeholder={i18n.t('campaignTitle')}
-                                          name='title' value={this.state.title} onChange={this.handleChange}/>
+                                          name='titleEn' value={this.state.titleEn} onChange={this.handleChange}/>
+                            </Col>
+                            <Col>
+                            <Form.Control required type="text" className="createFormPlaceHolder"
+                                          placeholder={i18n.t('campaignTitle')}
+                                          name='titleRu' value={this.state.titleRu} onChange={this.handleChange}/>
+                            </Col>
+                            </Row>            
                         </Form.Group>
                         <Form.Group>
-                            <Form.Label><Trans i18nKey='shortDescription'/><span className='redAsterisk'>*</span></Form.Label>
+                        <Form.Label><Trans i18nKey='shortDescription'/><span className='redAsterisk'>*</span></Form.Label>
+                            <Row>
+                            <Col>  
+                            <Form.Label><Trans i18nKey='english'/><span className='redAsterisk'>*</span></Form.Label>
+                            </Col>
+                            <Col> 
+                            <Form.Label><Trans i18nKey='russian'/><span className='redAsterisk'></span></Form.Label> 
+                            </Col>
+                            </Row>
+                            <Row>
+                            <Col>
                             <Form.Control required as="textarea" rows={3} className="createFormPlaceHolder"
                                           placeholder={i18n.t('descriptionOfCampaign')}
-                                          name='description' value={this.state.description}
-                                          maxLength='195' onChange={this.handleTextArea}/>
+                                          name='descriptionEn' value={this.state.descriptionEn}
+                                          maxLength='195' onChange={this.handleChange}/>
+                            </Col>    
+                            <Col>
+                            <Form.Control required as="textarea" rows={3} className="createFormPlaceHolder"
+                                          placeholder={i18n.t('descriptionOfCampaign')}
+                                          name='descriptionRu' value={this.state.descriptionRu}
+                                          maxLength='195' onChange={this.handleChange}/>
+                            </Col>  
+                            </Row>
                             <Form.Label><Trans i18nKey='campaignDescription'/><span className='redAsterisk'>*</span></Form.Label>
-                            <TextEditor />
+                            <Row>
+                            <Col>  
+                            <Form.Label><Trans i18nKey='english'/><span className='redAsterisk'>*</span></Form.Label>
+                            </Col>
+                            <Col> 
+                            <Form.Label><Trans i18nKey='russian'/><span className='redAsterisk'></span></Form.Label> 
+                            </Col>
+                            </Row> 
+                            <Row>
+                            <Col>
+                            <TextEditorEn />
+                            </Col>  
+                            <Col>
+                            <TextEditorRu />
+                            </Col>   
+                            </Row>
                         </Form.Group>
                         <Form.Group>
                             <Form.Label><Trans i18nKey='selectQRCodeImage'/></Form.Label>
@@ -967,7 +1066,8 @@ class CreateCampaign extends React.Component {
     }
 
     async componentDidMount() {
-        setEditorState({}, false);
+        setEditorStateEn({}, false);
+        setEditorStateRu({}, false);
         ReactGA.send({ hitType: "pageview", page: this.props.location.pathname });
         let chains = config.get("CHAINS");
         let chainId = config.get("CHAIN");

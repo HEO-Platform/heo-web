@@ -7,8 +7,14 @@ import { Link } from 'react-bootstrap-icons';
 import i18n from '../util/i18n';
 
 var DESCRIPTIONRAW;
+var DESCRIPTIONRAWEN;
+var DESCRIPTIONRAWRU;
 var STATEHASCHANGED = false;
+var STATEHASCHANGEDEN = false;
+var STATEHASCHANGEDRU = false;
 var STOREDSTATE = {};
+var STOREDSTATEEN = {};
+var STOREDSTATERU = {};
 
 class TextEditor extends React.Component {
     constructor(props) {
@@ -19,12 +25,13 @@ class TextEditor extends React.Component {
         urlValue: '',
         showPopoverAddLink: false,
         showPopoverRemoveLink: false,
-        popoverMessage: '',
+        popoverMessage: ''
       };
+      this.STATEHASCHANGED = false;
       this.focus = () => this.refs.editor.focus();
       this.onChange = (editorState) => {
         this.setState({editorState});
-        DESCRIPTIONRAW = convertToRaw(editorState.getCurrentContent())
+        DESCRIPTIONRAW = convertToRaw(editorState.getCurrentContent());
         STATEHASCHANGED = true;
       }
       this.handleKeyCommand = this._handleKeyCommand.bind(this);
@@ -385,8 +392,178 @@ class TextEditor extends React.Component {
     );
   };
 
+class TextEditorEn extends TextEditor{
+    constructor(props) {
+      super(props);           
+      this.state = {  
+        editorState : EditorState.createEmpty(this.createDecorator()),
+        showURLInput: false,
+        urlValue: '',
+        showPopoverAddLink: false,
+        showPopoverRemoveLink: false,
+        popoverMessage: ''
+      };
+      this.STATEHASCHANGEDEN = false;
+      this.focus = () => this.refs.editor.focus();
+      this.onChange = (editorState) => {
+        this.setState({editorState});
+        DESCRIPTIONRAWEN = convertToRaw(editorState.getCurrentContent());
+        STATEHASCHANGEDEN = true;
+      }
+      this.handleKeyCommand = this._handleKeyCommand.bind(this);
+      this.mapKeyToEditorCommand = this._mapKeyToEditorCommand.bind(this);
+      this.toggleBlockType = this._toggleBlockType.bind(this);
+      this.toggleInlineStyle = this._toggleInlineStyle.bind(this);
+      this.promptForLink = this._promptForLink.bind(this);
+      this.onURLChange = (e) => this.setState({urlValue: e.target.value});
+      this.confirmLink = this._confirmLink.bind(this);
+      this.onLinkInputKeyDown = this._onLinkInputKeyDown.bind(this);
+      this.removeLink = this._removeLink.bind(this);
+    }
+    componentDidMount() {
+      if(STOREDSTATEEN.length) {
+        this.setState({editorState : EditorState.createWithContent(STOREDSTATEEN, this.createDecorator())});
+      } else {
+        this.setState({editorState : EditorState.createEmpty(this.createDecorator())});
+      }
+    }
+    _confirmLink(e) {
+      e.preventDefault();
+      const {editorState, urlValue} = this.state;
+      const contentState = editorState.getCurrentContent();
+      const contentStateWithEntity = contentState.createEntity(
+        'LINK',
+        'MUTABLE',
+        {url: urlValue}
+      );
+      const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+      const newEditorState = EditorState.set(editorState, { currentContent: contentStateWithEntity });
+      this.setState({
+        editorState: RichUtils.toggleLink(
+          newEditorState,
+          newEditorState.getSelection(),
+          entityKey
+        ),
+        showURLInput: false,
+        urlValue: '',
+      }, () => {
+        setTimeout(() => this.refs.editor.focus(), 0);
+      });
+      STATEHASCHANGEDEN = true;
+    }
+
+    _removeLink(e) {
+      e.preventDefault();
+      const {editorState} = this.state;
+      const selection = editorState.getSelection();
+      if (!selection.isCollapsed() ) {
+        this.setState({
+          editorState: RichUtils.toggleLink(editorState, selection, null),
+        });
+        STATEHASCHANGEDEN = true;
+      } else {
+        this.setState({
+          popoverMessage: `${i18n.t('removeLink')}`,
+          showPopoverRemoveLink:true,
+        }, () => {
+          setTimeout(() => this.setState({showPopoverRemoveLink:false}), 2000);
+        });
+      }
+    }
+
+}
+
+class TextEditorRu extends TextEditor{
+    constructor(props) {
+      super(props);           
+      this.state = {  
+        editorState : EditorState.createEmpty(this.createDecorator()),
+        showURLInput: false,
+        urlValue: '',
+        showPopoverAddLink: false,
+        showPopoverRemoveLink: false,
+        popoverMessage: ''
+      };
+      this.STATEHASCHANGEDRU = false;
+      this.focus = () => this.refs.editor.focus();
+      this.onChange = (editorState) => {
+        this.setState({editorState});
+        DESCRIPTIONRAWRU = convertToRaw(editorState.getCurrentContent());
+        STATEHASCHANGEDRU = true;
+      }
+      this.handleKeyCommand = this._handleKeyCommand.bind(this);
+      this.mapKeyToEditorCommand = this._mapKeyToEditorCommand.bind(this);
+      this.toggleBlockType = this._toggleBlockType.bind(this);
+      this.toggleInlineStyle = this._toggleInlineStyle.bind(this);
+      this.promptForLink = this._promptForLink.bind(this);
+      this.onURLChange = (e) => this.setState({urlValue: e.target.value});
+      this.confirmLink = this._confirmLink.bind(this);
+      this.onLinkInputKeyDown = this._onLinkInputKeyDown.bind(this);
+      this.removeLink = this._removeLink.bind(this);
+    }
+    componentDidMount() {
+      if(STOREDSTATERU.length) {
+        this.setState({editorState : EditorState.createWithContent(STOREDSTATERU, this.createDecorator())});
+      } else {
+        this.setState({editorState : EditorState.createEmpty(this.createDecorator())});
+      }
+    }
+    _confirmLink(e) {
+      e.preventDefault();
+      const {editorState, urlValue} = this.state;
+      const contentState = editorState.getCurrentContent();
+      const contentStateWithEntity = contentState.createEntity(
+        'LINK',
+        'MUTABLE',
+        {url: urlValue}
+      );
+      const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+      const newEditorState = EditorState.set(editorState, { currentContent: contentStateWithEntity });
+      this.setState({
+        editorState: RichUtils.toggleLink(
+          newEditorState,
+          newEditorState.getSelection(),
+          entityKey
+        ),
+        showURLInput: false,
+        urlValue: '',
+      }, () => {
+        setTimeout(() => this.refs.editor.focus(), 0);
+      });
+      STATEHASCHANGEDRU = true;
+    }
+    _removeLink(e) {
+      e.preventDefault();
+      const {editorState} = this.state;
+      const selection = editorState.getSelection();
+      if (!selection.isCollapsed() ) {
+        this.setState({
+          editorState: RichUtils.toggleLink(editorState, selection, null),
+        });
+        STATEHASCHANGEDRU = true;
+      } else {
+        this.setState({
+          popoverMessage: `${i18n.t('removeLink')}`,
+          showPopoverRemoveLink:true,
+        }, () => {
+          setTimeout(() => this.setState({showPopoverRemoveLink:false}), 2000);
+        });
+      }
+    }
+
+}
+
+
   function getEditorState() {
     return DESCRIPTIONRAW;
+  }
+
+  function getEditorStateEn() {
+      return DESCRIPTIONRAWEN;
+  }
+
+  function getEditorStateRu() {
+    return DESCRIPTIONRAWRU;
   }
 
   function setEditorState(storedState, hasContent) {
@@ -398,11 +575,37 @@ class TextEditor extends React.Component {
     }
   }
 
+  function setEditorStateEn(storedState, hasContent) {
+    if(hasContent) {
+      const contentState = convertFromRaw(storedState);
+      STOREDSTATEEN = contentState;
+    } else {
+      STOREDSTATEEN = {};
+    }
+  }
+
+  function setEditorStateRu(storedState, hasContent) {
+    if(hasContent) {
+      const contentState = convertFromRaw(storedState);
+      STOREDSTATERU = contentState;
+    } else {
+      STOREDSTATERU = {};
+    }
+  }
+
   function editorStateHasChanged() {
     return STATEHASCHANGED;
   }
 
-  export {getEditorState, setEditorState, editorStateHasChanged};
+  function editorStateHasChangedEn() {
+    return STATEHASCHANGEDEN;
+  }
+
+  function editorStateHasChangedRu() {
+    return STATEHASCHANGEDRU;
+  }
+
+  export {getEditorState, setEditorState, editorStateHasChanged, editorStateHasChangedEn, editorStateHasChangedRu, getEditorStateEn, getEditorStateRu, TextEditorEn, TextEditorRu, setEditorStateEn, setEditorStateRu};
 
 
   export default TextEditor
