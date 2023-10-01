@@ -45,10 +45,11 @@
     "react-global-configuration": "^1.4.1",
     "react-i18next": "^11.8.15",
     "react-modal-container": "^2.0.1",
+    "react-motion": "^0.5.2",
     "react-player": "^2.9.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "^4.0.1",
-    "react-text-collapse": "^0.6.1",
+    "react-text-collapse": "*",
     "react-uuid": "^1.0.2",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^2.0.3",
@@ -73,7 +74,7 @@
   "scripts": {
     "start-react": "export NODE_OPTIONS=--openssl-legacy-provider && react-scripts start",
     "start": "export NODE_OPTIONS=--openssl-legacy-provider && cd server && node server.js",
-    "install-all": "npm --loglevel=error install && cd server && npm --loglevel=error install",
+    "install-all": "npm config set legacy-peer-deps true && npm --loglevel=error install && cd server && npm --loglevel=error install",
     "build": "export NODE_OPTIONS=--openssl-legacy-provider && react-scripts build && mv build/index.html build/_index.html",
     "test": "export NODE_OPTIONS=--openssl-legacy-provider && react-scripts test",
     "eject": "react-scripts eject"
