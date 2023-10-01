@@ -2,7 +2,7 @@
   "name": "heo-web",
   "version": "0.2.0",
   "engines": {
-    "node": "14.16.1"
+    "node": "18.18.0"
   },
   "private": true,
   "proxy": "http://localhost:5000",
