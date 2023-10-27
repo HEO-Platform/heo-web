@@ -3,14 +3,74 @@ const { default: axios } = require('axios');
 const { ObjectId } = require('mongodb');
 const {Web3} = require('web3');
 const nodemailer = require('nodemailer');
+const bcrypt = require('bcryptjs');
 
 
 class ServerLib {
     constructor() {
+        this.emailCode = new Map();
     }
     
     testingClass() {
         console.log('server library class');
+    }
+
+    getRandomCoge() {
+        let randCode = "";
+        for (let i = 0; i < 4; i++ ){
+            randCode += Math.floor(Math.random()*10).toString(); 
+        }
+        return (randCode);
+    }
+
+    async handleRegistrationStart(req, res, Sentry){
+        try{
+            let randCode = this.getRandomCoge();
+            let text = "Confirmation Code - " + randCode;
+            this.emailCode.delete(req.body.mydata.to_email);
+            this.emailCode.set(req.body.mydata.to_email, randCode);
+            return(text);
+        } catch (err) {
+          Sentry.captureException(new Error(err));
+          res.sendStatus(500);
+        }
+    }
+
+    async handleRegistrationEnd(req, res, Sentry, DB){
+        let password = bcrypt.hashSync(req.body.mydata.password, 8)
+        const ITEM = {
+            _id: req.body.mydata.to_email,
+            password: password
+        }
+        try {
+            const myCollection = await DB.collection('users');
+            await myCollection.insertOne(ITEM);
+            res.send('success');
+        } catch (err) {
+            Sentry.captureException(new Error(err));
+            res.sendStatus(500);
+        }
+    }
+
+    async handleCheckUser(req, DB){
+        try {
+            const myCollection = await DB.collection('users');
+            let result = await myCollection.findOne({"_id" : req.body.mydata.to_email});
+            if (result){
+             let res = bcrypt.compareSync(req.body.mydata.password, result.password);
+             if (res == true) return (1);  
+             else if(res == false) return (2);
+            }
+            else return (0);
+        } catch (err) {
+            return (0);
+        }
+    }
+
+    async handleCheckCode(req, res){
+        let randCode = this.emailCode.get(req.body.mydata.to_email);
+        if (randCode == req.body.mydata.code) res.send(true);
+        else res.send(false);
     }
 
     handleUploadImage(req, res, S3, Sentry) {
@@ -49,8 +109,6 @@ class ServerLib {
        try{
         const emailCollection = await DB.collection('global_configs');
         let result = await emailCollection.findOne({"_id" : key}); 
-        console.log("result");
-        console.log(result);
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -58,9 +116,12 @@ class ServerLib {
               pass: result.pass
             }
           });
-         await transporter.sendMail({
+        let to_email;
+        if (key == "HEO-Platform Confirmation Code") to_email = req.body.mydata.to_email;
+        else if (key == "New Campaign Alert") to_email = result.to;  
+        await transporter.sendMail({
             from: result.from, // sender address
-            to: result.to, // list of receivers
+            to: to_email, // list of receivers
             subject: result.subject, // Subject line
             text: text // html body
           }).then(info => {
@@ -180,8 +241,6 @@ class ServerLib {
 
     async handleLoadAllCampaigns(req, res, Sentry, DB) {
         try{
-           
-            const emailCollection = await DB.collection('email_config');
             const myCollection = await DB.collection('campaigns');
             const campaigns = await myCollection.find({active: true});
             const sortedCampaigns = await campaigns.sort({"lastDonationTime" : -1});
