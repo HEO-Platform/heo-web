@@ -253,12 +253,50 @@ APP.post('/api/auth/jwt_tron', async(req, res) =>{
         let token = jsonwebtoken.sign({ address:req.body.addr.toLowerCase() }, process.env.JWT_SECRET, { expiresIn: '7d' });
         res.cookie('authToken', token, { httpOnly: true }).send({success:true});
     } catch (err) {
-        console.log("Ошибка авторизации:");
-        console.log(err);
         Sentry.captureException(new Error(err));
         res.sendStatus(401);
     }
 });
+
+APP.post('/api/auth/registr_start', async (req, res) => {
+    const DB = CLIENT.db(DBNAME);
+    let result = await serverLib.handleCheckUser(req, DB);
+    if(result > 0)  res.send('bad_user');
+    else{
+        let text = await serverLib.handleRegistrationStart(req, res, Sentry);
+        await serverLib.handleSendEmail(req, res, Sentry, "HEO-Platform Confirmation Code", text, DB);
+    }
+})
+
+APP.post('/api/auth/autor_start', async (req, res) => {
+    const DB = CLIENT.db(DBNAME);
+    let result = serverLib.handleCheckUser(req, DB);
+    if(result == 0)  res.send('no_user');
+    else{
+        let text = await serverLib.handleRegistrationStart(req, res, Sentry);
+        await serverLib.handleSendEmail(req, res, Sentry, "HEO-Platform Confirmation Code", text, DB);
+    }
+})
+
+APP.post('/api/auth/check_code', async (req, res) => {
+    const DB = CLIENT.db(DBNAME);
+    await serverLib.handleCheckCode(req, res);
+})
+
+APP.post('/api/auth/registr_end', async (req, res) => {
+    const DB = CLIENT.db(DBNAME);
+    await serverLib.handleRegistrationEnd(req, res, Sentry, DB);
+})
+
+APP.post('/api/auth/autor_end', async (req, res) => {
+    try{
+        let token = jsonwebtoken.sign({ email:req.body.mydata.to_email }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        res.cookie('authToken', token, { httpOnly: true }).send({success:true});
+    } catch (err) {
+        Sentry.captureException(new Error(err));
+        res.sendStatus(401);
+    }
+})
 
 APP.post('/api/auth/jwt', async(req, res) => {
     //extract Address from signature

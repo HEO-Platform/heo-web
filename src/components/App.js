@@ -6,6 +6,7 @@ import UserCampaigns from './UserCampaigns';
 import EditCampaign from './EditCampaign';
 import MyDonations from './MyDonations';
 import WithdrawDonations from './WithdrawDonations';
+import Registration from './Registration';
 import Page404 from "./Page404";
 import TokenSale from './TokenSale'
 import logo from '../images/heo-logo.png';
@@ -35,13 +36,31 @@ class App extends Component {
             modalMessage: "",
             modalTitle: "",
             modalButtonMessage: "",
-            modalButtonVariant: ""
+            modalButtonVariant: "",
+            connect_ort: "",
+            connect_title: ""
         };
     }
 
     async componentDidMount() {
+        console.log("email");
+        console.log(document.cookie);
         let lang = GetLanguage();
         this.setState({language : lang});
+        if(!window.connect)
+        window.connect = false;
+        if((!window.connect) || (window.connect == false)){
+          this.setState({
+            connect_ort: "/Registration/connect",
+            connect_title: "authorization"
+          });
+        }
+        else{
+            this.setState({
+                connect_ort: "/Registration/disconnect",
+                connect_title: "deauthorization"
+              }); 
+        }
     }
 
     async setLanguage(lang) {
@@ -90,6 +109,8 @@ class App extends Component {
                                             <Trans i18nKey='myFundraisers'/>
                                         </Nav.Link>
                                         <Nav.Link eventKey="4" className='mainNavText' as='a' target='_blank' href='https://heo.finance'><Trans i18nKey='about'/></Nav.Link>
+                                        <Nav.Link as={Link} eventKey="5" className='mainNavText' to="/Registration/registr"><Trans i18nKey='registration'/></Nav.Link>
+                                        <Nav.Link as={Link} eventKey="6" className='mainNavText' to={this.state.connect_ort}><Trans i18nKey={this.state.connect_title}/></Nav.Link>
                                     </Nav>
                                 </Navbar.Collapse>
                                 <Navbar.Collapse className="justify-content-end">
@@ -139,6 +160,7 @@ class App extends Component {
                                 <Route path="/rewards" component={MyDonations} />
                                 <Route path="/editCampaign" component={EditCampaign} />
                                 <Route path="/invest" component={TokenSale} />
+                                <Route path="/registration" component={Registration} />
                                 <Route path="/404" component={Page404} />
                                 <Route path="/" component={Home} />
                                 <Route component={Error} />

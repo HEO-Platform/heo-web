@@ -188,7 +188,31 @@
     "prevention2" : "Once you fill in all the fields, you will need to choose the main blockchain on which your campaign will be deployed: Tron, BNB Chain, or Ethereum. Depending on this choice, you will receive donations in USDT TRC20, USDT BEP20, or USDT ERC20, respectively. At the moment, we recommend choosing Tron, as it has the lowest fees, and USDT TRC20 is the easiest to exchange for fiat money in most countries worldwide.",
     "prevention3" : "To deploy your campaign to the blockchain, you will need to pay a transaction fee, which amounts to 10-40 TRX ($0.7-$3) for the Tron blockchain, 0.02-0.04 BNB ($0.5-$10) for BNB Chain, and 0.01-0.03 ETH ($20-$60) for the Ethereum blockchain. These funds must be available in your wallet, so you need to top it up in advance before creating the campaign.",
     "preventionNB" : "NB: IIf you are unable to figure out how to buy cryptocurrency but believe that your campaign is of public interest, please contact us at support@heo.finance or via Telegram @heosupport, and we will try to assist you.",
-    "prevention4" : "After your campaign is deployed to the blockchain, it will undergo a verification process, which takes 1-3 working days. Therefore, we strongly recommend providing your up-to-date contact information. Our managers may get in touch with you to clarify details and verify the accuracy of the information you provided."
-
+    "prevention4" : "After your campaign is deployed to the blockchain, it will undergo a verification process, which takes 1-3 working days. Therefore, we strongly recommend providing your up-to-date contact information. Our managers may get in touch with you to clarify details and verify the accuracy of the information you provided.",
+    "registration" : "Registration",
+    "authorization" : "Authorization",
+    "deauthorization" : "Exit Authorization",
+    "confcode": "Confirmation Code",
+    "authorizedBtn": "Authorized",
+    "register": "Register",
+    "password": "Password",
+    "repeetpass": "Repeat Password",
+    "entercode": "Please enter the confirmation code",
+    "sendcode": "The confirmation code was sent to your email address",
+    "registerBtn": "Register",
+    "emailRequired": "Please enter your e-mail address",
+    "passwordRequired": "Please enter your password",
+    "repeetpassRequired": "Please re-enter your password",
+    "passwordsNoMatch": "Passwords do not match",
+    "errorRegistration": "An error occurred while attempting to register a user",
+    "errorAuthorization": "An error occurred while attempting to authorize the user",
+    "badcode": "Invalid code entered",
+    "resendcode": "Resend code",
+    "attention" : "ATTENTION!!",
+    "registrationComplete" : "You have successfully registered",
+    "authorizationComplete" : "You have successfully been authorized",
+    "oldemail" : "A user with this e-mail address already exists in the system",
+    "noUser" : "There is no such user in the system",
+    "badPassword" : "Invalid password"
 }
 
