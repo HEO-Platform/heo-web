@@ -1,5 +1,6 @@
 import {Component, Suspense} from 'react';
 import React from 'react';
+import axios from 'axios';
 import CampaignPage from './CampaignPage';
 import CreateCampaign from './CreateCampaign';
 import UserCampaigns from './UserCampaigns';
@@ -14,15 +15,15 @@ import Home from "./Home";
 import '../css/app.css';
 import '../css/modal.css';
 import { Switch, Route, Link, withRouter } from "react-router-dom";
-import { Nav, Navbar, Container, Button, Modal } from 'react-bootstrap';
-import { CheckCircle, ExclamationTriangle, HourglassSplit, XCircle } from 'react-bootstrap-icons';
+import { Nav, Navbar, Container, Button, Modal, NavLink, NavDropdown } from 'react-bootstrap';
+import { CheckCircle, ExclamationTriangle, HourglassSplit, XCircle, InfoCircle } from 'react-bootstrap-icons';
 import { Trans } from 'react-i18next';
 import { GetLanguage } from '../util/Utilities';
-
-import i18n from '../util/i18n';
 import {UserContext} from './UserContext';
-
 import ReactGA from "react-ga4";
+import i18n from '../util/i18n';
+//import {chains} from './chainblock';
+
 
 ReactGA.initialize("G-C657WZY5VT");
 class App extends Component {
@@ -36,9 +37,11 @@ class App extends Component {
             modalMessage: "",
             modalTitle: "",
             modalButtonMessage: "",
-            modalButtonVariant: "",
-            connect_ort: "",
-            connect_title: ""
+            connect: false,
+            disabled: "disabled",
+            modalButtonVariant: "#32CD32",
+            modalIcon: "",
+            userEmail: ""
         };
     }
 
@@ -49,18 +52,16 @@ class App extends Component {
         this.setState({language : lang});
         if(!window.connect)
         window.connect = false;
-        if((!window.connect) || (window.connect == false)){
-          this.setState({
-            connect_ort: "/Registration/connect",
-            connect_title: "authorization"
-          });
-        }
-        else{
-            this.setState({
-                connect_ort: "/Registration/disconnect",
-                connect_title: "deauthorization"
-              }); 
-        }
+    }
+
+    
+
+    async checkAutorisation(){
+        let result = await axios.post('/api/is_autorisation', {headers: {"Content-Type": "application/json"}});
+        if (result.data !== false){
+            this.setState({connect:true,userEmail:result.data});
+        } 
+        else this.setState({connect:false});   
     }
 
     async setLanguage(lang) {
@@ -73,9 +74,9 @@ class App extends Component {
             nonInteraction: false
         });
     }
-
     render() {
         let lang = GetLanguage();
+       this.checkAutorisation();
         return (
             <UserContext.Provider value={this.state}>
             <Suspense fallback="...is loading">
@@ -96,21 +97,30 @@ class App extends Component {
                                 <Navbar.Collapse id="basic-navbar-nav">
                                     <Nav className="mr-auto">
                                         <Nav.Link as={Link} eventKey="1" className='mainNavText' to="/"><Trans i18nKey='browse'/></Nav.Link>
-                                        <Nav.Link as={Link} eventKey="2" className='mainNavText' to={{pathname:"/new",
-                                            state:{
-                                                accounts: this.state.accounts
-                                            }}} >
-                                            <Trans i18nKey='startFundraiser'/>
-                                        </Nav.Link>
-                                        <Nav.Link as={Link} eventKey="3" className='mainNavText' to={{pathname:"/myCampaigns",
-                                            state:{
-                                                accounts: this.state.accounts
-                                            }}} >
+                                        <NavLink  as={Link} eventKey="2" className='mainNavText' onClick={async(event) => {
+                                          if(!this.state.connect){
+                                            this.setState({showModal:true, modalButtonVariant: "#E63C36", 
+                                            modalTitle:"attention", modalMessage: "noLogMessage", modalButtonMessage:"ok",
+                                            modalIcon: "ExclamationTriangle" });
+                                            event.preventDefault();
+                                          }}} to ='/new'>
+                                          <Trans i18nKey='startFundraiser'/>
+                                        </NavLink>
+                                        <Nav.Link as={Link} eventKey="3" className='mainNavText' onClick={async(event) => {
+                                          if(!this.state.connect){
+                                            this.setState({showModal:true, modalButtonVariant: "#E63C36", 
+                                            modalTitle:"attention", modalMessage: "noLogMessage", modalButtonMessage:"ok",
+                                            modalIcon: "ExclamationTriangle" });
+                                            event.preventDefault(); 
+                                          }}} to ='/myCampaigns'>
                                             <Trans i18nKey='myFundraisers'/>
                                         </Nav.Link>
                                         <Nav.Link eventKey="4" className='mainNavText' as='a' target='_blank' href='https://heo.finance'><Trans i18nKey='about'/></Nav.Link>
-                                        <Nav.Link as={Link} eventKey="5" className='mainNavText' to="/Registration/registr"><Trans i18nKey='registration'/></Nav.Link>
-                                        <Nav.Link as={Link} eventKey="6" className='mainNavText' to={this.state.connect_ort}><Trans i18nKey={this.state.connect_title}/></Nav.Link>
+                                        <NavDropdown className='mainNavText' title={i18n.t('registration')} id="basic-nav-dropdown">
+                                          <NavDropdown.Item as={Link} to='/Registration/registr'>{i18n.t('registration')}</NavDropdown.Item>
+                                          <NavDropdown.Item as={Link} disabled={!this.state.connect} to='/Registration/disconnect'>{i18n.t('deauthorization')}</NavDropdown.Item>
+                                          <NavDropdown.Item as={Link} disabled={this.state.connect} to='/Registration/connect'>{i18n.t('authorization')}</NavDropdown.Item> 
+                                        </NavDropdown>    
                                     </Nav>
                                 </Navbar.Collapse>
                                 <Navbar.Collapse className="justify-content-end">
@@ -174,4 +184,4 @@ class App extends Component {
     }
 }
 
-export default withRouter(App);
+export  default withRouter(App);

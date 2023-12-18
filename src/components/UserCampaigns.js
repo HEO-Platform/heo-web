@@ -1,15 +1,15 @@
-import React, { Component, lazy } from 'react';
+import React, { Component } from 'react';
 import config from 'react-global-configuration';
 import '../css/modal.css';
 import '../css/campaignList.css';
-import { Container, Row, Col, Card, ProgressBar, Button, Modal } from 'react-bootstrap';
-import { CheckCircle, ExclamationTriangle, HourglassSplit, XCircle } from 'react-bootstrap-icons';
+import '../css/campaignPage.css';
+import { Container, Row, Col, Card, ProgressBar, Button, Modal, Dropdown, DropdownButton } from 'react-bootstrap';
+import { ChevronLeft,CheckCircle, ExclamationTriangle, HourglassSplit, XCircle } from 'react-bootstrap-icons';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { i18nString, DescriptionPreview, LogIn, initWeb3, checkAuth, initWeb3Modal, checkAuthTron, LogInTron, initTron } from '../util/Utilities';
+import { i18nString, DescriptionPreview, LogIn, initWeb3, getTronWeb, checkAuth, initWeb3Modal, checkAuthTron, LogInTron, initTron } from '../util/Utilities';
 import { Trans } from 'react-i18next';
 import i18n from '../util/i18n';
-import {UserContext} from './UserContext';
 
 import ReactGA from "react-ga4";
 
@@ -35,151 +35,113 @@ class UserCampaigns extends Component {
             fileName: '',
             showModal: false,
             showModalDialog: false,
+            accounts:{},
         };
     }
 
-    async checkWLTron(chainId) {
-        //is white list enabled?
+    async getCampaignsInEtherium(){
         try {
-            console.log(`Tron initialized. Account1: ${window.tronWeb.toHex(window.tronAdapter.address)}`);
-            console.log(`Loading HEOParameters on ${chainId}`);
-            let abi = (await import("../remote/" + chainId + "/HEOParameters")).abi;
-            let address = (await import("../remote/" + chainId + "/HEOParameters")).address;
-            var HEOParameters = await window.tronWeb.contract(abi, address);
-            let wlEnabled = await HEOParameters.methods.intParameterValue(11).call();
-            if(wlEnabled > 0) {
-                console.log('WL enabled')
-                //is user white listed?
-                let whiteListed = await HEOParameters.methods.addrParameterValue(5, window.tronWeb.toHex(window.tronAdapter.address).toLowerCase()).call();
-                if(whiteListed > 0) {
-                    this.setState({
-                        isLoggedInTron : true,
-                        whiteListed: true,
-                        beneficiaryAddress: window.tronWeb.toHex(window.tronAdapter.address),
-                        showModal: false,
-                        goHome: false
-                    });
-                    this.loadCampaigns();
-                } else {
-                    console.log(`User not in WL`)
-                    //user is not in the white list
-                    this.setState({
-                        goHome: true,
-                        showModal:true,
-                        isLoggedInTron: true,
-                        whiteListed: false,
-                        modalTitle: 'nonWLTitle',
-                        modalMessage: 'nonWLMessage',
-                        modalIcon: 'XCircle', modalButtonMessage: 'closeBtn',
-                        modalButtonVariant: "#E63C36", waitToClose: false
-                    });
-                }
-            } else {
-                this.loadCampaigns();
-                //white list is disabled
-                this.setState({
-                    isLoggedInTron : true,
-                    whiteListed: true,
+            if(!this.state.accounts || !this.state.web3) {
+                await initWeb3(this.state.chainId, this);
+            }
+            let data = {chain: this.state.chainId, account: this.state.accounts[0].toLowerCase()};
+            this.setState(
+                {showModal:true, modalTitle: 'processingWait',
+                modalMessage: 'waitingForOperation', modalIcon: 'HourglassSplit',
+                modalButtonVariant: "gold", waitToClose: true
+            });
+            let res = await axios.post('/api/campaign/campaignstouser', data, {headers: {"Content-Type": "application/json"}});
+            if (res.data == "success"){
+                this.setState({showModal:true,
                     goHome: false,
-                    showModal: false
-                });
+                    waitToClose: false,
+                    isLoggedIn: false,
+                    modalIcon: 'CheckCircle',
+                    modalTitle: 'success',
+                    modalMessage: 'operationSaccess',
+                    modalButtonMessage: 'closeBtn',
+                    modalButtonVariant: "#E63C36"}
+                );  
             }
         } catch (err) {
             console.log(err);
-            this.setState({
-                showModal: true, modalTitle: 'Failed',
-                errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
-                modalButtonVariant: '#E63C36', waitToClose: false,
-                modalMessage: 'blockChainConnectFailed'
-            });
+            this.setState({showModal:true,
+                goHome: false,
+                waitToClose: false,
+                isLoggedIn: false,
+                modalIcon: 'XCircle',
+                modalTitle: 'authFailedTitle',
+                modalMessage: 'authFailedMessage',
+                modalButtonMessage: 'closeBtn',
+                modalButtonVariant: "#E63C36"}
+            );
         }
     }
 
-    //is white list enabled?
-    async checkWL(chainId) {
+    async getCampaignsInTron(){
         try {
-            if(!this.state.web3 || !this.state.accounts) {
-                await initWeb3(chainId, this);
-            }
-            let abi = (await import("../remote/" + chainId + "/HEOParameters")).abi;
-            let address = (await import("../remote/" + chainId + "/HEOParameters")).address;
-            var HEOParameters = new this.state.web3.eth.Contract(abi, address);
-            let wlEnabled = await HEOParameters.methods.intParameterValue(11).call();
-            if(wlEnabled > 0) {
-                //is user white listed?
-                let whiteListed = await HEOParameters.methods.addrParameterValue(5,this.state.accounts[0]).call();
-                if(whiteListed > 0) {
-                    this.setState({
-                        isLoggedIn : true,
-                        whiteListed: true,
-                        showModal: false,
-                        goHome: false
-                    });
-                  this.loadCampaigns();
-                } else {
-                    //user is not in the white list
-                    this.setState({
-                        campaigns : [],
-                        goHome: true,
-                        showModal:true,
-                        isLoggedIn: true,
-                        whiteListed: false,
-                        modalTitle: 'nonWLTitle',
-                        modalMessage: 'nonWLMessage',
-                        errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
-                        modalButtonVariant: "#E63C36", waitToClose: false
-                    });
-                }
-            } else {
-                //white list is disabled
-                this.setState({
-                    isLoggedIn : true,
-                    whiteListed: true,
+            initTron(this.state.tronChainId,this)
+            let account = window.tronAdapter._wallet.tronWeb.defaultAddress.hex;
+            let data = {chain: this.state.tronChainId, account: account};
+            let res = await axios.post('/api/campaign/campaignstouser', data, {headers: {"Content-Type": "application/json"}});
+            if (res.data == "success"){
+                await this.loadCampaigns();
+                this.setState({showModal:true,
                     goHome: false,
-                    showModal: false
-                });
-                this.loadCampaigns();
+                    waitToClose: false,
+                    isLoggedIn: false,
+                    modalTitle: 'success',
+                    modalIcon: 'CheckCircle',
+                    modalMessage: 'operationSaccess',
+                    modalButtonMessage: 'closeBtn',
+                    modalButtonVariant: "#E63C36"}
+                );  
             }
-
+            else{
+                console.log(res);
+                this.setState({showModal:true,
+                    goHome: false,
+                    waitToClose: false,
+                    isLoggedIn: false,
+                    modalIcon: 'XCircle',
+                    modalTitle: 'authFailedTitle',
+                    modalMessage: 'authFailedMessage',
+                    modalButtonMessage: 'closeBtn',
+                    modalButtonVariant: "#E63C36"}
+                ); 
+            }  
         } catch (err) {
             console.log(err);
-            this.setState({
-                showModal: true, modalTitle: 'Failed',
-                errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
-                modalButtonVariant: '#E63C36', waitToClose: false,
-                modalMessage: 'blockChainConnectFailed'
-            });
+            this.setState({showModal:true,
+                goHome: false,
+                waitToClose: false,
+                isLoggedIn: false,
+                modalIcon: 'XCircle',
+                modalTitle: 'authFailedTitle',
+                modalMessage: 'authFailedMessage',
+                modalButtonMessage: 'closeBtn',
+                modalButtonVariant: "#E63C36"}
+            );
         }
     }
 
     async componentDidMount() {
-        console.log("Метка 1");
         ReactGA.send({ hitType: "pageview", page: this.props.location.pathname });
         let chainId = config.get("CHAIN");
         let tronChainId = config.get("TRON_CHAIN");
         this.setState({
             chainId: chainId,
             tronChainId: tronChainId,
-        });
-        //await initWeb3Modal(chainId, this);
-        // is the user logged in?
-        this.setState({
             isLoggedIn : false,
             isLoggedInTron: false,
-            whiteListed: false,
-            goHome: false,
-            modalTitle: 'pleaseLogInTitle',
-            modalMessage: 'pleaseLogInToCreateMessage',
-            modalIcon: 'XCircle', modalButtonMessage: 'login',
-            modalButtonVariant: "#E63C36", waitToClose: false
-         });
-        if ((window.tron)&&(window.ethereum)) this.setState({showModalDialog : true,showModal:false});
-        else this.setState({showModalDialog : false, showModal : true});
+            whiteListed: false
+        });
+        this.loadCampaigns();
     }
 
     async loadCampaigns() {
-        this.setState({showModal:true, modalTitle: 'processingWait',
-            modalMessage: 'waitingForNetwork', errorIcon:'HourglassSplit',
+        this.setState({showModal:true, modalTitle: 'processingWait', modalIcon: 'HourglassSplit',
+            modalMessage: 'waitingForOperation',
             modalButtonVariant: "gold", waitToClose: true});
         var campaigns = [];
         var donates = [];
@@ -193,15 +155,10 @@ class UserCampaigns extends Component {
             this.setState({showModal:true,
                 modalTitle: modalTitle,
                 modalMessage: 'technicalDifficulties',
-                errorIcon:'XCircle', modalButtonMessage: 'returnHome',
+                modalIcon: 'XCircle', modalButtonMessage: 'returnHome',
                 modalButtonVariant: "#E63C36", waitToClose: false});
         })
-        let chainName;
-        if(window.blockChainOrt == "ethereum") chainName = this.state.chainId;
-        else if(window.blockChainOrt == "tron") chainName = this.state.tronChainId;
-        let data = {fieldName : chainName};
-        var modalTitle = 'failedToLoadCampaigns';
-        await axios.post('/api/campaign/loadUserCampaigns', data, {headers: {"Content-Type": "application/json"}})
+        await axios.post('/api/campaign/loadUserCampaigns', {headers: {"Content-Type": "application/json"}})
         .then(res => {
             campaigns = res.data;
             this.setState({
@@ -214,9 +171,10 @@ class UserCampaigns extends Component {
             this.setState({showModal:true,
                 modalTitle: modalTitle,
                 modalMessage: 'technicalDifficulties',
-                errorIcon:'XCircle', modalButtonMessage: 'returnHome',
+                modalIcon: 'XCircle', modalButtonMessage: 'returnHome',
                 modalButtonVariant: "#E63C36", waitToClose: false});
         })
+        
         campaigns.forEach( campaign => {
             const found = donates.find(element => element._id == campaign._id);
             let raisedDonations = found ? found.totalQuantity  : 0;
@@ -227,6 +185,7 @@ class UserCampaigns extends Component {
                 campaign["raisedAmount"] = Math.round((raisedAmount + fiatDonations + raisedOnCoinbase + raisedDonations) * 100)/100;
             }
         })
+        
         this.setState({
             showModal: false,
             campaigns: campaigns
@@ -241,7 +200,7 @@ class UserCampaigns extends Component {
         console.log('close campaign');
         this.setState({
             showTwoButtons: true, waitToClose: true,
-            showModal: true, errorIcon:'ExclamationTriangle',
+            showModal: true, modalIcon:'ExclamationTriangle',
             modalTitle: 'closeCampaign',
             modalMessage: 'final',
             campaignId: id
@@ -260,14 +219,14 @@ class UserCampaigns extends Component {
             this.deActivateInDB();
             this.setState({
                 modalMessage: 'campaignDeleted', modalTitle: 'complete',
-                errorIcon: 'CheckCircle', modalButtonMessage: i18n.t('ok'),
+                modalIcon: 'CheckCircle', modalButtonMessage: i18n.t('ok'),
                 modalButtonVariant: '#588157', waitToClose: false, showTwoButtons: false,
             })
         } catch (err) {
             console.log(err);
             this.setState({
                 waitToClose: false, modalMessage: 'technicalDifficulties',
-                errorIcon:'XCircle', modalButtonMessage: 'closeBtn', modalTitle: 'failed',
+                modalIcon:'XCircle', modalButtonMessage: 'closeBtn', modalTitle: 'failed',
                 modalButtonVariant: "#E63C36", showTwoButtons: false})
         }
     }
@@ -296,6 +255,7 @@ class UserCampaigns extends Component {
         return (
             <div>
                 <Container>
+                <p className='modalTitle'><Trans i18nKey={'myFundraisers'}/></p>
                     {this.state.campaigns.length == 0 &&
                         <h1>
                             <Trans i18nKey='noUserCampaigns'>You did not create any campaigns yet. Click <Link to="/new">here</Link> to create your first campaign.</Trans>
@@ -316,168 +276,32 @@ class UserCampaigns extends Component {
                             <a target='_blank' href='https://docs.google.com/forms/d/e/1FAIpQLSdTo_igaNjF-1E51JmsjJgILv68RN2v5pisTcqTLvZvuUvLDQ/viewform'>form</a>
                             to ne granted permission to fundraise on HEO Platform
                         </Trans></p>
-                        {!this.state.waitToClose &&
-                        <UserContext.Consumer>
-                            {() => (
-                                <Button className='myModalButton'
-                                    style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
-                                    onClick={ async () => {
-                                       
-                                           if (!window.tron){
-                                            window.blockChainOrt = "ethereum";
-                                            this.setState({showModal:false})
-                                            if(this.state.goHome) {
-                                                this.props.history.push('/');
-                                            } else if(!this.state.isLoggedIn) {
-                                                try {
-                                                    if(!this.state.accounts || !this.state.web3) {
-                                                        await initWeb3(this.state.chainId, this);
-                                                    }
-                                                    await LogIn(this.state.accounts[0], this.state.web3, this);
-                                                    if(this.state.isLoggedIn) {
-                                                        await this.checkWL(this.state.chainId);
-                                                    }
-                                                } catch (err) {
-                                                    console.log(err);
-                                                    this.setState({showModal:true,
-                                                        goHome: true,
-                                                        waitToClose: false,
-                                                        isLoggedIn: false,
-                                                        modalTitle: 'authFailedTitle',
-                                                        modalMessage: 'authFailedMessage',
-                                                        modalButtonMessage: 'closeBtn',
-                                                        modalButtonVariant: "#E63C36"}
-                                                    );
-                                                }
-                                            }
-                                           } else if (window.tron){
-                                            window.blockChainOrt = "tron";
-                                            if(this.state.goHome) {
-                                                this.props.history.push('/');
-                                            } else if(!this.state.isLoggedInTron) {
-                                                try {
-                                                    if(!window.tronWeb) {
-                                                        await initTron(this.state.tronChainId , this);
-                                                    } 
-                                                    await  LogInTron(this); 
-                                                    if(this.state.isLoggedInTron) {
-                                                    await this.checkWLTron(this.state.tronChainId);
-                                                    }  
-                                                } catch (err) {
-                                                    console.log(err);
-                                                    this.setState({showModal:true,
-                                                        goHome: true,
-                                                        waitToClose: false,
-                                                        isLoggedInTron: false,
-                                                        modalTitle: 'authFailedTitle',
-                                                        modalMessage: 'authFailedMessage',
-                                                        modalButtonMessage: 'closeBtn',
-                                                        modalButtonVariant: "#E63C36"}
-                                                    );
-                                                }
-                                            }
-                                           } 
-                                       
-                                        
-                                    }}>
-                                    <Trans i18nKey={this.state.modalButtonMessage} />
-                                </Button>
-                                )}
-                        </UserContext.Consumer>
-                        }
-                    </Modal.Body>
-                </Modal>
-                <Modal show={this.state.showModalDialog} onHide={()=>{}} className='myModal' centered>
-                    <Modal.Body><p className='modalIcon'>
-                        {this.state.modalIcon == 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
-                        </p>
-                        <p className='modalTitle'><Trans i18nKey={this.state.modalTitle}/></p>
-                        <p className='modalMessage'><Trans i18nKey={'pleaseLogInMessageDuo'}>
-                            Your account has not been cleared to create campaigns.
-                            Please fill out this
-                            <a target='_blank' href='https://docs.google.com/forms/d/e/1FAIpQLSdTo_igaNjF-1E51JmsjJgILv68RN2v5pisTcqTLvZvuUvLDQ/viewform'>form</a>
-                            to ne granted permission to fundraise on HEO Platform
-                        </Trans></p>
-                        {!this.state.waitToClose &&
-                        <UserContext.Consumer>
-                            {() => (
-                                <Modal.Dialog>
-                                <Row lg = {2}> 
-                                <Col md = '6'>       
-                                 <Button className='myModalButton'  
-                                    style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
-                                    onClick={ async () => {
-                                        window.blockChainOrt = "ethereum";
-                                        this.setState({showModalDialog:false})
-                                        if(this.state.goHome) {
-                                            this.props.history.push('/');
-                                        } else if(!this.state.isLoggedIn) {
-                                            try {
-                                                if(!this.state.accounts || !this.state.web3) {
-                                                    await initWeb3(this.state.chainId, this);
-                                                }
-                                                await LogIn(this.state.accounts[0], this.state.web3, this);
-                                                if(this.state.isLoggedIn) {
-                                                    await this.checkWL(this.state.chainId);
-                                                }
-                                            } catch (err) {
-                                                console.log(err);
-                                                this.setState({showModal:true,
-                                                    goHome: true,
-                                                    waitToClose: false,
-                                                    isLoggedIn: false,
-                                                    modalTitle: 'authFailedTitle',
-                                                    modalMessage: 'authFailedMessage',
-                                                    modalButtonMessage: 'closeBtn',
-                                                    modalButtonVariant: "#E63C36"}
-                                                );
-                                            }
-                                        }
-                                    }}>
-                                    Ethereum
-                                </Button>
-                                </Col>
-                                <Col  md = '6'> 
-                                <Button className='myModalButton'
-                                style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
-                                onClick={ async () => {
-                                    this.setState({showModalDialog:false});
-                                    window.blockChainOrt = "tron";
-                                    if(this.state.goHome) {
-                                        this.props.history.push('/');
-                                    } else if(!this.state.isLoggedInTron) {
-                                        try {
-                                            if(!window.tronWeb) {
-                                                await initTron(this.state.tronChainId , this);
-                                            } 
-                                            await  LogInTron(this); 
-                                            if(this.state.isLoggedInTron) {
-                                            await this.checkWLTron(this.state.tronChainId);
-                                            }  
-                                        } catch (err) {
-                                            console.log(err);
-                                            this.setState({showModal:true,
-                                                goHome: true,
-                                                waitToClose: false,
-                                                isLoggedInTron: false,
-                                                modalTitle: 'authFailedTitle',
-                                                modalMessage: 'authFailedMessage',
-                                                modalButtonMessage: 'closeBtn',
-                                                modalButtonVariant: "#E63C36"}
-                                            );
-                                        }
-                                    }
-                                }}>
-                            Tron
-                            </Button>
-                            </Col>
-                            </Row> 
-                            </Modal.Dialog>
-                            )}
-                        </UserContext.Consumer>
-                        }
+                        { !this.state.waitToClose &&
+                        <Button className='myModalButton' style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
+                            onClick={ async () => {this.setState({showModal:false}); if(this.state.goHome) this.props.history.push('/');}}>
+                         <Trans i18nKey={this.state.modalButtonMessage} />  
+                        </Button>}
                    </Modal.Body>
                 </Modal>
+                <Row>
+                <Col>    
+                <Container className='backToCampaignsDiv'>
+                    <p className='backToCampaigns'><Link class={"backToCampaignsLink"} to="/"><ChevronLeft id='backToCampaignsChevron'/> <Trans i18nKey='backToCampaigns'/></Link></p>
+                </Container>
+                </Col>
+                <Col>
+                <Container className='backToCampaignsDiv'>
+                 <DropdownButton size='lg' id="dropdown-saccess-button" title={i18n.t('findUserCompanies')} className='backToCampaigns'>
+                   <Dropdown.Item onClick={async() => {
+                    await this.getCampaignsInEtherium();   
+                    }} >Etherium</Dropdown.Item>
+                   <Dropdown.Item onClick={async() => {
+                    await this.getCampaignsInTron();   
+                    }}>Tron</Dropdown.Item>
+                 </DropdownButton>
+                 </Container>
+                </Col>
+                </Row>
                 <div id="campaingListMainDiv">
                     <Container>
                         {this.state.campaigns.map((item, i) =>
