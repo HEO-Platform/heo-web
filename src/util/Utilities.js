@@ -36,9 +36,7 @@ const LogInTron = async (that) => {
     if(!window.tronAdapter){
         await initTronadapter();
     }
-    console.log("Метка 1");
     let res = await axios.get('/api/auth/msg');
-    console.log("Метка 2");
     let dataToSign = res.data.dataToSign;
     let hexStrWithout0x = window.tronWeb.toHex(dataToSign).replace(/^0x/, '');
     let byteArray = window.tronWeb.utils.code.hexStr2byteArray(hexStrWithout0x);
@@ -68,7 +66,7 @@ const LogInTron = async (that) => {
 }
 
 const LogIn = async (accountAdd, web3, that) => {
-    if (window.blockChainOrt === "tron") return;
+    
     that.setState({showModal:true, modalTitle: '',
         modalMessage: 'signThePhrase', modalIcon: 'HourglassSplit',
         modalButtonVariant: "#E63C36", waitToClose: false, modalButtonMessage: 'abortBtn',
@@ -166,7 +164,10 @@ const getTronWeb = async () => {
 }
 
 const initTron = async (chainId, that) => {
-
+    if(!window.tronWeb)
+    {
+        window.tronWeb = await getTronWeb();
+    }
     if(!window.tronAdapter){
         await initTronadapter();
     }
@@ -182,6 +183,7 @@ const initTron = async (chainId, that) => {
             label: chainConfig["CHAIN_NAME"],
             nonInteraction: false
         });
+          
     } catch (switchError) {
         // This error code indicates that the chain has not been added to Tronlink.
         if (switchError.code === 4902) {
@@ -345,14 +347,14 @@ const checkAuth = async (chainId, that, skipError=false) => {
     }
 }
 
-const initTronadapter = async() => {
+const initTronadapter = async(that) => {
 
-    window.tronAdapter = new TronLinkAdapter();
+    window.tronAdapter = new TronLinkAdapter(); 
+ 
 }
 
 const initWeb3Modal = async(chainId) => {
-   if((window.blockChainOrt) && (window.blockChainOrt == "ethereum"))
-     {
+   
         let rpc = [];
         let chains = config.get("CHAINS");
         let chainConfig = chains[chainId];
@@ -389,7 +391,7 @@ const initWeb3Modal = async(chainId) => {
                 }
             }
         });
-    }
+    
 }
 
 const getPCIPublicKey = async() => {
@@ -405,5 +407,5 @@ const encryptCardData = async(keyData, cardData) => {
 }
 
 export {DescriptionPreview, i18nString, GetLanguage, LogIn, initWeb3, checkAuth, initWeb3Modal, clearWeb3Provider,clearTronProvider,
-    getPCIPublicKey, encryptCardData, LogInTron, initTronadapter, checkAuthTron, initTron };
+    getPCIPublicKey, encryptCardData, LogInTron, initTronadapter, checkAuthTron, initTron, getTronWeb };
 export default Utilities;

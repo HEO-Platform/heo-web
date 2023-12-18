@@ -63,7 +63,7 @@
     "abortBtn" : "ABORT",
     "web3WalletRequired": "Web3 Wallet is Required",
     "authFailedTitle": "Login failed",
-    "authFailedMessage": "Authentication failed. Please check your wallet app for details",
+    "authFailedMessage": "Authentication failed. Please check your wallet app for details and try again",
     "pleaseLogInTitle": "Authentication Required",
     "pleaseLogInMessage": "Please log in to see your campaigns",
     "pleaseLogInToCreateMessage": "Please, authorize using your crypto wallet",
@@ -191,9 +191,11 @@
     "prevention4" : "After your campaign is deployed to the blockchain, it will undergo a verification process, which takes 1-3 working days. Therefore, we strongly recommend providing your up-to-date contact information. Our managers may get in touch with you to clarify details and verify the accuracy of the information you provided.",
     "registration" : "Registration",
     "authorization" : "Authorization",
-    "deauthorization" : "Exit Authorization",
+    "deauthorization" : "Log out of Authorization",
     "confcode": "Confirmation Code",
     "authorizedBtn": "Authorized",
+    "registrationBtn" : "Register",
+    "deauthorizedBtn": "Exit Authorization",
     "register": "Register",
     "password": "Password",
     "repeetpass": "Repeat Password",
@@ -211,8 +213,14 @@
     "attention" : "ATTENTION!!",
     "registrationComplete" : "You have successfully registered",
     "authorizationComplete" : "You have successfully been authorized",
+    "deauthorizationComplete" : "You have successfully logged out of authorization",
     "oldemail" : "A user with this e-mail address already exists in the system",
     "noUser" : "There is no such user in the system",
-    "badPassword" : "Invalid password"
+    "badPassword" : "Invalid password",
+    "noLogMessage": "You must log in before you can create a company or open a list of your companies.",
+    "deployBtn":"Deploy companies in blockchain networks",
+    "findUserCompanies": "Find user companies",
+    "waitingForOperation": "We are waiting for the completion of the operation",
+    "operationSaccess":"Operation completed successfully"
 }
 
