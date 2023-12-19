@@ -254,6 +254,7 @@ class UserCampaigns extends Component {
     render() {
         return (
             <div>
+               <Row> 
                 <Container>
                 <p className='modalTitle'><Trans i18nKey={'myFundraisers'}/></p>
                     {this.state.campaigns.length == 0 &&
@@ -262,6 +263,26 @@ class UserCampaigns extends Component {
                         </h1>
                     }
                 </Container>
+                </Row>
+                <Row>
+                <Col>    
+                <Container className='backToCampaignsDiv'>
+                    <p className='backToCampaigns'><Link class={"backToCampaignsLink"} to="/"><ChevronLeft id='backToCampaignsChevron'/> <Trans i18nKey='backToCampaigns'/></Link></p>
+                </Container>
+                </Col>
+                <Col>
+                <Container className='backToCampaignsDiv'>
+                 <DropdownButton size='lg' id="dropdown-saccess-button" title={i18n.t('findUserCompanies')} className='backToCampaigns'>
+                   <Dropdown.Item onClick={async() => {
+                    await this.getCampaignsInEtherium();   
+                    }} >Etherium</Dropdown.Item>
+                   <Dropdown.Item onClick={async() => {
+                    await this.getCampaignsInTron();   
+                    }}>Tron</Dropdown.Item>
+                 </DropdownButton>
+                 </Container>
+                </Col>
+                </Row>
                 <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' centered>
                     <Modal.Body><p className='modalIcon'>
                         {this.state.modalIcon == 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
@@ -283,25 +304,6 @@ class UserCampaigns extends Component {
                         </Button>}
                    </Modal.Body>
                 </Modal>
-                <Row>
-                <Col>    
-                <Container className='backToCampaignsDiv'>
-                    <p className='backToCampaigns'><Link class={"backToCampaignsLink"} to="/"><ChevronLeft id='backToCampaignsChevron'/> <Trans i18nKey='backToCampaigns'/></Link></p>
-                </Container>
-                </Col>
-                <Col>
-                <Container className='backToCampaignsDiv'>
-                 <DropdownButton size='lg' id="dropdown-saccess-button" title={i18n.t('findUserCompanies')} className='backToCampaigns'>
-                   <Dropdown.Item onClick={async() => {
-                    await this.getCampaignsInEtherium();   
-                    }} >Etherium</Dropdown.Item>
-                   <Dropdown.Item onClick={async() => {
-                    await this.getCampaignsInTron();   
-                    }}>Tron</Dropdown.Item>
-                 </DropdownButton>
-                 </Container>
-                </Col>
-                </Row>
                 <div id="campaingListMainDiv">
                     <Container>
                         {this.state.campaigns.map((item, i) =>
