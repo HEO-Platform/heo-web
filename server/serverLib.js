@@ -159,9 +159,9 @@ class ServerLib {
 
     async handleAddCampaign(req, res, Sentry, DB, newWalletId) {
         const ITEM = {
-            _id: req.body.mydata.address.toLowerCase(),
-            beneficiaryId: req.body.mydata.beneficiaryId.toLowerCase(),
-            ownerId: req.user.address.toLowerCase(),
+            _id: req.body.mydata.id,
+            beneficiaryId: req.user.email,
+            ownerId: req.user.email,
             title: req.body.mydata.title,
             mainImageURL: req.body.mydata.mainImageURL,
             qrCodeImageURL: req.body.mydata.qrCodeImageURL,
@@ -184,6 +184,7 @@ class ServerLib {
             lastDonationTime: 0,
             coins: req.body.mydata.coins,
             addresses: req.body.mydata.addresses,
+            accounts: req.body.mydata.accounts, 
             active: false,
             new: true
         }
@@ -205,10 +206,10 @@ class ServerLib {
         } catch (err) {
             Sentry.captureException(new Error(err));
         }
-        if(!result || result.ownerId != req.user.address.toLowerCase()) {
-            Sentry.captureException(new Error(`Campaign's ownerId (${result.ownerId}) does not match the user (${req.user.address})`));
+        if(!result || result.ownerId != req.user.email) {
+            Sentry.captureException(new Error(`Campaign's ownerId (${result.ownerId}) does not match the user (${req.user.email})`));
             res.sendStatus(500);
-            console.log(`Campaign's ownerId (${result.ownerId}) does not match the user (${req.user.address})`);
+            console.log(`Campaign's ownerId (${result.ownerId}) does not match the user (${req.user.email})`);
         } else {
             try{
                 const myCollection = await DB.collection('campaigns');
@@ -224,9 +225,9 @@ class ServerLib {
     async handleDeactivateCampaign(req, res, Sentry, DB) {
         let myCollection = await DB.collection("campaigns");
         let result = await myCollection.findOne({"_id" : req.body.id});
-        if(!result || result.ownerId != req.user.address.toLowerCase()) {
+        if(!result || result.ownerId != req.user.email) {
             res.sendStatus(500);
-            console.log(`Campaign's ownerId (${result.ownerId}) does not match the user (${req.user.address})`);
+            console.log(`Campaign's ownerId (${result.ownerId}) does not match the user (${req.user.email})`);
         } else {
             try {
                 const myCollection = await DB.collection('campaigns');
@@ -322,9 +323,8 @@ class ServerLib {
 
     async handleLoadUserCampaigns(req, res, Sentry, DB) {
         try{
-            const key = "addresses." + req.body.fieldName;
             const myCollection = await DB.collection('campaigns');
-            const campaigns = await myCollection.find({"ownerId" : {$eq: req.user.address},[key]:{ $exists : true }, active: true});
+            const campaigns = await myCollection.find({"ownerId" : {$eq: req.user.email}, active: true});
             const result = await campaigns.toArray();
             res.send(result);
         } catch (err) {
@@ -379,7 +379,7 @@ class ServerLib {
     }
 
     async authenticated(req, res, Sentry) {
-        if(req.user && req.user.address) {
+        if(req.user && req.user.email) {
           return true;
         } else {
             Sentry.captureException(new Error('Failed 401'));
