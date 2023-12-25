@@ -141,16 +141,26 @@ APP.post('/api/circlenotifications', async (req, res) => {
 });
 
 APP.post('/api/uploadimage', (req,res) => {
- if(serverLib.authenticated(req, res, Sentry)) serverLib.handleUploadImage(req, res, S3, Sentry);
+ if(serverLib.authenticated(req, res, Sentry)) 
+ serverLib.handleUploadImage(req, res, S3, Sentry);
 });
 
 APP.post('/api/deleteimage', (req, res) => {
     if(serverLib.authenticated(req, res, Sentry)) serverLib.handleDeleteImage(req, res, S3, Sentry);
 });
 
+APP.post('/api/is_autorisation', function(req, res) {
+    if(req.user && req.user.email) {
+         res.send(req.user.email);
+    } else {
+       res.send(false);
+    }
+});
+
 APP.post('/api/campaign/add', async (req, res) => {
     if(serverLib.authenticated(req, res, Sentry)) {
         const DB = CLIENT.db(DBNAME);
+        
         let walletId, fiatPayment;
         try {
             fiatPayment = await serverLib.handleGetFiatPaymentSettings(DB, Sentry);
@@ -158,10 +168,11 @@ APP.post('/api/campaign/add', async (req, res) => {
                 walletId = await circleLib.createCircleWallet(req.body.mydata.address, CIRCLE_API_KEY, Sentry)
             }
         } catch (err) {Sentry.captureException(new Error(err));}
+       
        if (serverLib.handleAddCampaign(req, res, Sentry, DB, walletId)){
         const text = "There is a new campaign. Please review. " + "Сampaign title - " + req.body.mydata.title["default"] +
-        ". Сampaign name " + req.body.mydata.org["default"] + ". Сampaign ID - " +  req.body.mydata.address.toLowerCase() + ". Сampaign beneficiary - " +
-        req.body.mydata.beneficiaryId.toLowerCase() + ". Сampaign owner - " + req.user.address.toLowerCase() + ". Сampaign key - " + req.body.mydata.key + ".";
+        ". Сampaign name " + req.body.mydata.org["default"] + ". Сampaign ID - " +  req.body.mydata.id + ". Сampaign beneficiary - " +
+        req.user.email + ". Сampaign owner - " + req.user.email + ". Сampaign key - " + req.body.mydata.key + ".";
         serverLib.handleSendEmail(req, res, Sentry, 'New Campaign Alert', text, DB);
        }
        else res.sendStatus(500);
@@ -180,6 +191,13 @@ APP.post('/api/campaign/update', (req, res) => {
     if(serverLib.authenticated(req, res, Sentry)) {
         const DB = CLIENT.db(DBNAME);
         serverLib.handleUpdateCampaign(req, res, Sentry, DB);
+    }
+});
+
+APP.post('/api/campaign/campaignstouser', (req, res) => {
+    if(serverLib.authenticated(req, res, Sentry)) {
+        const DB = CLIENT.db(DBNAME);
+       serverLib.handleAddCampaignsToUser(req, res, Sentry, DB);
     }
 });
 
@@ -241,21 +259,12 @@ APP.get('/api/auth/msg', (req, res) => {
     res.json({dataToSign:`Today is ${(new Date()).toDateString()}`});
 });
 
-APP.post('/api/auth/jwt_tron', async(req, res) =>{
-    try{
-        let token = jsonwebtoken.sign({ address:req.body.addr.toLowerCase() }, process.env.JWT_SECRET, { expiresIn: '7d' });
-        res.cookie('authToken', token, { httpOnly: true }).send({success:true});
-    } catch (err) {
-        Sentry.captureException(new Error(err));
-        res.sendStatus(401);
-    }
-});
 
 APP.post('/api/auth/registr_start', async (req, res) => {
     const DB = CLIENT.db(DBNAME);
     let result = await serverLib.handleCheckUser(req, DB);
-    if(result > 0)  res.send('bad_user');
-    else{
+    if(result > 0)  res.send('old_user');
+    else if (result === 0){
         let text = await serverLib.handleRegistrationStart(req, res, Sentry);
         await serverLib.handleSendEmail(req, res, Sentry, "HEO-Platform Confirmation Code", text, DB);
     }
@@ -263,9 +272,10 @@ APP.post('/api/auth/registr_start', async (req, res) => {
 
 APP.post('/api/auth/autor_start', async (req, res) => {
     const DB = CLIENT.db(DBNAME);
-    let result = serverLib.handleCheckUser(req, DB);
-    if(result == 0)  res.send('no_user');
-    else{
+    let result = await serverLib.handleCheckUser(req, DB);
+    if(result === 0)  res.send('no_user');
+    else if (result === 2) res.send('bad_password');
+    else if (result === 1){
         let text = await serverLib.handleRegistrationStart(req, res, Sentry);
         await serverLib.handleSendEmail(req, res, Sentry, "HEO-Platform Confirmation Code", text, DB);
     }
@@ -285,6 +295,17 @@ APP.post('/api/auth/autor_end', async (req, res) => {
     try{
         let token = jsonwebtoken.sign({ email:req.body.mydata.to_email }, process.env.JWT_SECRET, { expiresIn: '7d' });
         res.cookie('authToken', token, { httpOnly: true }).send({success:true});
+    } catch (err) {
+        console.log("error autorisation:");
+        console.log(err);
+        Sentry.captureException(new Error(err));
+        res.sendStatus(401);
+    }
+})
+
+APP.post('/api/auth/deautor', async (req, res) => {
+    try{
+       res.clearCookie('authToken', { httpOnly: true }).send({success:true});
     } catch (err) {
         Sentry.captureException(new Error(err));
         res.sendStatus(401);
