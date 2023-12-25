@@ -60,7 +60,7 @@
     "nonWLTitle": "Не разрешено",
     "nonWLMessage": "Вам не разрешено заводить кампании. Пожалуйста заполните эту <1>форму</1> чтобы быть получить разрешение на сбор пожертвований через HEO Platform",
     "updatingCampaignOnBlockchain": "Сохраняем новые данные кампании в блокчейн...",
-    "updatingAmountFailed" : "Не удалось изменить данные в блокчейн. Попробуйте ещё раз",
+    "updatingAmountFailedEtherium" : "Не удалось изменить данные в блокчейн. Попробуйте ещё раз",
     "closeCmpnBtn" : "ЗАВЕРШИТЬ",
     "editCmpnBtn": "РЕДАКТИРОВАТЬ",
     "closeCampaign" : "Завершить кампанию?",
@@ -192,7 +192,6 @@
     "deauthorization" : "Выход из авторизации",
     "confcode": "Код подтверждения",
     "authorizedBtn": "Авторизоваться",
-    "registrationBtn" : "Зарегистрироваться",
     "deauthorizedBtn": "Выйти из авторизации",
     "password": "Пароль",
     "repeetpass": "Повторить пароль",
@@ -215,9 +214,12 @@
     "noUser" : "Такого пользователя нет в системе",
     "badPassword" : "неверный пароль",
     "noLogMessage": "Прежде чем создать компанию или открыть список своих компаний необходимо авторизоваться.",
-    "deployBtn":"Развернуть компании в сетях блокчейн",
+    "deployBtn":"Развернуть компанию в сетях блокчейн",
     "findUserCompanies": "Найти компании пользователя",
     "waitingForOperation": "Ждём окончания выполнения операции",
-    "operationSaccess":"Операция удачно завершена"
- 
+    "operationSaccess":"Операция удачно завершена",
+    "campaignInEthereum": "Компания сохранена в Ethereum",
+    "campaignInTron": "Компания сохранена в Tron",
+    "updateInTronFailed": "Не удалось сохранить изменения в Tron",
+    "updateInEthereumFailed": "Не удалось сохранить изменения в Ethereum"
 }

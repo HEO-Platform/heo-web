@@ -16,24 +16,50 @@ class Registration extends React.Component {
         this.state = {
           showModal: false,
           modalTitle: '',
-          modalTitleError: '',
           showModalRegistr: false,
           showModalConnect: false,
           showModalDisconnect: false,
           showModalCode: false,
+          modalIcon: '',
           email: '',
           password: '',
           repeetpass: '',
           confcode: '',
-          key: ''
+          key: '',
+          waitToClose: false
         };
     };
 
-    async startAuthorization(event){
+    async deAutorisation(){
+      this.setState(
+        {showModal:true, modalTitle: 'processingWait',
+        modalMessage: 'waitingForOperation', modalIcon: 'HourglassSplit',
+        modalButtonVariant: "gold", waitToClose: true
+        }); 
+     let res = await axios.post('/api/auth/deautor',
+                          {headers: {"Content-Type": "application/json"}});
+      if ((res.data.success)&&(res.data.success == true)) {
+        this.setState({showModal: true, goHome: true,
+              modalTitle: 'success',
+              modalMessage: 'authorizationComplete',  showModalDisconnect:false,
+              modalIcon: 'CheckCircle',
+              showModalCode: false,
+              modalButtonMessage: 'returnHome',
+              modalButtonVariant: "#E63C36", waitToClose: false
+            }); 
+      }
+    }  
+
+    async startAuthorization(){
       try{
+        this.setState(
+          {showModal:true, modalTitle: 'processingWait',
+          modalMessage: 'waitingForOperation', modalIcon: 'HourglassSplit',
+          modalButtonVariant: "gold", waitToClose: true
+          });
         if(!this.state.email) {
           this.setState(
-              {showModal:true, modalTitleError: 'requiredFieldsTitle',
+              {showModal:true, modalTitle: 'requiredFieldsTitle',
                   modalMessage: 'emailRequired', modalIcon: 'ExclamationTriangle',
                   waitToClose: false,
                   modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
@@ -42,7 +68,7 @@ class Registration extends React.Component {
         }
         if(!this.state.password) {
           this.setState(
-              {showModal:true, modalTitleError: 'requiredFieldsTitle',
+              {showModal:true, modalTitle: 'requiredFieldsTitle',
                   modalMessage: 'passwordRequired', modalIcon: 'ExclamationTriangle',
                   waitToClose: false,
                   modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
@@ -51,34 +77,37 @@ class Registration extends React.Component {
         } 
         let userData = {};
         userData.to_email = this.state.email;
+        userData.password = this.state.password;
         let res = await axios.post('/api/auth/autor_start', {mydata : userData},
                            {headers: {"Content-Type": "application/json"}}); 
-        if (res.data == 'no_user'){
+        console.log("авторизация:");
+        console.log(res);                   
+        if (res.data === 'no_user'){
          this.setState(
-           {showModal:true, modalTitleError: 'failed',
+           {showModal:true, modalTitle: 'failed',
                modalMessage: 'noUser', modalIcon: 'ExclamationTriangle',
                waitToClose: false,
                modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
          });
          return (false);  
         }    
-        if (res.data == 'bad_password'){
+        if (res.data === 'bad_password'){
           this.setState(
-            {showModal:true, modalTitleError: 'failed',
+            {showModal:true, modalTitle: 'failed',
                 modalMessage: 'badPassword', modalIcon: 'ExclamationTriangle',
                 waitToClose: false,
                 modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
           });
           return (false);  
          }                     
-        this.setState({showModal: true, modalTitleError: "attention", modalMessage: 'sendcode',
+        this.setState({showModal: true, modalTitle: "attention", modalMessage: 'sendcode',
            modalIcon: 'InfoCircle', 
            modalButtonMessage: 'ok',
            modalButtonVariant: "#E63C36", waitToClose: false
         });                   
       }catch(error)  {
         this.setState({showModal: true, goHome: true,
-          modalTitleError: 'failed',
+          modalTitle: 'failed',
           modalMessage: 'errorAuthorization',
           modalIcon: 'CheckCircle',
           modalButtonMessage: 'ok',
@@ -87,11 +116,16 @@ class Registration extends React.Component {
       }
     }
 
-    async startRegistration(event){
+    async startRegistration(){
       try{
+        this.setState(
+          {showModal:true, modalTitle: 'processingWait',
+          modalMessage: 'waitingForOperation', modalIcon: 'HourglassSplit',
+          modalButtonVariant: "gold", waitToClose: true
+          });
         if(!this.state.email) {
           this.setState(
-              {showModal:true, modalTitleError: 'requiredFieldsTitle',
+              {showModal:true, modalTitle: 'requiredFieldsTitle',
                   modalMessage: 'emailRequired', modalIcon: 'ExclamationTriangle',
                   waitToClose: false,
                   modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
@@ -100,7 +134,7 @@ class Registration extends React.Component {
         }
         if(!this.state.password) {
           this.setState(
-              {showModal:true, modalTitleError: 'requiredFieldsTitle',
+              {showModal:true, modalTitle: 'requiredFieldsTitle',
                   modalMessage: 'passwordRequired', modalIcon: 'ExclamationTriangle',
                   waitToClose: false,
                   modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
@@ -109,7 +143,7 @@ class Registration extends React.Component {
         }
         if(!this.state.repeetpass) {
           this.setState(
-              {showModal:true, modalTitleError: 'requiredFieldsTitle',
+              {showModal:true, modalTitle: 'requiredFieldsTitle',
                   modalMessage: 'repeetpassRequired', modalIcon: 'ExclamationTriangle',
                   waitToClose: false,
                   modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
@@ -118,7 +152,7 @@ class Registration extends React.Component {
         }
         if(this.state.password != this.state.repeetpass) {
           this.setState(
-            {showModal:true, modalTitleError: 'requiredFieldsTitle',
+            {showModal:true, modalTitle: 'requiredFieldsTitle',
                 modalMessage: 'passwordsNoMatch', modalIcon: 'ExclamationTriangle',
                 waitToClose: false,
                 modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
@@ -128,25 +162,26 @@ class Registration extends React.Component {
         let userData = {};
         userData.to_email = this.state.email;
         userData.password = this.state.password;
+        
         let res = await axios.post('/api/auth/registr_start', {mydata : userData},
                            {headers: {"Content-Type": "application/json"}}); 
-        if (res.data == 'bad_user'){
+        if (res.data === 'old_user'){
           this.setState(
-            {showModal:true, modalTitleError: 'failed',
+            {showModal:true, modalTitle: 'failed',
                 modalMessage: 'oldemail', modalIcon: 'ExclamationTriangle',
                 waitToClose: false,
                 modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
             });
           return (false);  
         }                   
-        this.setState({showModal: true, modalTitleError: "attention", modalMessage: 'sendcode',
+        this.setState({showModal: true, modalTitle: "attention", modalMessage: 'sendcode',
           modalIcon: 'InfoCircle', 
           modalButtonMessage: 'ok',
           modalButtonVariant: "#E63C36", waitToClose: false
         });
       } catch(error)  {
         this.setState({showModal: true, goHome: true,
-          modalTitleError: 'failed',
+          modalTitle: 'failed',
           modalMessage: 'errorRegistration',
           modalIcon: 'CheckCircle',
           modalButtonMessage: 'ok',
@@ -157,18 +192,47 @@ class Registration extends React.Component {
 
     async resendCode(){
       try{
+        this.setState(
+          {showModal:true, modalTitle: 'processingWait',
+          modalMessage: 'waitingForOperation', modalIcon: 'HourglassSplit',
+          modalButtonVariant: "gold", waitToClose: true
+          }); 
         let userData = {};
         userData.to_email = this.state.email;
-        let res = await axios.post('/api/auth/registr_start', {mydata : userData},
+        userData.password = this.password;
+        let res;
+        if(this.state.key == "registr")
+        res =await axios.post('/api/auth/registr_start', {mydata : userData},
                  {headers: {"Content-Type": "application/json"}}); 
-        this.setState({showModal: true, modalTitleError: "attention", modalMessage: 'sendcode',
+        else if(this.state.key == "connect")
+        res = await axios.post('/api/auth/autor_start', {mydata : userData},
+                           {headers: {"Content-Type": "application/json"}}); 
+        if (res.data == 'no_user'){
+         this.setState(
+           {showModal:true, modalTitle: 'failed',
+               modalMessage: 'noUser', modalIcon: 'ExclamationTriangle',
+               waitToClose: false,
+               modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
+         });
+         return (false);  
+        }    
+        if (res.data == 'bad_password'){
+          this.setState(
+            {showModal:true, modalTitle: 'failed',
+                modalMessage: 'badPassword', modalIcon: 'ExclamationTriangle',
+                waitToClose: false,
+                modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
+          });
+          return (false);  
+         }        
+        this.setState({showModal: true, modalTitle: "attention", modalMessage: 'sendcode',
           modalIcon: 'InfoCircle', 
           modalButtonMessage: 'ok',
           modalButtonVariant: "#E63C36", waitToClose: false
         });
       } catch(error)  {
         this.setState({showModal: true, goHome: true,
-          modalTitleError: 'failed',
+          modalTitle: 'failed',
           modalMessage: 'errorRegistration',
           modalIcon: 'CheckCircle',
           modalButtonMessage: 'ok',
@@ -179,6 +243,11 @@ class Registration extends React.Component {
 
     async endAuthorization(event){
       try{
+        this.setState(
+          {showModal:true, modalTitle: 'processingWait',
+          modalMessage: 'waitingForOperation', modalIcon: 'HourglassSplit',
+          modalButtonVariant: "gold", waitToClose: true
+          });
         let userData = {};
         userData.to_email = this.state.email;
         userData.code = this.state.confcode;
@@ -187,7 +256,7 @@ class Registration extends React.Component {
                           {headers: {"Content-Type": "application/json"}}); 
         if (res.data == false){
           this.setState(
-            {showModal:true, modalTitleError: 'requiredFieldsTitle',
+            {showModal:true, modalTitle: 'requiredFieldsTitle',
                 modalMessage: 'badcode', modalIcon: 'ExclamationTriangle',
                 waitToClose: false, 
                 modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
@@ -197,30 +266,28 @@ class Registration extends React.Component {
         else{
           res = await axios.post('/api/auth/autor_end', {mydata : userData},
                           {headers: {"Content-Type": "application/json"}});
-            if ((res.data.success)&&(res.data.success == true)) {
+          if (res.data.success == true) {
             this.setState({showModal: true, goHome: true,
-              modalTitleError: 'success',
+              modalTitle: 'success',
               modalMessage: 'authorizationComplete',
               modalIcon: 'CheckCircle',
               showModalCode: false,
               modalButtonMessage: 'returnHome',
               modalButtonVariant: "#E63C36", waitToClose: false
             }); 
-            window.connect = true;
-            console.log(document.cookie);
           }else{
             this.setState({showModal: true, goHome: true,
-              modalTitleError: 'failed',
+              modalTitle: 'failed',
               modalMessage: 'errorAuthorization',
               modalIcon: 'CheckCircle',
               modalButtonMessage: 'returnHome',
               modalButtonVariant: "#E63C36", waitToClose: false
             });
-          }                
+          } 
         }   
       } catch(error)  {
         this.setState({showModal: true, goHome: true,
-          modalTitleError: 'failed',
+          modalTitle: 'failed',
           modalMessage: 'errorAuthorization',
           modalIcon: 'CheckCircle',
           modalButtonMessage: 'returnHome',
@@ -231,6 +298,11 @@ class Registration extends React.Component {
 
     async endRegistration(event){
       try{
+        this.setState(
+          {showModal:true, modalTitle: 'processingWait',
+          modalMessage: 'waitingForOperation', modalIcon: 'HourglassSplit',
+          modalButtonVariant: "gold", waitToClose: true
+          });
         let userData = {};
         userData.to_email = this.state.email;
         userData.code = this.state.confcode;
@@ -239,7 +311,7 @@ class Registration extends React.Component {
                           {headers: {"Content-Type": "application/json"}});  
         if (res.data == false){
           this.setState(
-            {showModal:true, modalTitleError: 'requiredFieldsTitle',
+            {showModal:true, modalTitle: 'requiredFieldsTitle',
                 modalMessage: 'badcode', modalIcon: 'ExclamationTriangle',
                 waitToClose: false, 
                 modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
@@ -251,16 +323,17 @@ class Registration extends React.Component {
                           {headers: {"Content-Type": "application/json"}});
           if (res.data == 'success') {
             this.setState({showModal: true, goHome: true,
-              modalTitleError: 'successd',
+              modalTitle: 'successd',
               modalMessage: 'registrationComplete',
               modalIcon: 'CheckCircle',
               showModalCode: false,
               modalButtonMessage: 'returnHome',
               modalButtonVariant: "#E63C36", waitToClose: false
-            }); 
+            });
+             
           }else{
             this.setState({showModal: true, goHome: true,
-              modalTitleError: 'failed',
+              modalTitle: 'failed',
               modalMessage: 'errorRegistration',
               modalIcon: 'CheckCircle',
               modalButtonMessage: 'returnHome',
@@ -270,7 +343,7 @@ class Registration extends React.Component {
         }   
       } catch(error)  {
         this.setState({showModal: true, goHome: true,
-          modalTitleError: 'failed',
+          modalTitle: 'failed',
           modalMessage: 'errorRegistration',
           modalIcon: 'CheckCircle',
           modalButtonMessage: 'returnHome',
@@ -293,38 +366,36 @@ class Registration extends React.Component {
         return(
            <div>
             <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' centered>
-                    <Modal.Body><p className='errorIcon'>
-                        {this.state.errorIcon == 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
-                        {this.state.errorIcon == 'ExclamationTriangle' && <ExclamationTriangle/>}
-                        {this.state.errorIcon == 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
-                        {this.state.errorIcon == 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
-                        {this.state.errorIcon == 'InfoCircle' && <InfoCircle style={{color: '#588157'}}/>}
+                    <Modal.Body><p className='modalIcon'>
+                        {this.state.modalIcon == 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
+                        {this.state.modalIcon== 'ExclamationTriangle' && <ExclamationTriangle/>}
+                        {this.state.modalIcon== 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
+                        {this.state.modalIcon == 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
+                        {this.state.modalIcon == 'InfoCircle' && <InfoCircle style={{color: '#588157'}}/>}
                         </p>
-                        <p className='modalTitle'><Trans i18nKey={this.state.modalTitleError}/></p>
+                        <p className='modalTitle'><Trans i18nKey={this.state.modalTitle}/></p>
                         <p className='modalMessage'><Trans i18nKey={this.state.modalMessage}/></p>
                         {!this.state.waitToClose &&
                         <Button className='modalButtonError'
                             style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
-                            onClick={ () => {this.setState({showModal:false, modalButtonVariant: '#588157'});
-                               if(this.state.modalButtonMessage == 'returnHome') this.props.history.push('/');
-                               else if(this.state.modalTitleError == 'attention') 
-                                   this.setState({showModalCode: true, showModalRegistr: false, showModalConnect: false});
-                            }}>
+                            onClick={ async() => {this.setState({showModal:false, modalButtonVariant: '#588157'});
+                               if(this.state.modalButtonMessage == 'returnHome') await this.props.history.push('/');
+                               else if(this.state.modalTitle == 'attention') 
+                                  this.setState({showModalCode: true, showModalRegistr: false, showModalConnect: false});
+                            }}> 
                             <Trans i18nKey={this.state.modalButtonMessage} />
                         </Button>
                         }
                     </Modal.Body>
              </Modal>
-             <Modal show={this.state.showModalRegistr} onHide={()=>{}} className='myModal'>
+             <Modal show={this.state.showModalRegistr} size='lg' onHide={()=>{}} className='myModal'>
              <Modal.Header>
-                <Modal.Title className='modalTitle' style={{margin: {left: "30%"}}}>
-                <Trans i18nKey={this.state.modalTitle}/>
-                </Modal.Title>
+                <Modal.Title className='modalTitle'><Trans i18nKey={'registration'}/></Modal.Title>
              </Modal.Header>  
              <Modal.Body>
                 <Form> 
                 <Form.Group>
-                <Row>
+                <Row show = {false}>
                  <p className='redAsterisk'><Trans i18nKey={'email'}/></p> 
                 </Row>
                 <Row>
@@ -351,7 +422,7 @@ class Registration extends React.Component {
                 <Col>
                 <Button className='myModalButton'
                       onClick={ async() => {
-                         this.startRegistration();
+                        await this.startRegistration();
                        }}>
                   <Trans i18nKey= 'registerBtn' />
                  </Button>
@@ -359,17 +430,18 @@ class Registration extends React.Component {
                 <Col>
                 <Button className='myModalButton'
                   onClick={ async() => {
-                  this.props.history.push('/');
+                 await this.props.history.push('/');
                 }}>
                   <Trans i18nKey= 'closeBtn' />
                  </Button>
                 </Col>
                 </Row>
                 </Modal.Body>   
-            </Modal>  
-            <Modal show={this.state.showModalCode} onHide={()=>{}} className='myModal' centered>
+            </Modal>
+            
+            <Modal show={this.state.showModalCode} size='lg' onHide={()=>{}} className='myModal' centered>
              <Modal.Header>
-                <p className='modalTitle'><Trans i18nKey={this.state.modalTitle}/></p>   
+                <p className='modalTitle'><Trans i18nKey={'confcode'}/></p>   
              </Modal.Header>  
             <Modal.Body>
                 <Form> 
@@ -383,32 +455,30 @@ class Registration extends React.Component {
                 </Row>
                 </Form.Group>
                 </Form> 
-               <Row md = {3}>
+               <Row md = {5}>
                 <Col>
                 <Button className='myModalButton'
                  style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
                        onClick={ async() => {
-                        if(this.state.key == "registr") this.endRegistration();
-                        else if(this.state.key == "connect") this.endAuthorization();
+                        if(this.state.key == "registr") await this.endRegistration();
+                        else if(this.state.key == "connect") await this.endAuthorization();
                        }}>
                   <Trans i18nKey= 'ok' />
                  </Button>
                  </Col>
+                 <Col>  </Col>
                  <Col>
                  <Button className='myModalButton'
                  style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
-                       onClick={ async() => {
-                        this.props.history.push('/');
-                       }}>
+                       onClick={ async() => {await this.props.history.push('/');}}>
                   <Trans i18nKey= 'closeBtn' />
                  </Button>
                  </Col>
+                 <Col>  </Col>
                  <Col>
                  <Button className='myModalButton'
                  style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
-                       onClick={ async() => {
-                         this.resendCode();
-                       }}>
+                       onClick={ async() =>{await this.resendCode();}}>
                   <Trans i18nKey= 'resendcode' />
                  </Button>
                  </Col> 
@@ -416,11 +486,9 @@ class Registration extends React.Component {
                 </Modal.Body>
             </Modal> 
 
-            <Modal show={this.state.showModalConnect} onHide={()=>{}} className='myModal'>
+            <Modal show={this.state.showModalConnect} size='lg' onHide={()=>{}} className='myModal'>
              <Modal.Header>
-                <Modal.Title className='modalTitle' style={{margin: {left: "30%"}}}>
-                <Trans i18nKey={this.state.modalTitle}/>
-                </Modal.Title>
+              <p className='modalTitle'><Trans i18nKey={'authorization'}/></p>
              </Modal.Header>  
              <Modal.Body>
                 <Form> 
@@ -441,20 +509,53 @@ class Registration extends React.Component {
                 </Row>
                 </Form.Group>
                 </Form> 
-               <Row md = {2}>
+               <Row md = {3}>
                 <Col>
                 <Button className='myModalButton'
+                    style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
                       onClick={ async() => {
-                         this.startAuthorization();
+                        await this.startAuthorization();
                        }}>
                   <Trans i18nKey= 'authorizedBtn' />
                  </Button>
                 </Col>
                 <Col>
                 <Button className='myModalButton'
+                   style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
+                   onClick={ async() => {
+                    await this.startRegistration();}}>
+                  <Trans i18nKey= 'registerBtn' />
+                 </Button>
+                </Col>
+                <Col>
+                <Button className='myModalButton'
+                  style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
                   onClick={ async() => {
-                  this.props.history.push('/');
-                }}>
+                   await this.props.history.push('/');}}>
+                  <Trans i18nKey= 'closeBtn' />
+                 </Button>
+                </Col>
+                </Row>
+                </Modal.Body>   
+            </Modal>  
+            <Modal show={this.state.showModalDisconnect} onHide={()=>{}} className='myModal'>
+             <Modal.Header>
+                <Modal.Title className='modalTitle'><Trans i18nKey={'deauthorization'}/></Modal.Title>
+             </Modal.Header>  
+             <Modal.Body>
+              <Row md = {2}>
+                <Col>
+                <Button className='myModalButton'
+                      onClick={ async() => {
+                       await this.deAutorisation();
+                       }}>
+                  <Trans i18nKey= 'deauthorizedBtn' />
+                 </Button>
+                </Col>
+                <Col>
+                <Button className='myModalButton'
+                  onClick={ async() => {
+                   await this.props.history.push('/');}} >
                   <Trans i18nKey= 'closeBtn' />
                  </Button>
                 </Col>
@@ -471,7 +572,7 @@ class Registration extends React.Component {
       let key = toks[toks.length -1];
       if(key == "registr") this.setState({showModalRegistr: true, modalTitle: "registration", key: key});
       else if(key == "connect") this.setState({showModalConnect: true, modalTitle: "authorization", key: key });
-      else if(key == "disconnect") this.setState({showModalRegistr: true, modalTitle: "deauthorization", key: key});
+      else if(key == "disconnect") this.setState({showModalDisconnect: true, modalTitle: "deauthorization", key: key});
     };
 }
 

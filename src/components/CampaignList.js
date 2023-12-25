@@ -19,7 +19,6 @@ import daiLogo from '../images/dai-logo.png';
 import ltcLogo from '../images/ltc-logo.png'
 import visaMcLogo from '../images/visa-mc-logo.png';
 import usdtLogo from '../images/usdt-logo.png';
-
 import config from "react-global-configuration";
 
 const IMG_MAP = {"BUSD": busdIcon,

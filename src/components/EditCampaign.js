@@ -61,6 +61,7 @@ class EditCampaign extends React.Component {
             mainImageFile:"",
             waitToClose: false,
             maxAmount:0,
+            maxAmount_old:0,
             updateImage: false,
             updateMeta: false,
             campaignId: "",
@@ -102,7 +103,6 @@ class EditCampaign extends React.Component {
         this.setState({isInTron: checked});
         else
         this.setState({ [name] : value, updateMeta : true });
-         
     }
 
     fileSelected = e => {
@@ -114,7 +114,6 @@ class EditCampaign extends React.Component {
     }
 
     handleClick = async () => {
-        
         if ((window.ethereum)&&(this.state.isInEtherium)){
             await initWeb3Modal(this.state.chainId, this);
             await initWeb3(this.state.chainId, this);
@@ -135,7 +134,6 @@ class EditCampaign extends React.Component {
         if(editorStateHasChangedEn()|| editorStateHasChangedRu()) {
             this.state.updateMeta = true;
         }
-
         if(!this.state.orgEn) {
             this.setState(
                 {showModal:true, modalTitle: 'requiredFieldsTitle',
@@ -236,14 +234,13 @@ class EditCampaign extends React.Component {
             modalIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
             modalButtonVariant: '#588157', waitToClose: false
         });
-        if(!(await this.updateCampaign())) {
+        let result = await this.updateCampaign();
+        if (result === false)
             this.setState({showModal : true,
                 modalTitle: 'failed',
                 modalMessage: 'updatingAmountFailed',
                 modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
                 modalButtonVariant: "#E63C36", waitToClose: false});
-            return;
-        }
         this.setState({
             showModal: true, modalTitle: 'complete', goHome: true,
             modalMessage: 'updateSuccessfull',
@@ -252,14 +249,14 @@ class EditCampaign extends React.Component {
         });
     }
 
-    async savetoTron(compressed_meta, new_record){
-
+    async savetoTron(new_record){
       try{
         this.setState({showModal:false});
         if(!window.tronWeb) {
             await initTron(this.state.tronChainId , this);
         }
         await window.tronAdapter.connect();
+        let compressed_meta = {}; 
         if(!new_record){
             let HEOCampaign = (await import("../remote/"+ this.state.tronChainId + "/HEOCampaign")).default;
             CAMPAIGNINSTANCE = await window.tronWeb.contract(HEOCampaign, window.tronWeb.address.fromHex(this.state.addresses[this.state.tronChainId]));
@@ -268,16 +265,15 @@ class EditCampaign extends React.Component {
                 modalButtonVariant: "gold", waitToClose: true});  
             let result =await CAMPAIGNINSTANCE.update(window.tronWeb.toSun(this.state.maxAmount), compressed_meta)
               .send({from:window.tronAdapter._wallet.tronWeb.defaultAddress.hex,callValue:0,feeLimit:15000000000,shouldPollResponse:false});
-            
-                let txnObject;
-                let m = 1;
-                do{
-                    console.log("Waiting for transaction record");
-                    txnObject = await window.tronWeb.trx.getTransactionInfo(result);
-                    if(txnObject){
-                      if (txnObject.receipt)  break;   
-                    }
-                }while(m != 2);  
+            let txnObject;
+            let m = 1;
+            do{
+             console.log("Waiting for transaction record");
+             txnObject = await window.tronWeb.trx.getTransactionInfo(result);
+             if(txnObject){
+               if (txnObject.receipt)  break;   
+             }
+            }while(m != 2);  
             if(txnObject.receipt.result != "SUCCESS") return false;
             else{
                 this.state.line_accounts[this.state.tronChainId]  = window.tronAdapter._wallet.tronWeb.defaultAddress.hex;
@@ -343,12 +339,13 @@ class EditCampaign extends React.Component {
       }
     }
     
-    async saveToEtherium(compressed_meta, new_record){
+    async saveToEtherium(new_record){
         try{
             this.setState({showModal:false});
             if(!this.state.accounts || !this.state.web3) {
              await initWeb3(this.state.chainId, this);
             }
+            let compressed_meta = {};
             if (!new_record){
                 this.setState({showModal:true, modalTitle: 'processingWait',
                 modalMessage: 'waitingForNetwork', modalIcon: 'HourglassSplit',
@@ -463,48 +460,13 @@ class EditCampaign extends React.Component {
             console.log(data.title);
             console.log(`Updating org to`);
             console.log(data.org);
-            let compressed_meta = await compress(JSON.stringify(data));
             let result;
-            if (this.state.isInEtherium){
-              if(this.state.addresses[this.state.chainId]){
-                result = await this.saveToEtherium(compressed_meta, false);
-                if (result === false) return (result);
-                this.setState({showModal:true,modalTitle: 'processingWait',
-                modalMessage: 'waitingForOperation', modalIcon:'HourglassSplit',
-                modalButtonVariant: "gold", waitToClose: true}); 
-              }
-              else{
-                result = await this.saveToEtherium(compressed_meta, true);
-                if (result === false) return (result);
-                this.setState({showModal:true,modalTitle: 'processingWait',
-                modalMessage: 'waitingForOperation', modalIcon:'HourglassSplit',
-                modalButtonVariant: "gold", waitToClose: true}); 
-              } 
-            }
-            if (this.state.isInTron){ 
-              if(this.state.addresses[this.state.tronChainId]){
-                result = await this.savetoTron(compressed_meta, false);
-                if (result === false) return (result);
-                this.setState({showModal:true,modalTitle: 'processingWait',
-                modalMessage: 'waitingForOperation', modalIcon:'HourglassSplit',
-                modalButtonVariant: "gold", waitToClose: true}); 
-              } 
-              else{
-                result =  await this.savetoTron(compressed_meta, true);
-                if (result === false) return (result); 
-                this.setState({showModal:true,modalTitle: 'processingWait',
-                modalMessage: 'waitingForOperation', modalIcon:'HourglassSplit',
-                modalButtonVariant: "gold", waitToClose: true}); 
-              }
-            }
-            data.accounts = this.state.line_accounts;
-            data.addresses = this.state.addresses;
+            
             let dataForDB = {address: this.state.campaignId, dataToUpdate: data};
             try {
                let res = await axios.post('/api/campaign/update', {mydata : dataForDB},
                  {headers: {"Content-Type": "application/json"}});
-                 if (res.data == 'success') return (true);
-                 else return (false);
+                 if (res.data !== 'success') return (false);
             } catch (err) {
                console.log(err);
                if(err.response) {
@@ -515,7 +477,20 @@ class EditCampaign extends React.Component {
                    this.setState({currentError : ''});
                }
                return false;
-            }            
+            }
+            if((this.state.addresses[this.state.chainId])&&(this.state.maxAmount_old !== this.state.maxAmount)){
+                result = await this.saveToEtherium(false);
+                this.setState({showModal:true,modalTitle: 'processingWait',
+                modalMessage: 'waitingForOperation', modalIcon:'HourglassSplit',
+                modalButtonVariant: "gold", waitToClose: true}); 
+            }
+            if((this.state.addresses[this.state.tronChainId])&&(this.state.maxAmount_old !== this.state.maxAmount)){
+             result = await this.savetoTron(false);
+             //if (result === false) return (result);
+             this.setState({showModal:true,modalTitle: 'processingWait',
+             modalMessage: 'waitingForOperation', modalIcon:'HourglassSplit',
+             modalButtonVariant: "gold", waitToClose: true}); 
+            }             
 
         }catch(err){
             console.log(err);  
@@ -726,25 +701,37 @@ class EditCampaign extends React.Component {
                             {this.state.updatedEditorStateRu && <TextEditorRu  />}
                             </Col>   
                             </Row>
+                            <Row>
+                             <Col>
+                              {this.state.addresses[this.state.chainId] && 
+                                <Form.Label><span><CheckCircle style={{color:'#E63C36'}} /> </span>
+                                <Trans i18nKey='campaignInEtereum'/><span className='redAsterisk'></span></Form.Label>} 
+                             </Col> 
+                             <Col>
+                              {this.state.addresses[this.state.tronChainId] && 
+                                <Form.Label><span><CheckCircle style={{color:'#E63C36'}} /> </span>
+                                <Trans i18nKey='campaignInTron'/><span className='redAsterisk'></span></Form.Label>} 
+                             </Col>  
+                            </Row>
                         </Form.Group>
-                        <Row md ={3}>
+                        <Row>
                          <Col>   
                           <Button onClick={() => this.handleClick()} id='createCampaignBtn' name='ff3'>
                             {i18n.t('saveCampaignBtn')}
                           </Button> 
                          </Col> 
                          <Col>
-                         <Form.Check className='optional' type="checkbox" checked={this.state.isInEtherium} label={`Save in Etherium`}
-                                        disabled = {this.state.addresses[this.state.chainId]} value = {this.state.isInEtherium}
-                                        name='EtheriumCheckbox' onChange={this.handleChange} onwheel="this.blur()"/>
-                         </Col>
-                         <Col>
-                          <Form.Check className='optional' type="checkbox" checked={this.state.isInTron} label={`Save in Tron`}
-                                        disabled = {this.state.addresses[this.state.tronChainId]} value = {this.state.isInTron}
-                                        name='TronCheckbox' onChange={this.handleChange} onwheel="this.blur()"/>
+                          {(((!this.state.addresses[this.state.tronChainId])||(!this.state.addresses[this.state.chainId]))&&(window.ethereum||window.tron)) && 
+                            <DropdownButton size='lg' id="createCampaignBtn" title={i18n.t('deployBtn')} className='backToCampaigns'>
+                             {(!this.state.addresses[this.state.chainId] && window.ethereum)&& <Dropdown.Item onClick={async() => {
+                              await this.saveToEtherium(true);   
+                              }} >Etherium</Dropdown.Item>}
+                             {(!this.state.addresses[this.state.tronChainId] && window.tron)&& <Dropdown.Item onClick={async() => {
+                              await this.savetoTron(true);   
+                              }}>Tron</Dropdown.Item>}
+                            </DropdownButton>}
                          </Col>
                         </Row>
-                        
                     </Form>
                 </Container>
             </div>
@@ -850,6 +837,7 @@ class EditCampaign extends React.Component {
             ogDescription: descriptionObj,
             mainImageURL: dbCampaignObj.mainImageURL,
             maxAmount : dbCampaignObj.maxAmount,
+           // maxAmount_old : dbCampaignObj.maxAmount,
             addresses: dbCampaignObj.addresses,
             coinbaseCommerceURL: dbCampaignObj.coinbaseCommerceURL,
             defDonationAmount: dbCampaignObj.defaultDonationAmount,
