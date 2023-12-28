@@ -120,8 +120,9 @@ class ServerLib {
             }
           });
         let to_email;
-        if (key == "HEO-Platform Confirmation Code") to_email = req.body.mydata.to_email;
-        else if (key == "New Campaign Alert") to_email = result.to;  
+        if (key === "HEO-Platform Confirmation Code") to_email = req.body.mydata.to_email;
+        else if (key === "New Campaign Alert") to_email = result.to;  
+        else if (key === "Failed to delete picture") to_email = result.to; 
         await transporter.sendMail({
             from: result.from, // sender address
             to: to_email, // list of receivers
@@ -228,13 +229,13 @@ class ServerLib {
     async handleDeactivateCampaign(req, res, Sentry, DB) {
         let myCollection = await DB.collection("campaigns");
         let result = await myCollection.findOne({"_id" : req.body.id});
-        if(!result || result.ownerId != req.user.email) {
+        if(!result || result.ownerId !== req.user.email) {
             res.sendStatus(500);
             console.log(`Campaign's ownerId (${result.ownerId}) does not match the user (${req.user.email})`);
         } else {
             try {
                 const myCollection = await DB.collection('campaigns');
-                await myCollection.updateOne({'_id': req.body.id}, {$set: {active:false}});
+                await myCollection.updateOne({'_id': req.body.id}, {$set: {deleted:true}});
                 res.send('success');
             } catch (err) {
                 Sentry.captureException(new Error(err));
@@ -246,7 +247,7 @@ class ServerLib {
     async handleLoadAllCampaigns(req, res, Sentry, DB) {
         try{
             const myCollection = await DB.collection('campaigns');
-            const campaigns = await myCollection.find({active: true});
+            const campaigns = await myCollection.find({active: true, deleted:{ $exists : false }});
             const sortedCampaigns = await campaigns.sort({"lastDonationTime" : -1});
             const result = await sortedCampaigns.toArray();
             res.send(result);
@@ -327,7 +328,7 @@ class ServerLib {
     async handleLoadUserCampaigns(req, res, Sentry, DB) {
         try{
             const myCollection = await DB.collection('campaigns');
-            const campaigns = await myCollection.find({"ownerId" : {$eq: req.user.email}, active: true});
+            const campaigns = await myCollection.find({"ownerId" : {$eq: req.user.email}, "deleted":{ $exists : false }});
             const result = await campaigns.toArray();
             res.send(result);
         } catch (err) {

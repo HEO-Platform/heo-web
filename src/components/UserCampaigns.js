@@ -4,10 +4,10 @@ import '../css/modal.css';
 import '../css/campaignList.css';
 import '../css/campaignPage.css';
 import { Container, Row, Col, Card, ProgressBar, Button, Modal, Dropdown, DropdownButton } from 'react-bootstrap';
-import { ChevronLeft,CheckCircle, ExclamationTriangle, HourglassSplit, XCircle } from 'react-bootstrap-icons';
+import { ChevronLeft,CheckCircle, ExclamationTriangle, HourglassSplit, XCircle} from 'react-bootstrap-icons';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { i18nString, DescriptionPreview, LogIn, initWeb3, getTronWeb, checkAuth, initWeb3Modal, checkAuthTron, LogInTron, initTron } from '../util/Utilities';
+import { i18nString, DescriptionPreview, initWeb3, initTron } from '../util/Utilities';
 import { Trans } from 'react-i18next';
 import i18n from '../util/i18n';
 
@@ -36,6 +36,8 @@ class UserCampaigns extends Component {
             showModal: false,
             showModalDialog: false,
             accounts:{},
+            modalButtonMessage:"",
+            modalButtonTwoMessage:"",
         };
     }
 
@@ -193,15 +195,14 @@ class UserCampaigns extends Component {
     }
 
     async closeCampaignPrep(id, imageURL) {
-        let chainId = config.get("CHAIN");
-        if(!this.state.web3 || !this.state.accounts) {
-            await initWeb3(chainId, this);
-        }
+        
         console.log('close campaign');
         this.setState({
-            showTwoButtons: true, waitToClose: true,
+            showTwoButtons: true, waitToClose: false,
             showModal: true, modalIcon:'ExclamationTriangle',
             modalTitle: 'closeCampaign',
+            modalButtonMessage: 'yes',
+            modalButtonTwoMessage:'no',
             modalMessage: 'final',
             campaignId: id
         })
@@ -213,66 +214,87 @@ class UserCampaigns extends Component {
     }
 
     async closeCampaign() {
-        this.setState({showModal: true, modalMessage: 'confirmMetamask', modalIcon:'HourglassSplit',
+        this.setState({showModal: true, modalMessage: 'waitingForOperation', modalIcon:'HourglassSplit',modalTitle: 'processingWait',
             showTwoButtons: false, modalButtonVariant: "gold", waitToClose: true});
         try {
-            this.deActivateInDB();
-            this.setState({
-                modalMessage: 'campaignDeleted', modalTitle: 'complete',
-                modalIcon: 'CheckCircle', modalButtonMessage: i18n.t('ok'),
-                modalButtonVariant: '#588157', waitToClose: false, showTwoButtons: false,
-            })
+           let res1 = await this.deleteimage();
+            let res2 = await this.deActivateInDB();
         } catch (err) {
             console.log(err);
             this.setState({
                 waitToClose: false, modalMessage: 'technicalDifficulties',
                 modalIcon:'XCircle', modalButtonMessage: 'closeBtn', modalTitle: 'failed',
-                modalButtonVariant: "#E63C36", showTwoButtons: false})
+                modalButtonVariant: "#E63C36", showTwoButtons: false});
         }
     }
 
     async deleteimage () {
+       let that = this;
+       let dataEmail;   
+       try{
         let data = {name: this.state.fileName};
-        return axios.post('/api/deleteimage', data, {headers: {"Content-Type": "application/json"}})
-        .then(res => {
+        let res = await axios.post('/api/deleteimage', data, {headers: {"Content-Type": "application/json"}});
+        if (res.data !== 'complete'){
+            dataEmail ={key: 'Failed to delete picture', text:`Failed to delete picture with name - ${that.state.fileName}`} 
+            axios.post('/api/sendemail', dataEmail, {headers: {"Content-Type": "application/json"}});
+            return (res.data);
+           }   
+        else {
             console.log("Success deleting image");
-        }).catch(err => {
-            console.log(err);
-        });
+            return(res.data);
+        } 
+       } catch (err){
+        dataEmail ={key: 'Failed to delete picture', text:`Failed to delete picture with name - ${that.state.fileName}`} 
+        axios.post('/api/sendemail', dataEmail, {headers: {"Content-Type": "application/json"}});
+        console.log(err);
+        return (err);
+       }
     }
 
     async deActivateInDB() {
+      try{
         let data = {id : this.state.campaignId};
-        return axios.post('/api/campaign/deactivate', data, {headers: {"Content-Type": "application/json"}})
-        .then(res => {
-            console.log("Success deleting db entry");
-        }).catch(err => {
-            console.log(err);
-        });
+        let res = await axios.post('/api/campaign/deactivate', data, {headers: {"Content-Type": "application/json"}});
+        if (res.data === 'success'){
+            this.setState({
+                modalMessage: 'campaignDeleted', modalTitle: 'complete',
+                modalIcon: 'CheckCircle', modalButtonMessage: 'ok',
+                modalButtonVariant: '#588157', waitToClose: false, showTwoButtons: false
+            });
+        } 
+        else{
+            this.setState({
+                waitToClose: false, modalMessage: 'technicalDifficulties',
+                modalIcon:'XCircle', modalButtonMessage: 'closeBtn', modalTitle: 'failed',
+                modalButtonVariant: "#E63C36", showTwoButtons: false}); 
+        }
+        return(res.data);
+      } catch (err){
+        this.setState({
+            waitToClose: false, modalMessage: 'technicalDifficulties',
+            modalIcon:'XCircle', modalButtonMessage: 'closeBtn', modalTitle: 'failed',
+            modalButtonVariant: "#E63C36", showTwoButtons: false});
+        return(err);    
+      }
     }
 
     render() {
         return (
-            <div>
-               <Row> 
-                <Container>
-                <p className='modalTitle'><Trans i18nKey={'myFundraisers'}/></p>
-                    {this.state.campaigns.length == 0 &&
+            <div> 
+             <div><p className='modalTitle'><Trans i18nKey={'myFundraisers'}/></p></div>   
+            <Row> 
+                  {this.state.campaigns.length === 0 &&
                         <h1>
                             <Trans i18nKey='noUserCampaigns'>You did not create any campaigns yet. Click <Link to="/new">here</Link> to create your first campaign.</Trans>
                         </h1>
                     }
-                </Container>
                 </Row>
-                <Row>
-                <Col>    
-                <Container className='backToCampaignsDiv'>
-                    <p className='backToCampaigns'><Link class={"backToCampaignsLink"} to="/"><ChevronLeft id='backToCampaignsChevron'/> <Trans i18nKey='backToCampaigns'/></Link></p>
-                </Container>
-                </Col>
-                <Col>
-                <Container className='backToCampaignsDiv'>
-                 <DropdownButton size='lg' id="dropdown-saccess-button" title={i18n.t('findUserCompanies')} className='backToCampaigns'>
+                <Row> 
+                 <Col>
+                   <p className='backToCampaigns'><Link class={"backToCampaignsLink"} to="/"><ChevronLeft id='backToCampaignsChevron'/> <Trans i18nKey='backToCampaigns'/></Link></p>
+                 </Col>  
+                 <Col md={{ span: 3, offset: 3 }}>
+                   <DropdownButton size='lg' id="dropdown-saccess-button" title={i18n.t('findUserCompanies')} className='backToCampaigns'>
                    <Dropdown.Item onClick={async() => {
                     await this.getCampaignsInEtherium();   
                     }} >Etherium</Dropdown.Item>
@@ -280,28 +302,40 @@ class UserCampaigns extends Component {
                     await this.getCampaignsInTron();   
                     }}>Tron</Dropdown.Item>
                  </DropdownButton>
-                 </Container>
-                </Col>
+                 </Col>
                 </Row>
+               
                 <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' centered>
-                    <Modal.Body><p className='modalIcon'>
+                <Modal.Body>  
+                    <p className='modalIcon'>
                         {this.state.modalIcon == 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
                         {this.state.modalIcon == 'ExclamationTriangle' && <ExclamationTriangle/>}
                         {this.state.modalIcon == 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
                         {this.state.modalIcon == 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
                         </p>
-                        <p className='modalTitle'><Trans i18nKey={this.state.modalTitle}/></p>
-                        <p className='modalMessage'><Trans i18nKey={this.state.modalMessage}>
+                    <div><p className='modalTitle'><Trans i18nKey={this.state.modalTitle}/></p></div>
+                     <p className='modalMessage'><Trans i18nKey={this.state.modalMessage}>
                             Your account has not been cleared to create campaigns.
                             Please fill out this
                             <a target='_blank' href='https://docs.google.com/forms/d/e/1FAIpQLSdTo_igaNjF-1E51JmsjJgILv68RN2v5pisTcqTLvZvuUvLDQ/viewform'>form</a>
                             to ne granted permission to fundraise on HEO Platform
                         </Trans></p>
                         { !this.state.waitToClose &&
+                        <Row>
+                        <Col>    
+                        <Button className='myModalButton' style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
+                            onClick={ async () => {this.setState({showModal:false}); if(this.state.goHome) this.props.history.push('/');
+                            else if (this.state.modalMessage === 'final') this.closeCampaign();}}>
+                         <Trans i18nKey={this.state.modalButtonMessage} />  
+                        </Button>
+                        </Col>
+                        {this.state.showTwoButtons && <Col> 
                         <Button className='myModalButton' style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
                             onClick={ async () => {this.setState({showModal:false}); if(this.state.goHome) this.props.history.push('/');}}>
-                         <Trans i18nKey={this.state.modalButtonMessage} />  
-                        </Button>}
+                         <Trans i18nKey={this.state.modalButtonTwoMessage} />  
+                        </Button>
+                        </Col>}
+                        </Row>}
                    </Modal.Body>
                 </Modal>
                 <div id="campaingListMainDiv">

@@ -235,7 +235,6 @@ class CreateCampaign extends React.Component {
             campaignData.org["en"] = this.state.orgEn;
             campaignData.org["ru"] = this.state.orgRu;
             campaignData.cn = this.state.cn;
-            campaignData.key = this.state.key;
             campaignData.fiatPayments = true;
             let EditorStateEn = getEditorStateEn();
             let EditorStateRu = getEditorStateRu();
@@ -569,15 +568,6 @@ class CreateCampaign extends React.Component {
                             <TextEditorRu />
                             </Col>   
                             </Row>
-                        </Form.Group>
-                        <Form.Group>
-                            <Form.Label><Trans i18nKey='selectQRCodeImage'/></Form.Label>
-                            <Form.File
-                                name='qrCodeImageFile' className="position-relative"
-                                id="campaignImgInput" accept='.jpg,.png,.jpeg,.gif'
-                                onChange={this.qrfileSelected}
-                            />
-                            <Image id='qrCodeImg' src={this.state.qrCodeImageURL}/>
                         </Form.Group>
                         <Row>
                           <Col>    

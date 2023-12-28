@@ -164,6 +164,11 @@ APP.post('/api/is_autorisation', function(req, res) {
     }
 });
 
+APP.post('/api/sendemail', async (req, res) => {
+    const DB = CLIENT.db(DBNAME);
+    serverLib.handleSendEmail(req, res, Sentry, req.body.key, req.body.text, DB); 
+})
+
 APP.post('/api/campaign/add', async (req, res) => {
     if(serverLib.authenticated(req, res, Sentry)) {
         const DB = CLIENT.db(DBNAME);

@@ -117,7 +117,7 @@ class App extends Component {
                                         </Nav.Link>
                                         <Nav.Link eventKey="4" className='mainNavText' as='a' target='_blank' href='https://heo.finance'><Trans i18nKey='about'/></Nav.Link>
                                         <NavDropdown className='mainNavText' title={i18n.t('registration')} id="basic-nav-dropdown">
-                                          <NavDropdown.Item as={Link} to='/Registration/registr'>{i18n.t('registration')}</NavDropdown.Item>
+                                          {(!this.state.connect)&&<NavDropdown.Item as={Link} to='/Registration/registr'>{i18n.t('registration')}</NavDropdown.Item>}
                                           {this.state.connect && <NavDropdown.Item as={Link} to='/Registration/disconnect'>{i18n.t('deauthorization')}</NavDropdown.Item>}
                                          {(!this.state.connect)&&<NavDropdown.Item as={Link} disabled={this.state.connect} to='/Registration/connect'>{i18n.t('authorization')}</NavDropdown.Item>} 
                                         </NavDropdown>    
