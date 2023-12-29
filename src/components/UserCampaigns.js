@@ -218,7 +218,7 @@ class UserCampaigns extends Component {
             showTwoButtons: false, modalButtonVariant: "gold", waitToClose: true});
         try {
            let res1 = await this.deleteimage();
-            let res2 = await this.deActivateInDB();
+           let res2 = await this.deActivateInDB();
         } catch (err) {
             console.log(err);
             this.setState({
@@ -261,6 +261,7 @@ class UserCampaigns extends Component {
                 modalIcon: 'CheckCircle', modalButtonMessage: 'ok',
                 modalButtonVariant: '#588157', waitToClose: false, showTwoButtons: false
             });
+           await this.loadCampaigns(); 
         } 
         else{
             this.setState({
