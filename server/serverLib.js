@@ -293,7 +293,7 @@ class ServerLib {
     async handleGetId(req, res, Sentry, DB) {
         try {
             const myCollection = await DB.collection('campaigns');
-            let result = await myCollection.findOne({"key" : req.body.KEY, active: true});
+            let result = await myCollection.findOne({"key" : req.body.KEY, "deleted":{ $exists : false }});
             if (result) res.send(result._id)
             else res.send(req.body.KEY);
         } catch (err) {Sentry.captureException(new Error(err));}
@@ -320,7 +320,7 @@ class ServerLib {
     async handleLoadOneCampaign(req, res, Sentry, DB) {
         try {
             const myCollection = await DB.collection('campaigns');
-            let result = await myCollection.findOne({"_id" : req.body.ID});
+            let result = await myCollection.findOne({"_id" : req.body.ID, "deleted":{ $exists : false }});
             res.send(result);
         } catch (err) {Sentry.captureException(new Error(err));}
     }
