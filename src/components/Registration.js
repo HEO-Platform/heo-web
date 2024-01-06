@@ -679,8 +679,8 @@ class Registration extends React.Component {
                 <Col>
                 <Button className='myModalButton'
                    style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
-                   onClick={ async() => {
-                    await this.startRegistration();}}>
+                   onClick={ () => {
+                    this.setState({showModalRegistr: true, modalTitle: "registration", key: "registr", showModalConnect:false})}}>
                   <Trans i18nKey= 'registerBtn' />
                  </Button>
                 </Col>
