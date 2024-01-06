@@ -98,7 +98,16 @@
 
 .redAsterisk{
     color: #E63C36;
+    text-align: left;
 }
+
+.linkbtn {
+    color: #159dec;
+    font-style: italic;
+    border: none;
+    cursor: pointer;
+    text-align: right;
+  }
 
 #campaignImgInput{
     font-family: 'Open Sans', sans-serif;

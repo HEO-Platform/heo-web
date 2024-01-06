@@ -15,7 +15,7 @@ import Home from "./Home";
 import '../css/app.css';
 import '../css/modal.css';
 import { Switch, Route, Link, withRouter } from "react-router-dom";
-import { Nav, Navbar, Container, Button, Modal, NavLink, NavDropdown } from 'react-bootstrap';
+import { Nav, Navbar, Container, Button, Modal, NavLink} from 'react-bootstrap';
 import { CheckCircle, ExclamationTriangle, HourglassSplit, XCircle, InfoCircle } from 'react-bootstrap-icons';
 import { Trans } from 'react-i18next';
 import { GetLanguage } from '../util/Utilities';
@@ -41,7 +41,8 @@ class App extends Component {
             disabled: "disabled",
             modalButtonVariant: "#32CD32",
             modalIcon: "",
-            userEmail: ""
+            userEmail: "",
+            registrBtnTiile:""
         };
     }
 
@@ -59,9 +60,9 @@ class App extends Component {
     async checkAutorisation(){
         let result = await axios.post('/api/is_autorisation', {headers: {"Content-Type": "application/json"}});
         if (result.data !== false){
-            this.setState({connect:true,userEmail:result.data});
+            this.setState({connect:true,userEmail:result.data,registrBtnTiile:'deauthorization'});
         } 
-        else this.setState({connect:false});   
+        else this.setState({connect:false,registrBtnTiile:'registration'});   
     }
 
     async setLanguage(lang) {
@@ -75,7 +76,7 @@ class App extends Component {
         });
     }
     render() {
-        let lang = GetLanguage();
+       let lang = GetLanguage();
        this.checkAutorisation();
         return (
             <UserContext.Provider value={this.state}>
@@ -116,11 +117,12 @@ class App extends Component {
                                             <Trans i18nKey='myFundraisers'/>
                                         </Nav.Link>
                                         <Nav.Link eventKey="4" className='mainNavText' as='a' target='_blank' href='https://heo.finance'><Trans i18nKey='about'/></Nav.Link>
-                                        <NavDropdown className='mainNavText' title={i18n.t('registration')} id="basic-nav-dropdown">
-                                          {(!this.state.connect)&&<NavDropdown.Item as={Link} to='/Registration/registr'>{i18n.t('registration')}</NavDropdown.Item>}
-                                          {this.state.connect && <NavDropdown.Item as={Link} to='/Registration/disconnect'>{i18n.t('deauthorization')}</NavDropdown.Item>}
-                                         {(!this.state.connect)&&<NavDropdown.Item as={Link} disabled={this.state.connect} to='/Registration/connect'>{i18n.t('authorization')}</NavDropdown.Item>} 
-                                        </NavDropdown>    
+                                        {(!this.state.connect)&&<Nav.Link as={Link} eventKey="5" className='mainNavText' to ='/Registration/connect'>
+                                            <Trans i18nKey='authorization'/>
+                                        </Nav.Link>}
+                                        {(this.state.connect)&&<Nav.Link as={Link} eventKey="5" className='mainNavText' to ='/Registration/disconnect'>
+                                            <Trans i18nKey='deauthorization'/>
+                                        </Nav.Link>}
                                     </Nav>
                                 </Navbar.Collapse>
                                 <Navbar.Collapse className="justify-content-end">

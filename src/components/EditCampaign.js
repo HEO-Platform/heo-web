@@ -117,22 +117,25 @@ class EditCampaign extends React.Component {
     }
 
     handleClick = async () => {
-        if ((window.ethereum)&&(this.state.isInEtherium)){
+        if (this.state.maxAmount_old !== this.state.maxAmount){
+          if ((window.ethereum)&&(this.state.isInEtherium)){
             await initWeb3Modal(this.state.chainId, this);
             await initWeb3(this.state.chainId, this);
             // is the user logged in?
             if(!this.state.isLoggedIn) {
                 await checkAuth(this.state.chainId, this);
             }
-        }
-        if ((window.tron)&&(this.state.isInTron)){
+          }
+          if ((window.tron)&&(this.state.isInTron)){
             await initTronadapter();
             await initTron(this.state.tronChainId, this);
             // is the user logged in?
             if(!this.state.isLoggedInTron) {
                 await checkAuthTron(this.state.tronChainId, this);
             }
+          }
         }
+        
         this.setState({resultEtherium : true, resultTron: true});
         //check if this campaign belongs to this user
         if(editorStateHasChangedEn()|| editorStateHasChangedRu()) {
@@ -456,6 +459,7 @@ class EditCampaign extends React.Component {
             data.descriptionEditor["en"] = EditorStateEn;
             data.descriptionEditor["default"] = EditorStateEn;
             data.descriptionEditor["ru"] = EditorStateRu;
+            data.maxAmount = this.state.maxAmount;
             data.org = this.state.ogOrg;
             data.org["en"] = this.state.orgEn;
             data.org["default"] = this.state.orgEn;
@@ -482,20 +486,22 @@ class EditCampaign extends React.Component {
                }
                return false;
             }
-            if((this.state.addresses[this.state.chainId])&&(this.state.maxAmount_old !== this.state.maxAmount)){
+            if(this.state.maxAmount_old !== this.state.maxAmount){
+              if(this.state.addresses[this.state.chainId]){
                 result = await this.saveToEtherium(false);
                 if (result !== true) this.setState({resultEtherium : false});
                 this.setState({showModal:true,modalTitle: 'processingWait',
-                modalMessage: 'waitingForOperation', modalIcon:'HourglassSplit',
-                modalButtonVariant: "gold", waitToClose: true}); 
+                  modalMessage: 'waitingForOperation', modalIcon:'HourglassSplit',
+                  modalButtonVariant: "gold", waitToClose: true}); 
+              }
+              if(this.state.addresses[this.state.tronChainId]){
+                result = await this.savetoTron(false);
+                if (result !== true) this.setState({resultTron : false});
+                this.setState({showModal:true,modalTitle: 'processingWait',
+                  modalMessage: 'waitingForOperation', modalIcon:'HourglassSplit',
+                  modalButtonVariant: "gold", waitToClose: true}); 
+              } 
             }
-            if((this.state.addresses[this.state.tronChainId])&&(this.state.maxAmount_old !== this.state.maxAmount)){
-             result = await this.savetoTron(false);
-             if (result !== true) this.setState({resultTron : false});
-             this.setState({showModal:true,modalTitle: 'processingWait',
-             modalMessage: 'waitingForOperation', modalIcon:'HourglassSplit',
-             modalButtonVariant: "gold", waitToClose: true}); 
-            } 
             return true;           
 
         }catch(err){
@@ -860,7 +866,7 @@ class EditCampaign extends React.Component {
             ogDescription: descriptionObj,
             mainImageURL: dbCampaignObj.mainImageURL,
             maxAmount : dbCampaignObj.maxAmount,
-           // maxAmount_old : dbCampaignObj.maxAmount,
+            maxAmount_old : dbCampaignObj.maxAmount,
             addresses: dbCampaignObj.addresses,
             coinbaseCommerceURL: dbCampaignObj.coinbaseCommerceURL,
             defDonationAmount: dbCampaignObj.defaultDonationAmount,

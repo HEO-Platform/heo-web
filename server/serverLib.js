@@ -42,11 +42,12 @@ class ServerLib {
         try {
             const myCollection = await DB.collection('users');
             let result = await myCollection.findOne({"_id" : req.body.mydata.to_email});
-            if (result){
+            if ((result)&&(req.body.mydata.password)){
              let res = bcrypt.compareSync(req.body.mydata.password, result.password);
              if (res === true) return (1);  
              else if(res === false) return (2);
             }
+            else if ((result)&&(!req.body.mydata.password)) return(1);
             else return (0);
         } catch (err) {
             console.log(err);
@@ -70,9 +71,21 @@ class ServerLib {
         }
     }
 
+    async handleNewPassword(req, res, Sentry, DB){
+        let password = bcrypt.hashSync(req.body.mydata.password, 8);
+        try{
+            const myCollection = await DB.collection('users');
+            await myCollection.updateOne({'_id': req.body.mydata.to_email}, {$set: {password:password}});
+            res.send('success');
+        } catch (err) {
+            Sentry.captureException(new Error(err));
+            res.sendStatus(500);
+        }
+    }
+
     async handleCheckCode(req, res){
         let randCode = this.emailCode.get(req.body.mydata.to_email);
-        if (randCode == req.body.mydata.code) res.send(true);
+        if (randCode === req.body.mydata.code) res.send(true);
         else res.send(false);
     }
 
