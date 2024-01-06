@@ -250,7 +250,7 @@ class CreateCampaign extends React.Component {
             let res = await axios.post('/api/campaign/add', {mydata : campaignData},
                 {headers: {"Content-Type": "application/json"}});
             if (res.data == 'success'){
-                this.setState({showModal:true, goHome: false,
+                this.setState({showModal:true, goHome: true,
                     modalMessage: 'campaignwWillBePublished',
                     modalTitle: 'success',
                     modalIcon: 'CheckCircle',
@@ -261,7 +261,7 @@ class CreateCampaign extends React.Component {
                 });
             }    
             else{
-                this.setState({showModal: true, goHome: true,
+                this.setState({showModal: true, goHome: false,
                     modalTitle: 'failed',
                     modalMessage: 'errorWritingCampaignToDB',
                     modalIcon: 'CheckCircle',
@@ -270,7 +270,7 @@ class CreateCampaign extends React.Component {
                 });
             }            
         } catch (err) {
-            this.setState({showModal: true, goHome: true,
+            this.setState({showModal: true, goHome: false,
                 modalTitle: 'failed',
                 modalMessage: 'errorWritingCampaignToDB',
                 modalIcon: 'CheckCircle',
