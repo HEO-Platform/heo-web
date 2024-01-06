@@ -253,12 +253,24 @@ class ServerLib {
         }
     }
 
+    async handleLoadFinishedCampaigns(req, res, Sentry, DB) {
+        try{
+            const myCollection = await DB.collection('campaigns');
+            const campaigns = await myCollection.find({successful: true}, {limit:3, sort:{raisedAmount: -1, raisedOnCoinbase: -1}});
+            const result = await campaigns.toArray();
+            res.send(result);
+        } catch (err) {
+            console.log(err);
+            Sentry.captureException(new Error(err));
+            res.sendStatus(500);
+        }
+    }
+
     async handleLoadAllCampaigns(req, res, Sentry, DB) {
         try{
             const myCollection = await DB.collection('campaigns');
-            const campaigns = await myCollection.find({active: true, deleted:{ $exists : false }});
-            const sortedCampaigns = await campaigns.sort({"lastDonationTime" : -1});
-            const result = await sortedCampaigns.toArray();
+            const campaigns = await myCollection.find({active: true, deleted:{ $exists : false }}, {limit: 20, sort:{lastDonationTime: -1, raisedAmount: -1, raisedOnCoinbase: -1}});
+            const result = await campaigns.toArray();
             res.send(result);
         } catch (err) {
             Sentry.captureException(new Error(err));
@@ -407,9 +419,11 @@ class ServerLib {
             let fiatSettingsRAW = await configCollection.find({_id : 'FIATPAYMENT'});
             let fiatSettings = await fiatSettingsRAW.toArray();
             if(fiatSettings[0].enabled) {
-                if(fiatSettings[0].CIRCLE && !fiatSettings[0].PAYADMIT) {
+                if (fiatSettings[0].STRIPE) {
+                    return 'stripeLib';
+                } else if(fiatSettings[0].CIRCLE) {
                     return 'circleLib';
-                } else if (!fiatSettings[0].CIRCLE && fiatSettings[0].PAYADMIT) {
+                } else if (fiatSettings[0].PAYADMIT) {
                     return 'payadmitLib';
                 }
             }
