@@ -8,7 +8,6 @@ import { Trans } from 'react-i18next';
 import i18n from '../util/i18n';
 import { ChevronLeft, CheckCircle, ExclamationTriangle, HourglassSplit, XCircle } from 'react-bootstrap-icons';
 import { Link } from 'react-router-dom';
-import { compress} from 'shrink-string';
 import { getEditorStateEn, getEditorStateRu, TextEditorEn, TextEditorRu, setEditorStateEn, setEditorStateRu, editorStateHasChangedRu,
         editorStateHasChangedEn } from '../components/TextEditor';
 import { initWeb3, checkAuth, initWeb3Modal, initTronadapter, checkAuthTron, initTron} from '../util/Utilities';
@@ -135,7 +134,7 @@ class EditCampaign extends React.Component {
             }
           }
         }
-        
+
         this.setState({resultEtherium : true, resultTron: true});
         //check if this campaign belongs to this user
         if(editorStateHasChangedEn()|| editorStateHasChangedRu()) {
@@ -178,11 +177,11 @@ class EditCampaign extends React.Component {
             return false;
         }
         let n = 0;
-        let i = 0; 
+        let i = 0;
         let EditorStateEn = await getEditorStateEn();
         if (EditorStateEn){
             for (let i = 0; i < EditorStateEn.blocks.length; i++){
-                n = n + EditorStateEn.blocks[i].text.length; 
+                n = n + EditorStateEn.blocks[i].text.length;
               }
               if (n < 3) {
                   this.setState(
@@ -204,10 +203,10 @@ class EditCampaign extends React.Component {
                         });
                         return false;
                     }
-                  } 
-              }    
+                  }
+              }
         }
-        
+
         this.setState({showModal:true, modalTitle: 'processingWait',
                 modalMessage: 'waitingForNetwork',
                 modalIcon:'HourglassSplit',
@@ -263,13 +262,13 @@ class EditCampaign extends React.Component {
             await initTron(this.state.tronChainId , this);
         }
         await window.tronAdapter.connect();
-        let compressed_meta = {}; 
+        let compressed_meta = {};
         if(!new_record){
             let HEOCampaign = (await import("../remote/"+ this.state.tronChainId + "/HEOCampaign")).default;
             CAMPAIGNINSTANCE = await window.tronWeb.contract(HEOCampaign, window.tronWeb.address.fromHex(this.state.addresses[this.state.tronChainId]));
             this.setState({showModal:true,modalTitle: 'processingWait',
                 modalMessage: 'updatingCampaignOnBlockchain', modalIcon:'HourglassSplit',
-                modalButtonVariant: "gold", waitToClose: true});  
+                modalButtonVariant: "gold", waitToClose: true});
             let result =await CAMPAIGNINSTANCE.update(window.tronWeb.toSun(this.state.maxAmount), compressed_meta)
               .send({from:window.tronAdapter._wallet.tronWeb.defaultAddress.hex,callValue:0,feeLimit:15000000000,shouldPollResponse:false});
             let txnObject;
@@ -278,20 +277,20 @@ class EditCampaign extends React.Component {
              console.log("Waiting for transaction record");
              txnObject = await window.tronWeb.trx.getTransactionInfo(result);
              if(txnObject){
-               if (txnObject.receipt)  break;   
+               if (txnObject.receipt)  break;
              }
-            }while(m != 2);  
+            }while(m != 2);
             if(txnObject.receipt.result != "SUCCESS") return false;
             else{
                 this.state.line_accounts[this.state.tronChainId]  = window.tronAdapter._wallet.tronWeb.defaultAddress.hex;
                 return (true);
-            } 
+            }
         }
         else {
             try {
                 this.setState({showModal:true,modalTitle: 'processingWait',
                 modalMessage: 'updatingCampaignOnBlockchain', modalIcon:'HourglassSplit',
-                modalButtonVariant: "gold", waitToClose: true}); 
+                modalButtonVariant: "gold", waitToClose: true});
                 let abi = (await import("../remote/" + this.state.tronChainId + "/HEOCampaignFactory")).abi;
                 let address = (await import("../remote/" + this.state.tronChainId + "/HEOCampaignFactory")).address;
                 address = window.tronWeb.address.toHex(address);
@@ -312,7 +311,7 @@ class EditCampaign extends React.Component {
                             break;
                         }
                     } while(m != 2);
-    
+
                     if (txnObject.receipt.result === "SUCCESS") {
                       m = 1;
                       let transEvent;
@@ -323,7 +322,7 @@ class EditCampaign extends React.Component {
                              break;
                          }
                       } while(m != 2);
-    
+
                       console.log(`createCampaign transaction successful ${transEvent}`);
                       this.state.addresses[this.state.tronChainId] = transEvent[0].result.campaignAddress;
                       this.state.line_accounts[this.state.tronChainId]  = window.tronAdapter._wallet.tronWeb.defaultAddress.hex;
@@ -338,14 +337,14 @@ class EditCampaign extends React.Component {
             } catch (error) {
               console.log(error);
               return false;
-            }  
-        } 
+            }
+        }
       } catch (err) {
             console.log(err);
-            return (false) 
+            return (false)
       }
     }
-    
+
     async saveToEtherium(new_record){
         try{
             this.setState({showModal:false});
@@ -362,12 +361,12 @@ class EditCampaign extends React.Component {
                 CAMPAIGNINSTANCE = new this.state.web3.eth.Contract(HEOCampaign, this.state.addresses[this.state.chainId]);
                 await CAMPAIGNINSTANCE.methods.update(
                     this.state.web3.utils.toWei(`${this.state.maxAmount}`), compressed_meta).send({from:this.state.accounts[0]});
-                this.state.line_accounts[this.state.chainId]  = this.state.accounts[0];   
+                this.state.line_accounts[this.state.chainId]  = this.state.accounts[0];
                 this.setState(
                     {showModal:true, modalTitle: 'processingWait',
                     modalMessage: 'waitingForOperation', modalIcon: 'HourglassSplit',
                     modalButtonVariant: "gold", waitToClose: true
-                    }); 
+                    });
                 return (true);
             }
             else{
@@ -376,7 +375,7 @@ class EditCampaign extends React.Component {
                 modalButtonVariant: "gold", waitToClose: true});
                 let abi = (await import("../remote/" + this.state.chainId + "/HEOCampaignFactory")).abi;
                 let address = (await import("../remote/" + this.state.chainId + "/HEOCampaignFactory")).address;
-                var HEOCampaignFactory = new this.state.web3.eth.Contract(abi, address); 
+                var HEOCampaignFactory = new this.state.web3.eth.Contract(abi, address);
                 var that = this;
                 var web3 = this.state.web3;
                 var result;
@@ -396,8 +395,8 @@ class EditCampaign extends React.Component {
                                     {showModal:true, modalTitle: 'processingWait',
                                     modalMessage: 'waitingForOperation', modalIcon: 'HourglassSplit',
                                     modalButtonVariant: "gold", waitToClose: true
-                                    }); 
-                                  return (result); 
+                                    });
+                                  return (result);
                                 }
                             );
                         });
@@ -419,25 +418,24 @@ class EditCampaign extends React.Component {
                             {showModal:true, modalTitle: 'processingWait',
                             modalMessage: 'waitingForOperation', modalIcon: 'HourglassSplit',
                             modalButtonVariant: "gold", waitToClose: true
-                            });     
-                    return (true); 
+                            });
+                    return (true);
                     } else {
                         return false;
                     }
-                } 
+                }
             }
         } catch (err) {
             console.log(err);
-            return (false) 
+            return (false)
         }
     }
 
     async updateCampaign() {
-         
+
         try {
             let data = {
                 mainImageURL: this.state.mainImageURL,
-                coinbaseCommerceURL: this.state.coinbaseCommerceURL,
                 fn: this.state.fn,
                 ln: this.state.ln,
                 cn: this.state.cn,
@@ -469,7 +467,7 @@ class EditCampaign extends React.Component {
             console.log(`Updating org to`);
             console.log(data.org);
             let result;
-            
+
             let dataForDB = {address: this.state.campaignId, dataToUpdate: data};
             try {
                let res = await axios.post('/api/campaign/update', {mydata : dataForDB},
@@ -492,22 +490,22 @@ class EditCampaign extends React.Component {
                 if (result !== true) this.setState({resultEtherium : false});
                 this.setState({showModal:true,modalTitle: 'processingWait',
                   modalMessage: 'waitingForOperation', modalIcon:'HourglassSplit',
-                  modalButtonVariant: "gold", waitToClose: true}); 
+                  modalButtonVariant: "gold", waitToClose: true});
               }
               if(this.state.addresses[this.state.tronChainId]){
                 result = await this.savetoTron(false);
                 if (result !== true) this.setState({resultTron : false});
                 this.setState({showModal:true,modalTitle: 'processingWait',
                   modalMessage: 'waitingForOperation', modalIcon:'HourglassSplit',
-                  modalButtonVariant: "gold", waitToClose: true}); 
-              } 
+                  modalButtonVariant: "gold", waitToClose: true});
+              }
             }
-            return true;           
+            return true;
 
         }catch(err){
-            console.log(err);  
+            console.log(err);
             return (false);
-        }    
+        }
     }
 
     async uploadImageS3(type) {
@@ -564,14 +562,14 @@ class EditCampaign extends React.Component {
                                     modalTitle: 'failed',
                                     modalMessage: 'updatingAmountFailedEtherium',
                                     modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
-                                    modalButtonVariant: "#E63C36", waitToClose: false, resultEtherium:true});   
+                                    modalButtonVariant: "#E63C36", waitToClose: false, resultEtherium:true});
                                 }
                                 else if (this.state.resultTron === false){
                                     this.setState({showModal : true,
                                        modalTitle: 'failed',
                                        modalMessage: 'updatingAmountFailedTron',
                                        modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
-                                       modalButtonVariant: "#E63C36", waitToClose: false, resultTron:true});   
+                                       modalButtonVariant: "#E63C36", waitToClose: false, resultTron:true});
                                    }
                                 else this.setState({showModal:false});
                             }}>
@@ -589,23 +587,23 @@ class EditCampaign extends React.Component {
                         <Form.Group >
                             <Form.Label><Trans i18nKey='organization'/><span className='redAsterisk'>*</span></Form.Label>
                             <Row>
-                            <Col>  
+                            <Col>
                             <Form.Label><Trans i18nKey='english'/><span className='redAsterisk'>*</span></Form.Label>
                             </Col>
-                            <Col> 
-                            <Form.Label><Trans i18nKey='russian'/><span className='redAsterisk'></span></Form.Label> 
+                            <Col>
+                            <Form.Label><Trans i18nKey='russian'/><span className='redAsterisk'></span></Form.Label>
                             </Col>
                             </Row>
                             <Row>
-                            <Col>  
+                            <Col>
                             <Form.Control required type="text" className="createFormPlaceHolder" placeholder={i18n.t('on')}
                                 name='orgEn' value={this.state.orgEn} onChange={this.handleChange}/>
                             </Col>
-                            <Col> 
+                            <Col>
                             <Form.Control required type="text" className="createFormPlaceHolder" placeholder={i18n.t('on')}
-                                name='orgRu' value={this.state.orgRu} onChange={this.handleChange}/>  
+                                name='orgRu' value={this.state.orgRu} onChange={this.handleChange}/>
                             </Col>
-                            </Row>     
+                            </Row>
                         </Form.Group>
                         <hr/>
                         <Form.Row>
@@ -641,12 +639,6 @@ class EditCampaign extends React.Component {
                                         name='fiatPayments' onChange={this.handleChange} onwheel="this.blur()"/>
                             </Col>
                             </Row>
-                            <Form.Label><Trans i18nKey='coinbaseCommerceURL'/><span
-                                className='optional'>(<Trans i18nKey='optional'/>)</span></Form.Label>
-                            <Form.Control ria-describedby="currencyHelpBlock"
-                                          className="createFormPlaceHolder"
-                                          value={this.state.coinbaseCommerceURL} placeholder={this.state.coinbaseCommerceURL}
-                                          name='coinbaseCommerceURL' onChange={this.handleChange} onwheel="this.blur()" />
                         </Form.Group>
                         <hr/>
                         <Form.Group>
@@ -668,11 +660,11 @@ class EditCampaign extends React.Component {
                         <Form.Group>
                             <Form.Label><Trans i18nKey='title'/><span className='redAsterisk'>*</span></Form.Label>
                             <Row>
-                            <Col>  
+                            <Col>
                             <Form.Label><Trans i18nKey='english'/><span className='redAsterisk'>*</span></Form.Label>
                             </Col>
-                            <Col> 
-                            <Form.Label><Trans i18nKey='russian'/><span className='redAsterisk'></span></Form.Label> 
+                            <Col>
+                            <Form.Label><Trans i18nKey='russian'/><span className='redAsterisk'></span></Form.Label>
                             </Col>
                             </Row>
                             <Row>
@@ -686,16 +678,16 @@ class EditCampaign extends React.Component {
                                           placeholder={i18n.t('campaignTitle')}
                                           name='titleRu' value={this.state.titleRu} onChange={this.handleChange}/>
                             </Col>
-                            </Row>              
+                            </Row>
                         </Form.Group>
                         <Form.Group>
                         <Form.Label><Trans i18nKey='shortDescription'/><span className='redAsterisk'>*</span></Form.Label>
                             <Row>
-                            <Col>  
+                            <Col>
                             <Form.Label><Trans i18nKey='english'/><span className='redAsterisk'>*</span></Form.Label>
                             </Col>
-                            <Col> 
-                            <Form.Label><Trans i18nKey='russian'/><span className='redAsterisk'></span></Form.Label> 
+                            <Col>
+                            <Form.Label><Trans i18nKey='russian'/><span className='redAsterisk'></span></Form.Label>
                             </Col>
                             </Row>
                             <Row>
@@ -704,58 +696,58 @@ class EditCampaign extends React.Component {
                                           placeholder={i18n.t('descriptionOfCampaign')}
                                           name='descriptionEn' value={this.state.descriptionEn}
                                           maxLength='195' onChange={this.handleChange}/>
-                            </Col>    
+                            </Col>
                             <Col>
                             <Form.Control required as="textarea" rows={3} className="createFormPlaceHolder"
                                           placeholder={i18n.t('descriptionOfCampaign')}
                                           name='descriptionRu' value={this.state.descriptionRu}
                                           maxLength='195' onChange={this.handleChange}/>
-                            </Col>  
+                            </Col>
                             </Row>
                             <Form.Label><Trans i18nKey='campaignDescription'/><span className='redAsterisk'>*</span></Form.Label>
                             <Row>
-                            <Col>  
+                            <Col>
                             <Form.Label><Trans i18nKey='english'/><span className='redAsterisk'>*</span></Form.Label>
                             </Col>
-                            <Col> 
-                            <Form.Label><Trans i18nKey='russian'/><span className='redAsterisk'></span></Form.Label> 
+                            <Col>
+                            <Form.Label><Trans i18nKey='russian'/><span className='redAsterisk'></span></Form.Label>
                             </Col>
-                            </Row> 
+                            </Row>
                             <Row>
                             <Col>
                             {this.state.updatedEditorStateEn && <TextEditorEn  />}
-                            </Col>  
+                            </Col>
                             <Col>
                             {this.state.updatedEditorStateRu && <TextEditorRu  />}
-                            </Col>   
+                            </Col>
                             </Row>
                             <Row>
                              <Col>
-                              {this.state.addresses[this.state.chainId] && 
+                              {this.state.addresses[this.state.chainId] &&
                                 <Form.Label><span><CheckCircle style={{color:'#E63C36'}} /> </span>
-                                <Trans i18nKey='campaignInEtereum'/><span className='redAsterisk'></span></Form.Label>} 
-                             </Col> 
+                                <Trans i18nKey='campaignInEtereum'/><span className='redAsterisk'></span></Form.Label>}
+                             </Col>
                              <Col>
-                              {this.state.addresses[this.state.tronChainId] && 
+                              {this.state.addresses[this.state.tronChainId] &&
                                 <Form.Label><span><CheckCircle style={{color:'#E63C36'}} /> </span>
-                                <Trans i18nKey='campaignInTron'/><span className='redAsterisk'></span></Form.Label>} 
-                             </Col>  
+                                <Trans i18nKey='campaignInTron'/><span className='redAsterisk'></span></Form.Label>}
+                             </Col>
                             </Row>
                         </Form.Group>
                         <Row>
-                         <Col>   
+                         <Col>
                           <Button onClick={() => this.handleClick()} id='createCampaignBtn' name='ff3'>
                             {i18n.t('saveCampaignBtn')}
-                          </Button> 
-                         </Col> 
+                          </Button>
+                         </Col>
                          <Col>
-                          {(((!this.state.addresses[this.state.tronChainId])||(!this.state.addresses[this.state.chainId]))&&(window.ethereum||window.tron)&&(this.state.active)) && 
+                          {(((!this.state.addresses[this.state.tronChainId])||(!this.state.addresses[this.state.chainId]))&&(window.ethereum||window.tron)&&(this.state.active)) &&
                             <DropdownButton size='lg' id="createCampaignBtn" title={i18n.t('deployBtn')} className='backToCampaigns'>
                              {(!this.state.addresses[this.state.chainId] && window.ethereum)&& <Dropdown.Item onClick={async() => {
-                              await this.saveToEtherium(true);   
+                              await this.saveToEtherium(true);
                               }} >Etherium</Dropdown.Item>}
                              {(!this.state.addresses[this.state.tronChainId] && window.tron)&& <Dropdown.Item onClick={async() => {
-                              await this.savetoTron(true);   
+                              await this.savetoTron(true);
                               }}>Tron</Dropdown.Item>}
                             </DropdownButton>}
                          </Col>
@@ -785,7 +777,7 @@ class EditCampaign extends React.Component {
                     modalMessage,
                 })
             })
-            
+
         return campaign;
     }
 
@@ -868,7 +860,6 @@ class EditCampaign extends React.Component {
             maxAmount : dbCampaignObj.maxAmount,
             maxAmount_old : dbCampaignObj.maxAmount,
             addresses: dbCampaignObj.addresses,
-            coinbaseCommerceURL: dbCampaignObj.coinbaseCommerceURL,
             defDonationAmount: dbCampaignObj.defaultDonationAmount,
             fiatPayments: dbCampaignObj.fiatPayments
         });
@@ -878,20 +869,20 @@ class EditCampaign extends React.Component {
         else this.setState({isInTron:false});
         if(dbCampaignObj.descriptionEditor.en){
             setEditorStateEn(dbCampaignObj.descriptionEditor.en, true);
-            this.setState({updatedEditorStateEn : true});  
-        } 
+            this.setState({updatedEditorStateEn : true});
+        }
         else{
             setEditorStateEn({}, false);
-            this.setState({updatedEditorStateEn : true}); 
-        } 
+            this.setState({updatedEditorStateEn : true});
+        }
         if(dbCampaignObj.descriptionEditor.ru){
             setEditorStateRu(dbCampaignObj.descriptionEditor.ru, true);
-            this.setState({updatedEditorStateRu : true}); 
-        } 
+            this.setState({updatedEditorStateRu : true});
+        }
         else{
             setEditorStateRu({}, false);
-            this.setState({updatedEditorStateRu : true}); 
-        } 
+            this.setState({updatedEditorStateRu : true});
+        }
         console.log(`Set title to`);
         console.log(this.state.ogTitle);
         console.log(`Set org to`);

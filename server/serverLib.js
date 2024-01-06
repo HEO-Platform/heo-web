@@ -1,7 +1,3 @@
-const { registerRequestInstrumentation } = require('@sentry/tracing');
-const { default: axios } = require('axios');
-const { ObjectId } = require('mongodb');
-const {Web3} = require('web3');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 
@@ -10,7 +6,7 @@ class ServerLib {
     constructor() {
         this.emailCode = new Map();
     }
-    
+
     testingClass() {
         console.log('server library class');
     }
@@ -44,7 +40,7 @@ class ServerLib {
             let result = await myCollection.findOne({"_id" : req.body.mydata.to_email});
             if ((result)&&(req.body.mydata.password)){
              let res = bcrypt.compareSync(req.body.mydata.password, result.password);
-             if (res === true) return (1);  
+             if (res === true) return (1);
              else if(res === false) return (2);
             }
             else if ((result)&&(!req.body.mydata.password)) return(1);
@@ -124,7 +120,7 @@ class ServerLib {
     async handleSendEmail(req, res, Sentry, key, text, DB){
        try{
         const emailCollection = await DB.collection('global_configs');
-        let result = await emailCollection.findOne({"_id" : key}); 
+        let result = await emailCollection.findOne({"_id" : key});
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -134,8 +130,8 @@ class ServerLib {
           });
         let to_email;
         if (key === "HEO-Platform Confirmation Code") to_email = req.body.mydata.to_email;
-        else if (key === "New Campaign Alert") to_email = result.to;  
-        else if (key === "Failed to delete picture") to_email = result.to; 
+        else if (key === "New Campaign Alert") to_email = result.to;
+        else if (key === "Failed to delete picture") to_email = result.to;
         await transporter.sendMail({
             from: result.from, // sender address
             to: to_email, // list of receivers
@@ -144,7 +140,7 @@ class ServerLib {
           }).then(info => {
             console.log({info});
             res.send('success');
-          }).catch(console.error); 
+          }).catch(console.error);
        } catch (err) {
         Sentry.captureException(new Error(err));
         res.sendStatus(500);
@@ -163,7 +159,7 @@ class ServerLib {
             deleted: false,
             checked: false
         }
-        
+
         try {
             const myCollection = await DB.collection('donations');
             await myCollection.insertOne(ITEM);
@@ -172,7 +168,7 @@ class ServerLib {
             Sentry.captureException(new Error(err));
             res.sendStatus(500);
         }
-    } 
+    }
 
     async handleAddCampaign(req, res, Sentry, DB, newWalletId) {
         const ITEM = {
@@ -201,7 +197,7 @@ class ServerLib {
             lastDonationTime: 0,
             coins: req.body.mydata.coins,
             addresses: req.body.mydata.addresses,
-            accounts: req.body.mydata.accounts, 
+            accounts: req.body.mydata.accounts,
             active: false,
             new: true
         }
@@ -271,38 +267,38 @@ class ServerLib {
     }
 
     async handleGetAllDonateForCampaign(req, res, Sentry, DB){
-        try {  
+        try {
         let result = await DB.collection('donations').find({campaignID: req.body.mydata.campaignID});
         if (result.length == 0) res.send(0);
         else
         {
          const pipeline = [
           { $match: {campaignID: req.body.mydata.campaignID, deleted : false } },
-           {$group: { _id: null, totalQuantity: { $sum: "$raisedAmount" } }}  
+           {$group: { _id: null, totalQuantity: { $sum: "$raisedAmount" } }}
          ];
          result = await DB.collection('donations').aggregate(pipeline).toArray();
          res.send(result);
-        }      
+        }
        } catch (err) {
         Sentry.captureException(new Error(err));
         res.send("error");
-       }  
+       }
     }
 
     async handleGetAllDonateForList(req, res, Sentry, DB){
         try {
             const pipeline = [
                 { $match: { deleted : false } },
-                {$group: { _id: '$campaignID', totalQuantity: {$sum: "$raisedAmount"}}}  
+                {$group: { _id: '$campaignID', totalQuantity: {$sum: "$raisedAmount"}}}
             ];
             let result = await DB.collection('donations').aggregate(pipeline).toArray();
-            res.send(result);  
+            res.send(result);
        } catch (err) {
         Sentry.captureException(new Error(err));
         res.sendn("error");
-       }  
+       }
     }
-  
+
     async handleGetId(req, res, Sentry, DB) {
         try {
             const myCollection = await DB.collection('campaigns');

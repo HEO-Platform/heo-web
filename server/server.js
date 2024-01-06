@@ -16,6 +16,10 @@ const Tracing = require("@sentry/tracing");
 const ServerLib = require('./serverLib');
 const CircleLib = require('./circleLib');
 const PayadmitLib = require('./payadmitLib');
+
+const StripeLib = require('./stripeLib');
+const CoinbaseLib = require('./coinbaseLib');
+
 const PORT = process.env.PORT || 5000;
 
 
@@ -26,6 +30,9 @@ const APP = EXPRESS();
 const serverLib = new ServerLib();
 const circleLib = new CircleLib();
 const payadmitLib = new PayadmitLib();
+
+const stripeLib = new StripeLib();
+const coinbaseLib = new CoinbaseLib();
 
 Sentry.init({
     dsn: process.env.SENTRY_DSN,
@@ -141,7 +148,7 @@ APP.post('/api/circlenotifications', async (req, res) => {
 });
 
 APP.post('/api/uploadimage', (req,res) => {
- if(serverLib.authenticated(req, res, Sentry)) 
+ if(serverLib.authenticated(req, res, Sentry))
  serverLib.handleUploadImage(req, res, S3, Sentry);
 });
 
@@ -159,13 +166,13 @@ APP.post('/api/is_autorisation', function(req, res) {
 
 APP.post('/api/sendemail', async (req, res) => {
     const DB = CLIENT.db(DBNAME);
-    serverLib.handleSendEmail(req, res, Sentry, req.body.key, req.body.text, DB); 
+    serverLib.handleSendEmail(req, res, Sentry, req.body.key, req.body.text, DB);
 })
 
 APP.post('/api/campaign/add', async (req, res) => {
     if(serverLib.authenticated(req, res, Sentry)) {
         const DB = CLIENT.db(DBNAME);
-        
+
         let walletId, fiatPayment;
         try {
             fiatPayment = await serverLib.handleGetFiatPaymentSettings(DB, Sentry);
@@ -173,7 +180,7 @@ APP.post('/api/campaign/add', async (req, res) => {
                 walletId = await circleLib.createCircleWallet(req.body.mydata.address, CIRCLE_API_KEY, Sentry)
             }
         } catch (err) {Sentry.captureException(new Error(err));}
-       
+
        if (serverLib.handleAddCampaign(req, res, Sentry, DB, walletId)){
         const text = "There is a new campaign. Please review. " + "Сampaign title - " + req.body.mydata.title["default"] +
         ". Сampaign name " + req.body.mydata.org["default"] + ". Сampaign ID - " +  req.body.mydata.id + ". Сampaign beneficiary - " +
@@ -463,11 +470,21 @@ APP.post('/api/donatefiat', async (req, res) => {
     } else if (fiatPayment && fiatPayment === 'stripeLib') {
         console.log("Handing fiat via Stripe");
         stripeLib.handleDonateFiat(req, res, STRIPE_API_KEY, CLIENT, DBNAME, Sentry);
+    } else {
+        res.status(503).send('serviceNotAvailable');
     }
-    else {res.status(503).send('serviceNotAvailable');}
-
 });
 
+// Handles crypto payment initiation via coinbase commerce
+APP.post('/api/donatecoinbasecommerce', async (req, res) => {
+    try {
+        console.log("Looking up coinbase library");
+        coinbaseLib.createCharge(req, res, CLIENT, DBNAME, Sentry, COINBASE_API_KEY);
+    } catch (err) {
+        console.log(err);
+        Sentry.captureException(new Error(err));
+    }
+});
 
 /**
  * Handles any requests that don't match the ones above.
