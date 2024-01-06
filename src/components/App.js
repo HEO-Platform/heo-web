@@ -52,17 +52,21 @@ class App extends Component {
         let lang = GetLanguage();
         this.setState({language : lang});
         if(!window.connect)
-        window.connect = false;
+            window.connect = false;
+
+        await this.checkAutorisation();
+        this.props.history.listen((location, action) => {
+            this.checkAutorisation();
+        });
     }
 
-    
 
     async checkAutorisation(){
         let result = await axios.post('/api/is_autorisation', {headers: {"Content-Type": "application/json"}});
         if (result.data !== false){
             this.setState({connect:true,userEmail:result.data,registrBtnTiile:'deauthorization'});
-        } 
-        else this.setState({connect:false,registrBtnTiile:'registration'});   
+        }
+        else this.setState({connect:false,registrBtnTiile:'registration'});
     }
 
     async setLanguage(lang) {
@@ -77,7 +81,7 @@ class App extends Component {
     }
     render() {
        let lang = GetLanguage();
-       this.checkAutorisation();
+
         return (
             <UserContext.Provider value={this.state}>
             <Suspense fallback="...is loading">
@@ -100,7 +104,7 @@ class App extends Component {
                                         <Nav.Link as={Link} eventKey="1" className='mainNavText' to="/"><Trans i18nKey='browse'/></Nav.Link>
                                         <NavLink  as={Link} eventKey="2" className='mainNavText' onClick={async(event) => {
                                           if(!this.state.connect){
-                                            this.setState({showModal:true, modalButtonVariant: "#E63C36", 
+                                            this.setState({showModal:true, modalButtonVariant: "#E63C36",
                                             modalTitle:"attention", modalMessage: "noLogMessage", modalButtonMessage:"ok",
                                             modalIcon: "ExclamationTriangle" });
                                             event.preventDefault();
@@ -109,10 +113,10 @@ class App extends Component {
                                         </NavLink>
                                         <Nav.Link as={Link} eventKey="3" className='mainNavText' onClick={async(event) => {
                                           if(!this.state.connect){
-                                            this.setState({showModal:true, modalButtonVariant: "#E63C36", 
+                                            this.setState({showModal:true, modalButtonVariant: "#E63C36",
                                             modalTitle:"attention", modalMessage: "noLogMessage", modalButtonMessage:"ok",
                                             modalIcon: "ExclamationTriangle" });
-                                            event.preventDefault(); 
+                                            event.preventDefault();
                                           }}} to ='/myCampaigns'>
                                             <Trans i18nKey='myFundraisers'/>
                                         </Nav.Link>
@@ -120,7 +124,7 @@ class App extends Component {
                                         {(!this.state.connect)&&<Nav.Link as={Link} eventKey="5" className='mainNavText' to ='/Registration/connect'>
                                             <Trans i18nKey='authorization'/>
                                         </Nav.Link>}
-                                        {(this.state.connect)&&<Nav.Link as={Link} eventKey="5" className='mainNavText' to ='/Registration/disconnect'>
+                                        {(this.state.connect)&&<Nav.Link as={Link}  eventKey="5" className='mainNavText' to ='/Registration/disconnect'>
                                             <Trans i18nKey='deauthorization'/>
                                         </Nav.Link>}
                                     </Nav>
@@ -172,7 +176,7 @@ class App extends Component {
                                 <Route path="/rewards" component={MyDonations} />
                                 <Route path="/editCampaign" component={EditCampaign} />
                                 <Route path="/invest" component={TokenSale} />
-                                <Route path="/registration" component={Registration} />
+                                <Route path="/registration"  component={Registration} onLeave={ () => { console.log("Registration on Leave") } }  />
                                 <Route path="/404" component={Page404} />
                                 <Route path="/" component={Home} />
                                 <Route component={Error} />
