@@ -293,6 +293,17 @@ APP.post('/api/auth/autor_start', async (req, res) => {
     }
 })
 
+APP.post('/api/auth/change_pass', async (req, res) => {
+    const DB = CLIENT.db(DBNAME);
+    let result = await serverLib.handleCheckUser(req, DB);
+    if(result === 0)  res.send('no_user');
+    else{
+        let text = await serverLib.handleRegistrationStart(req, res, Sentry);
+        await serverLib.handleSendEmail(req, res, Sentry, "HEO-Platform Confirmation Code", text, DB);
+    }
+})
+
+
 APP.post('/api/auth/check_code', async (req, res) => {
     const DB = CLIENT.db(DBNAME);
     await serverLib.handleCheckCode(req, res);
@@ -301,6 +312,11 @@ APP.post('/api/auth/check_code', async (req, res) => {
 APP.post('/api/auth/registr_end', async (req, res) => {
     const DB = CLIENT.db(DBNAME);
     await serverLib.handleRegistrationEnd(req, res, Sentry, DB);
+})
+
+APP.post('/api/auth/new_pass', async (req, res) => {
+    const DB = CLIENT.db(DBNAME);
+    await serverLib.handleNewPassword(req, res, Sentry, DB);
 })
 
 APP.post('/api/auth/autor_end', async (req, res) => {
