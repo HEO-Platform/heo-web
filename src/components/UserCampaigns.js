@@ -282,31 +282,7 @@ class UserCampaigns extends Component {
     render() {
         return (
             <div> 
-             <div><p className='modalTitle'><Trans i18nKey={'myFundraisers'}/></p></div>   
-            <Row> 
-                  {this.state.campaigns.length === 0 &&
-                        <h1>
-                            <Trans i18nKey='noUserCampaigns'>You did not create any campaigns yet. Click <Link to="/new">here</Link> to create your first campaign.</Trans>
-                        </h1>
-                    }
-                </Row>
-                <Row> 
-                 <Col>
-                   <p className='backToCampaigns'><Link class={"backToCampaignsLink"} to="/"><ChevronLeft id='backToCampaignsChevron'/> <Trans i18nKey='backToCampaigns'/></Link></p>
-                 </Col>  
-                 <Col md={{ span: 3, offset: 3 }}>
-                   <DropdownButton size='lg' id="dropdown-saccess-button" title={i18n.t('findUserCompanies')} className='backToCampaigns'>
-                   <Dropdown.Item onClick={async() => {
-                    await this.getCampaignsInEtherium();   
-                    }} >Etherium</Dropdown.Item>
-                   <Dropdown.Item onClick={async() => {
-                    await this.getCampaignsInTron();   
-                    }}>Tron</Dropdown.Item>
-                 </DropdownButton>
-                 </Col>
-                </Row>
-               
-                <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' centered>
+               <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' centered>
                 <Modal.Body>  
                     <p className='modalIcon'>
                         {this.state.modalIcon == 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
@@ -338,7 +314,31 @@ class UserCampaigns extends Component {
                         </Col>}
                         </Row>}
                    </Modal.Body>
-                </Modal>
+                </Modal> 
+                <div><p className='modalTitle'><Trans i18nKey={'myFundraisers'}/></p></div>
+               <Row> 
+                <Col>
+                <Container className='backToCampaignsDiv'>
+                    <Link className={"backToCampaignsLink"} to="/"><span><ChevronLeft id='backToCampaignsChevron'/><Trans i18nKey='backToCampaigns'/></span></Link>
+                </Container>
+                </Col>   
+                 <Col md={{ span: 3, offset: 3 }}>
+                   <DropdownButton size='lg' id="dropdown-saccess-button" title={i18n.t('findUserCompanies')} className='backToCampaigns'>
+                   <Dropdown.Item onClick={async() => {
+                    await this.getCampaignsInEtherium();   
+                    }} >Etherium</Dropdown.Item>
+                   <Dropdown.Item onClick={async() => {
+                    await this.getCampaignsInTron();   
+                    }}>Tron</Dropdown.Item>
+                 </DropdownButton>
+                 </Col>
+                </Row>
+                {this.state.campaigns.length === 0 &&<Row> 
+                <h1>
+                 <Trans i18nKey='noUserCampaigns'>You did not create any campaigns yet. Click <Link to="/new">here</Link> to create your first campaign.</Trans>
+                </h1>
+                </Row>}
+                
                 <div id="campaingListMainDiv">
                     <Container>
                         {this.state.campaigns.map((item, i) =>

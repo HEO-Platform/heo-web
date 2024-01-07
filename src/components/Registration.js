@@ -47,7 +47,7 @@ class Registration extends React.Component {
               modalIcon: 'CheckCircle',
               showModalCode: false,
               modalButtonMessage: 'returnHome',
-              modalButtonVariant: "#E63C36", waitToClose: false
+              modalButtonVariant: "#16a1e1", waitToClose: false
             }); 
       }
     }  
@@ -86,7 +86,7 @@ class Registration extends React.Component {
         this.setState({showModal: true, modalTitle: "attention", modalMessage: 'sendcode',
            modalIcon: 'InfoCircle', 
            modalButtonMessage: 'ok',
-           modalButtonVariant: "#E63C36", waitToClose: false, changePass:true
+           modalButtonVariant: "#16a1e1", waitToClose: false, changePass:true
         });                   
       }catch(error)  {
         this.setState({showModal: true, goHome: true,
@@ -150,7 +150,7 @@ class Registration extends React.Component {
         this.setState({showModal: true, modalTitle: "attention", modalMessage: 'sendcode',
            modalIcon: 'InfoCircle', 
            modalButtonMessage: 'ok',
-           modalButtonVariant: "#E63C36", waitToClose: false
+           modalButtonVariant: "#16a1e1", waitToClose: false
         });                   
       }catch(error)  {
         this.setState({showModal: true, goHome: true,
@@ -224,7 +224,7 @@ class Registration extends React.Component {
         this.setState({showModal: true, modalTitle: "attention", modalMessage: 'sendcode',
           modalIcon: 'InfoCircle', 
           modalButtonMessage: 'ok',
-          modalButtonVariant: "#E63C36", waitToClose: false
+          modalButtonVariant: "#16a1e1", waitToClose: false
         });
       } catch(error)  {
         this.setState({showModal: true, goHome: true,
@@ -308,7 +308,7 @@ class Registration extends React.Component {
         this.setState({showModal: true, modalTitle: "attention", modalMessage: 'sendcode',
           modalIcon: 'InfoCircle', 
           modalButtonMessage: 'ok',
-          modalButtonVariant: "#E63C36", waitToClose: false
+          modalButtonVariant: "#16a1e1", waitToClose: false
         });
       } catch(error)  {
         this.setState({showModal: true, goHome: true,
@@ -353,7 +353,7 @@ class Registration extends React.Component {
               modalIcon: 'CheckCircle',
               showModalCode: false,
               modalButtonMessage: 'returnHome',
-              modalButtonVariant: "#E63C36", waitToClose: false
+              modalButtonVariant: "#16a1e1", waitToClose: false
             }); 
           }else{
             this.setState({showModal: true, goHome: true,
@@ -418,12 +418,12 @@ class Registration extends React.Component {
                           {headers: {"Content-Type": "application/json"}});
         if (res.data == 'success') {
             this.setState({showModal: true, goHome: true,
-              modalTitle: 'successd',
+              modalTitle: 'success',
               modalMessage: 'changePassComplete',
               modalIcon: 'CheckCircle',
               showModalCode: false,
               modalButtonMessage: 'returnHome',
-              modalButtonVariant: "#E63C36", waitToClose: false
+              modalButtonVariant: "#16a1e1", waitToClose: false
             });
              
         }else{
@@ -474,12 +474,12 @@ class Registration extends React.Component {
                           {headers: {"Content-Type": "application/json"}});
           if (res.data == 'success') {
             this.setState({showModal: true, goHome: true,
-              modalTitle: 'successd',
+              modalTitle: 'success',
               modalMessage: 'registrationComplete',
               modalIcon: 'CheckCircle',
               showModalCode: false,
               modalButtonMessage: 'returnHome',
-              modalButtonVariant: "#E63C36", waitToClose: false
+              modalButtonVariant: "#16a1e1", waitToClose: false
             });
              
           }else{

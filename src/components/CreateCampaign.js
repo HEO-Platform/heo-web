@@ -15,7 +15,7 @@ import { ChevronLeft, CheckCircle, ExclamationTriangle, HourglassSplit, XCircle 
 import { compress } from 'shrink-string';
 import '../css/createCampaign.css';
 import '../css/modal.css';
-
+import '../css/campaignPage.css';
 //import TronWeb from "tronweb";
 import ReactGA from "react-ga4";
 ReactGA.initialize("G-C657WZY5VT");
@@ -414,11 +414,9 @@ class CreateCampaign extends React.Component {
                         </Button>}
                     </Modal.Body> 
                 </Modal>
-              
                 <Container className='backToCampaignsDiv'>
-                    <p className='backToCampaigns'><Link class={"backToCampaignsLink"} to="/"><ChevronLeft id='backToCampaignsChevron'/> <Trans i18nKey='backToCampaigns'/></Link></p>
+                    <Link className={"backToCampaignsLink"} to="/"><span><ChevronLeft id='backToCampaignsChevron'/><Trans i18nKey='backToCampaigns'/></span></Link>
                 </Container>
-                
                 <Container en id='mainContainer'>
                     <Form onSubmit={this.onSubmit}>
                         <div className='titles'><Trans i18nKey='aboutYou'/></div>

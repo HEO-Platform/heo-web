@@ -579,7 +579,7 @@ class EditCampaign extends React.Component {
                     </Modal.Body>
                 </Modal>
                 <Container className='backToCampaignsDiv'>
-                    <p className='backToCampaigns'><Link class={"backToCampaignsLink"} to="/myCampaigns"><ChevronLeft id='backToCampaignsChevron'/> <Trans i18nKey='backToMyCampaigns'/></Link></p>
+                    <Link className={"backToCampaignsLink"} to="/myCampaigns"><span><ChevronLeft id='backToCampaignsChevron'/><Trans i18nKey='backToMyCampaigns'/></span></Link>
                 </Container>
                 <Container id='mainContainer'>
                     <Form onSubmit={this.onSubmit}>
