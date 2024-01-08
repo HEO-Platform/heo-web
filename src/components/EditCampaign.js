@@ -234,15 +234,9 @@ class EditCampaign extends React.Component {
                 return;
             }
         }
-        this.setState({
-            showModal: true, modalTitle: 'complete', goHome: true,
-            modalMessage: 'updateSuccessfull',
-            modalIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
-            modalButtonVariant: '#588157', waitToClose: false
-        });
         let result = await this.updateCampaign();
         if (result === false)
-            this.setState({showModal : true,
+        this.setState({showModal : true,
                 modalTitle: 'failed',
                 modalMessage: 'errorWritingCampaignToDB',
                 modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
@@ -326,21 +320,60 @@ class EditCampaign extends React.Component {
                       console.log(`createCampaign transaction successful ${transEvent}`);
                       this.state.addresses[this.state.tronChainId] = transEvent[0].result.campaignAddress;
                       this.state.line_accounts[this.state.tronChainId]  = window.tronAdapter._wallet.tronWeb.defaultAddress.hex;
+                      this.state.maxAmount_old = this.state.maxAmount;
+                      let res =await this.updateCampaign();  
+                      if (res === false)
+                        this.setState({showModal : true,
+                          modalTitle: 'failed',
+                          modalMessage: 'errorWritingCampaignToDB',
+                          modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
+                          modalButtonVariant: "#E63C36", waitToClose: false
+                        });
+                      else this.setState({
+                        showModal: true, modalTitle: 'complete', goHome: true,
+                        modalMessage: 'updateSuccessfull',
+                        modalIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
+                        modalButtonVariant: '#588157', waitToClose: false
+                      });    
                       return (true);
                     } else {
+                        this.setState({showModal : true,
+                            modalTitle: 'failed',
+                            modalMessage: 'blockChainTransactionFailed',
+                            modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
+                            modalButtonVariant: "#E63C36", waitToClose: false
+                        });
                       return false;
                     }
                 } catch (err) {
                     console.log(err);
+                    this.setState({showModal : true,
+                        modalTitle: 'failed',
+                        modalMessage: 'blockChainTransactionFailed',
+                        modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
+                        modalButtonVariant: "#E63C36", waitToClose: false
+                    });
                     return false;
                 }
             } catch (error) {
               console.log(error);
+              this.setState({showModal : true,
+                modalTitle: 'failed',
+                modalMessage: 'blockChainTransactionFailed',
+                modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
+                modalButtonVariant: "#E63C36", waitToClose: false
+            });
               return false;
             }
         }
       } catch (err) {
             console.log(err);
+            this.setState({showModal : true,
+                modalTitle: 'failed',
+                modalMessage: 'blockChainTransactionFailed',
+                modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
+                modalButtonVariant: "#E63C36", waitToClose: false
+            });
             return (false)
       }
     }
@@ -414,19 +447,41 @@ class EditCampaign extends React.Component {
                         console.log(`Deployed campaign to ${this.state.chainId} at ${result.events.CampaignDeployed.returnValues.campaignAddress}`)
                         this.state.addresses[this.state.chainId] = result.events.CampaignDeployed.returnValues.campaignAddress;
                         this.state.line_accounts[this.state.chainId]  = this.state.accounts[0];
-                        this.setState(
-                            {showModal:true, modalTitle: 'processingWait',
-                            modalMessage: 'waitingForOperation', modalIcon: 'HourglassSplit',
-                            modalButtonVariant: "gold", waitToClose: true
-                            });
-                    return (true);
+                        this.state.maxAmount_old = this.state.maxAmount;
+                        let res =await this.updateCampaign();  
+                        if (res === false)
+                          this.setState({showModal : true,
+                            modalTitle: 'failed',
+                            modalMessage: 'errorWritingCampaignToDB',
+                            modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
+                            modalButtonVariant: "#E63C36", waitToClose: false
+                        });
+                        else this.setState({
+                          showModal: true, modalTitle: 'complete', goHome: true,
+                          modalMessage: 'updateSuccessfull',
+                          modalIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
+                          modalButtonVariant: '#588157', waitToClose: false
+                        });  
+                      return (true);
                     } else {
+                        this.setState({showModal : true,
+                            modalTitle: 'failed',
+                            modalMessage: 'blockChainTransactionFailed',
+                            modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
+                            modalButtonVariant: "#E63C36", waitToClose: false
+                        });  
                         return false;
                     }
                 }
             }
         } catch (err) {
             console.log(err);
+            this.setState({showModal : true,
+                modalTitle: 'failed',
+                modalMessage: 'blockChainTransactionFailed',
+                modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
+                modalButtonVariant: "#E63C36", waitToClose: false
+            });
             return (false)
         }
     }
@@ -462,6 +517,8 @@ class EditCampaign extends React.Component {
             data.org["en"] = this.state.orgEn;
             data.org["default"] = this.state.orgEn;
             data.org["ru"] = this.state.orgRu;
+            data.addresses = this.state.addresses;
+            data.accounts = this.state.line_accounts;
             console.log(`Updating title to`);
             console.log(data.title);
             console.log(`Updating org to`);
