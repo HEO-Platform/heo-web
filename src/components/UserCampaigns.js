@@ -317,21 +317,9 @@ class UserCampaigns extends Component {
                 </Modal> 
                 <div><p className='modalTitle'><Trans i18nKey={'myFundraisers'}/></p></div>
                <Row> 
-                <Col>
                 <Container className='backToCampaignsDiv'>
                     <Link className={"backToCampaignsLink"} to="/"><span><ChevronLeft id='backToCampaignsChevron'/><Trans i18nKey='backToCampaigns'/></span></Link>
                 </Container>
-                </Col>   
-                 <Col md={{ span: 3, offset: 3 }}>
-                   <DropdownButton size='lg' id="dropdown-saccess-button" title={i18n.t('findUserCompanies')} className='backToCampaigns'>
-                   <Dropdown.Item onClick={async() => {
-                    await this.getCampaignsInEtherium();   
-                    }} >Etherium</Dropdown.Item>
-                   <Dropdown.Item onClick={async() => {
-                    await this.getCampaignsInTron();   
-                    }}>Tron</Dropdown.Item>
-                 </DropdownButton>
-                 </Col>
                 </Row>
                 {this.state.campaigns.length === 0 &&<Row> 
                 <h1>
