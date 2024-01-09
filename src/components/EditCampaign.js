@@ -55,6 +55,7 @@ class EditCampaign extends React.Component {
             descriptionEn:"",
             descriptionRu:"",
             ogDescription:{},
+            ogDescriptionEditor:{},
             mainImageURL: "",
             imgID:"",
             mainImageFile:"",
@@ -321,6 +322,7 @@ class EditCampaign extends React.Component {
                       this.state.addresses[this.state.tronChainId] = transEvent[0].result.campaignAddress;
                       this.state.line_accounts[this.state.tronChainId]  = window.tronAdapter._wallet.tronWeb.defaultAddress.hex;
                       this.state.maxAmount_old = this.state.maxAmount;
+                      
                       let res =await this.updateCampaign();  
                       if (res === false)
                         this.setState({showModal : true,
@@ -497,21 +499,27 @@ class EditCampaign extends React.Component {
                 vl: this.state.vl,
                 defaultDonationAmount: this.state.defDonationAmount,
                 fiatPayments: this.state.fiatPayments,
-                descriptionEditor:{}
             };
-            let EditorStateEn = await getEditorStateEn();
-            let EditorStateRu = await getEditorStateRu();
             data.description = this.state.ogDescription;
             data.description["en"] = this.state.descriptionEn;
             data.description["ru"] = this.state.descriptionRu;
-            data.description["default"] = this.state.descriptiont;
+            data.description["default"] = this.state.descriptionEn;
             data.title = this.state.ogTitle;
             data.title["en"] = this.state.titleEn;
             data.title["ru"] = this.state.titleRu;
             data.title["default"] = this.state.titleEn;
-            data.descriptionEditor["en"] = EditorStateEn;
-            data.descriptionEditor["default"] = EditorStateEn;
-            data.descriptionEditor["ru"] = EditorStateRu;
+            data.descriptionEditor = this.state.ogDescriptionEditor;
+            console.log("ogDescriptionEditor:");
+            console.log(this.state.ogDescriptionEditor);
+            if (editorStateHasChangedEn()){
+              let EditorStateEn = await getEditorStateEn();  
+              data.descriptionEditor["en"] = EditorStateEn;
+              data.descriptionEditor["default"] = EditorStateEn;
+            }
+            if (editorStateHasChangedRu()){
+                let EditorStateRu = await getEditorStateRu();  
+                data.descriptionEditor["ru"] = EditorStateRu;
+            }
             data.maxAmount = this.state.maxAmount;
             data.org = this.state.ogOrg;
             data.org["en"] = this.state.orgEn;
@@ -907,7 +915,8 @@ class EditCampaign extends React.Component {
             orgRu: orgObj["ru"],
             orgEn:orgObj["en"],
             ogOrg: orgObj,
-            titleRu: titleObj["ru"],
+            ogDescriptionEditor:dbCampaignObj.descriptionEditor,
+             titleRu: titleObj["ru"],
             titleEn: titleObj["en"],
             ogTitle: titleObj,
             descriptionRu: descriptionObj["ru"],

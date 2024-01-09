@@ -59,8 +59,8 @@
     "saveCampaignBtn" : "SAVE CAMPAIGN",
     "complete" : "Complete!",
     "updateSuccessfull" : "Updated Campaign information successfully",
-    "closeBtn" : "CLOSE",
-    "abortBtn" : "ABORT",
+    "closeBtn" : "Close",
+    "abortBtn" : "Abort",
     "web3WalletRequired": "Web3 Wallet is Required",
     "authFailedTitle": "Login failed",
     "authFailedMessage": "Authentication failed. Please check your wallet app for details and try again",
@@ -225,6 +225,7 @@
     "campaignInEtereum": "Campaign saved in Ethereum",
     "campaignInTron": "Campaign saved in Tron",
     "updateInTronFailed": "Failed to save changes to Tron",
-    "updateInEthereumFailed": "Failed to save changes to Ethereum"
+    "updateInEthereumFailed": "Failed to save changes to Ethereum",
+    "forgotPass": "Recover Password"
 }
 
