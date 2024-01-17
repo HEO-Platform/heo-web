@@ -1270,7 +1270,8 @@ class CampaignPage extends Component {
             }
             contentState[i18n.language] = convertFromRaw(campaign.descriptionEditor["default"]);
         } else {
-            contentState[i18n.language] = convertFromRaw(campaign.descriptionEditor);
+            
+           // contentState[i18n.language] = convertFromRaw(campaign.descriptionEditor);
         }
 
         var that = this;
@@ -1357,8 +1358,7 @@ class CampaignPage extends Component {
             chains: chains,
             campaignId: campaignId,
             campaign : campaign,
-            coins: dedupedCoinNames,
-            editorState: EditorState.createWithContent(contentState[i18n.language], createDecorator())
+            coins: dedupedCoinNames
         });
         await this.updateRaisedAmount();
         ReactGA.send({ hitType: "pageview", page: this.props.location.pathname });

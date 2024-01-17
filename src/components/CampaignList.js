@@ -8,7 +8,7 @@ import { i18nString, DescriptionPreview } from '../util/Utilities';
 import { Trans } from 'react-i18next';
 import i18n from '../util/i18n';
 import ReactGA from "react-ga4";
-
+import { ChevronLeft, ChevronRight} from 'react-bootstrap-icons';
 import bnbIcon from '../images/binance-coin-bnb-logo.png';
 import busdIcon from '../images/binance-usd-busd-logo.png';
 import usdcIcon from '../images/usd-coin-usdc-logo.png';
@@ -35,6 +35,8 @@ class CampaignList extends Component {
         super(props);
         this.state = {
             campaigns: [],
+            pages:[],
+            pagescount:0,
             showError:false,
             errorMessage:"",
             lang:'',
@@ -52,8 +54,17 @@ class CampaignList extends Component {
                 this.setState({fiatPaymentEnabled: element.enabled});
             }
         });
+        let campaigns = await this.getCampaigns(window.curPg);
+        let pages = [];
+        for (let i = 0; i < this.state.pagescount; i++){
+            if (i > 8) break;
+            if ((window.curPg > 5)&&(this.state.pagescount > (window.curPg + 4))) pages[i] = window.curPg - 4 + i;
+            else if((window.curPg > 5)&&(this.state.pagescount <= (window.curPg + 4))) pages[i] = this.state.pagescount - 8 + i;
+            else if (window.curPg <= 5) pages[i] = i+1;
+        } 
         this.setState({
-            campaigns : (await this.getCampaigns())
+            campaigns : campaigns,
+            pages:pages
         });
     }
 
@@ -61,7 +72,7 @@ class CampaignList extends Component {
         var errorMessage = 'Failed to load coins';
         await axios.post('/api/getcoinslist')
         .then(res => {
-            this.setState({coinslist:res.data})
+            this.setState({coinslist:res.data});
         }).catch(err => {
             if (err.response) {
                 errorMessage = 'Failed to load coins. We are having technical difficulties'}
@@ -76,15 +87,33 @@ class CampaignList extends Component {
         })
     }
 
-    async getCampaigns() {
+    async changePage(page){
+        window.curPg = page;
+        let campaigns = await this.getCampaigns(page);
+        let pages = [];
+        for (let i = 0; i < this.state.pagescount; i++){
+            if (i > 8) break;
+            if ((window.curPg > 5)&&(this.state.pagescount > (window.curPg + 4))) pages[i] = window.curPg - 4 + i;
+            else if((window.curPg > 5)&&(this.state.pagescount <= (window.curPg + 4))) pages[i] = this.state.pagescount - 8 + i;
+            else if (window.curPg <= 5) pages[i] = i+1;
+        } 
+        this.setState({
+            campaigns : campaigns,
+            pages:pages
+        });
+    }
+
+    async getCampaigns(startRec) {
         var campaigns = [];
         var donates = [];
         await this.getCoins();
         var that = this;
         var errorMessage = 'Failed to load campaigns';
-        await axios.post('/api/campaign/loadAll')
+        let data = {startRec : (startRec - 1)*window.pgCount, compaignsCount:window.pgCount};
+        await axios.post('/api/campaign/loadAll', data, {headers: {"Content-Type": "application/json"}})
         .then(res => {
-          campaigns = res.data;
+          campaigns = res.data.curArr;
+          this.setState({pagescount:Math.ceil(res.data.arCount/window.pgCount)});
         }).catch(err => {
             if (err.response) {
                 errorMessage = 'Failed to load campaigns. We are having technical difficulties'}
@@ -204,6 +233,33 @@ class CampaignList extends Component {
                         )}
                     </Container>
                 </div>
+                <Row>
+                {(this.state.pagescount > 1)&&<Col>    
+                <div class="btn-toolbar" role="toolbar" >
+                 <Button disabled={window.curPg === this.state.pages[0]} 
+                  onClick={async() =>{window.curPg=window.curPg-1; await this.changePage(window.curPg);}}><span><ChevronLeft/></span></Button>
+                 <Button style={{backgroundColor : "white", borderColor : "white"}}></Button>
+                {((this.state.pages[0] > 1)&&(this.state.pagescount > 9))&&<div class = "btn-group">
+                 <Button style={{cursor:"pointer"}} onClick={async()=>{window.curPg=1; await this.changePage(window.curPg - 1);}}>{1}</Button>   
+                 <Button style={{backgroundColor : "white", borderColor : "white", color: "#0E161C"}}><span>...</span></Button>}
+                 <Button style={{backgroundColor : "white", borderColor : "white"}}></Button>  
+                </div>} 
+                {this.state.pages.map((item, i) =><div>
+                 <Button style={{cursor:"pointer"}} disabled={window.curPg === item} 
+                  onClick={async()=>{window.curPg=item; await this.changePage(item,this.state.pages[0]);}}>{item}</Button>   
+                 <Button style={{backgroundColor : "white", borderColor : "white"}}></Button>
+                </div>)}
+                {((this.state.pages[this.state.pages.length - 1] < this.state.pagescount)&&(this.state.pagescount > 9))&&<div class = "btn-group">
+                 <Button style={{backgroundColor : "white", borderColor : "white", color: "#0E161C"}}><span>...</span></Button>
+                 <Button style={{cursor:"pointer"}} onClick={async()=>{window.curPg=this.state.pagescount; await this.changePage(this.state.pagescount);}}>
+                    {this.state.pagescount}</Button>
+                 <Button style={{backgroundColor : "white", borderColor : "white"}}></Button>
+                </div>}
+                 <Button disabled={window.curPg===this.state.pages[this.state.pagescount]} style={{cursor:"pointer"}} 
+                   onClick={async()=>{window.curPg=window.curPg+1; await this.changePage(window.curPg);}}><span><ChevronRight/></span></Button>
+                </div>
+                </Col>}
+                </Row>
             </div>
 
         );

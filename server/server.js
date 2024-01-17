@@ -255,6 +255,11 @@ APP.post('/api/campaign/getalldonationsforlist', (req, res) => {
     serverLib.handleGetAllDonateForList(req, res, Sentry, DB);
 });
 
+APP.post('/api/campaign/getCountInPage', (req, res) => {
+    const DB = CLIENT.db(DBNAME);
+    serverLib.handleGetCountInPage(res, Sentry, DB);
+});
+
 APP.post('/api/campaign/loadOne', (req, res) => {
     const DB = CLIENT.db(DBNAME);
     serverLib.handleLoadOneCampaign(req, res, Sentry, DB);
