@@ -44,6 +44,8 @@ class App extends Component {
             userEmail: "",
             registrBtnTiile:""
         };
+        window.curPg = 1;
+        window.pgCount = 0;
     }
 
     async componentDidMount() {
@@ -53,7 +55,8 @@ class App extends Component {
         this.setState({language : lang});
         if(!window.connect)
             window.connect = false;
-
+        let result = await axios.post('/api/campaign/getCountInPage', {headers: {"Content-Type": "application/json"}});
+        window.pgCount = result.data;
         await this.checkAutorisation();
         this.props.history.listen((location, action) => {
             this.checkAutorisation();

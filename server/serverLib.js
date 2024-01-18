@@ -268,11 +268,15 @@ class ServerLib {
 
     async handleLoadAllCampaigns(req, res, Sentry, DB) {
         try{
-            const myCollection = await DB.collection('campaigns');
-            const campaigns = await myCollection.find({active: true, deleted:{ $exists : false }}, {sort:{lastDonationTime: -1, raisedAmount: -1, raisedOnCoinbase: -1}});
-            const arr = await campaigns.toArray();
-            const curArr = arr.slice(req.body.startRec, req.body.startRec+req.body.compaignsCount);
-            let result = {curArr:curArr, arCount:arr.length};
+            let pipeline = [
+                { $match: {active: true, deleted:{ $exists : false}}},
+                 {$sort: {lastDonationTime: -1, raisedAmount: -1, raisedOnCoinbase: -1, _id: 1}},
+                 { $skip : req.body.startRec},
+                 { $limit: req.body.compaignsCount}
+               ];
+            let curArr =  await DB.collection('campaigns').aggregate(pipeline).toArray();
+            let arCount = await DB.collection('campaigns').count({active: true, deleted:{ $exists : false }});    
+            let result = {curArr:curArr, arCount:arCount};
             res.send(result);
         } catch (err) {
             Sentry.captureException(new Error(err));
@@ -436,7 +440,7 @@ class ServerLib {
     async handleGetCountInPage(res, Sentry, DB) {
         try {
             let configCollection = await DB.collection('global_configs');
-            let fiatSettingsRAW = await configCollection.find({_id : 'Сampaigns count in page'});
+            let fiatSettingsRAW = await configCollection.find({_id : 'campaigns_per_page'});
             let fiatSettings = await fiatSettingsRAW.toArray();
             res.send(fiatSettings[0].count);
         } catch (err){

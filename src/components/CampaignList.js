@@ -110,10 +110,12 @@ class CampaignList extends Component {
         var that = this;
         var errorMessage = 'Failed to load campaigns';
         let data = {startRec : (startRec - 1)*window.pgCount, compaignsCount:window.pgCount};
+       
         await axios.post('/api/campaign/loadAll', data, {headers: {"Content-Type": "application/json"}})
         .then(res => {
           campaigns = res.data.curArr;
-          this.setState({pagescount:Math.ceil(res.data.arCount/window.pgCount)});
+          let pagescount = (window.pgCount > res.data.arCount)?1:res.data.arCount/window.pgCount;
+          this.setState({pagescount:pagescount});
         }).catch(err => {
             if (err.response) {
                 errorMessage = 'Failed to load campaigns. We are having technical difficulties'}
