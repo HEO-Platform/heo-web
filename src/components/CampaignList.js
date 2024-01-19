@@ -236,7 +236,7 @@ class CampaignList extends Component {
                     </Container>
                 </div>
                 <Row>
-                {(this.state.pagescount > 1)&&<Col>    
+                {(this.state.pagescount > 1)&&<Col md={{ span: 9, offset: 3 }}>    
                 <div class="btn-toolbar" role="toolbar" >
                  <Button disabled={window.curPg === this.state.pages[0]} 
                   onClick={async() =>{window.curPg=window.curPg-1; await this.changePage(window.curPg);}}><span><ChevronLeft/></span></Button>
@@ -257,7 +257,7 @@ class CampaignList extends Component {
                     {this.state.pagescount}</Button>
                  <Button style={{backgroundColor : "white", borderColor : "white"}}></Button>
                 </div>}
-                 <Button disabled={window.curPg===this.state.pages[this.state.pagescount]} style={{cursor:"pointer"}} 
+                 <Button disabled={window.curPg===this.state.pagescount} style={{cursor:"pointer"}} 
                    onClick={async()=>{window.curPg=window.curPg+1; await this.changePage(window.curPg);}}><span><ChevronRight/></span></Button>
                 </div>
                 </Col>}

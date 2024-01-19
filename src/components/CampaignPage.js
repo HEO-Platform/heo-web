@@ -392,8 +392,8 @@ class CampaignPage extends Component {
         }
         let result = await axios.post('/api/donate/adddanate', {mydata: donateData}, {headers: {"Content-Type": "application/json"}});
         this.setState({showModal:true, goHome: true,
-            modalMessage: 'campaignCreateSuccess',
-            modalTitle: 'success',
+            modalMessage: 'thankYouDonation',
+            modalTitle: 'complete',
             modalIcon: 'CheckCircle',
             modalButtonMessage: 'returnHome',
             modalButtonVariant: "#588157", waitToClose: false
