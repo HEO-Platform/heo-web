@@ -43,25 +43,6 @@ const abi=[
         "type": "event"
     },
     {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "previousOwner",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "newOwner",
-                "type": "address"
-            }
-        ],
-        "name": "OwnershipTransferred",
-        "type": "event"
-    },
-    {
         "inputs": [
             {
                 "internalType": "uint256",
@@ -85,17 +66,23 @@ const abi=[
         "type": "function"
     },
     {
-        "inputs": [],
-        "name": "owner",
-        "outputs": [
+        "anonymous": false,
+        "inputs": [
             {
+                "indexed": true,
                 "internalType": "address",
-                "name": "",
+                "name": "previousOwner",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "newOwner",
                 "type": "address"
             }
         ],
-        "stateMutability": "view",
-        "type": "function"
+        "name": "OwnershipTransferred",
+        "type": "event"
     },
     {
         "inputs": [],
@@ -116,8 +103,21 @@ const abi=[
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "owner",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
     }
 ];
-const address = "TScC45rURm47pPiG5MZb6skscSXUS47Sen";
+const address = "TLoAF1DtkJfR6yZhUf5JLDXJ8fPtvatbpG";
 
 export {abi, address};

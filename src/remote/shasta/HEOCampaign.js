@@ -18,36 +18,6 @@ const abi= [
                 "type": "address"
             },
             {
-                "internalType": "uint256",
-                "name": "heoLocked",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "heoPrice",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "heoPriceDecimals",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "fee",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "feeDecimals",
-                "type": "uint256"
-            },
-            {
-                "internalType": "address",
-                "name": "heoAddr",
-                "type": "address"
-            },
-            {
                 "internalType": "string",
                 "name": "metaData",
                 "type": "string"
@@ -55,31 +25,6 @@ const abi= [
         ],
         "stateMutability": "nonpayable",
         "type": "constructor"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "address",
-                "name": "spender",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-            }
-        ],
-        "name": "Approve",
-        "type": "event"
     },
     {
         "anonymous": false,
