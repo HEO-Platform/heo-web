@@ -30,5 +30,5 @@ yarn-error.log*
 .vscode/
 
 # Elastic Beanstalk Files
-.elasticbeanstalk/*
+.elasticbeanstalk/saved_configs/*
 .aws_credentials
