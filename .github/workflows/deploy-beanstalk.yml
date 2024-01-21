@@ -9,15 +9,22 @@ jobs:
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v2
-        - name: Use Node.js 14.x
+
+        - name: Use Node.js 18
           uses: actions/setup-node@v1
           with:
               node-version: 18.18.0
 
-        - name: build node app
+        - name: install dependencies
+          NODE_OPTIONS: --openssl-legacy-provider
           run: |
                 npm run install-all
-                npm run build
+
+        - name: build
+          env:
+            NODE_OPTIONS: --openssl-legacy-provider
+          run: |
+                npm run build            
 
         - name: Deploy to AWS Elastic Beanstalk
           uses: einaregilsson/beanstalk-deploy@v15
