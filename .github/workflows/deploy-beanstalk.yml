@@ -35,7 +35,6 @@ jobs:
               aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
               application_name: ${{ vars.EB_APP_NAME }}
               environment_name: ${{ vars.EB_ENV_NAME }}
-              version_label: ${{ github.sha }}
               region: ${{ vars.AWS_REGION }}
               wait_for_deployment: true
 
