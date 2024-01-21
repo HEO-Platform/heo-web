@@ -8,6 +8,16 @@ jobs:
         runs-on: ubuntu-latest
         steps:
         - uses: actions/checkout@v2
+        - name: Use Node.js 14.x
+          uses: actions/setup-node@v1
+          with:
+              node-version: 18.18.0
+
+        - name: build node app
+          run: |
+                npm run install-all
+                npm run build
+            
         - name: Deploy to AWS Elastic Beanstalk
           uses: einaregilsson/beanstalk-deploy@v15
           with:
