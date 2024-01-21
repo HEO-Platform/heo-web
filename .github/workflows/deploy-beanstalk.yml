@@ -34,7 +34,7 @@ jobs:
           env:
             NODE_OPTIONS: --openssl-legacy-provider
           run: |
-                npm run install
+                npm install
 
         - name: install server dependencies
           if: steps.cache_server_deps.outputs.cache-hit != 'true'
@@ -42,7 +42,7 @@ jobs:
           env:
             NODE_OPTIONS: --openssl-legacy-provider
           run: |
-            npm run install
+            npm install
 
         - name: build
           env:
@@ -55,6 +55,7 @@ jobs:
           uses: actions/setup-python@v2
           with:
               python-version: 3.8
+
         - name: Install pip
           run: |
                 python -m pip install --upgrade pip
@@ -65,5 +66,6 @@ jobs:
 
         - name: Use eb cli to deploy to Elastic Beanstalk
           run: |
+                eb init ${{ vars.EB_APP_NAME }} -r ${{ vars.AWS_REGION }} -p "Node.js 18 running on 64bit Amazon Linux 2023"
                 eb deploy ${{ vars.EB_ENV_NAME }} --region ${{ vars.AWS_REGION }}
 
