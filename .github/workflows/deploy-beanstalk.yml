@@ -15,6 +15,12 @@ jobs:
           with:
               node-version: 18.18.0
 
+        - name: cache node modules
+          uses: actions/cache@v2
+          with:
+              path: node_modules
+              key: ${{ runner.OS }}-build-${{ hashFiles('**/package-lock.json') }}
+
         - name: install dependencies
           env:
             NODE_OPTIONS: --openssl-legacy-provider
@@ -28,13 +34,19 @@ jobs:
           run: |
                 npm run build            
 
-        - name: Deploy to AWS Elastic Beanstalk
-          uses: einaregilsson/beanstalk-deploy@v15
+        - name: install python3
+          uses: actions/setup-python@v2
           with:
-              aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-              aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-              application_name: ${{ vars.EB_APP_NAME }}
-              environment_name: ${{ vars.EB_ENV_NAME }}
-              region: ${{ vars.AWS_REGION }}
-              wait_for_deployment: true
+              python-version: 3.8
+        - name: Install pip
+          run: |
+                python -m pip install --upgrade pip
+
+        - name: Install Elastic Beanstalk CLI
+          run: |
+                pip install awsebcli --upgrade --user
+
+        - name: Use eb cli to deploy to Elastic Beanstalk
+          run: |
+                eb deploy ${{ vars.EB_ENV_NAME }} --region ${{ vars.AWS_REGION }}
 
