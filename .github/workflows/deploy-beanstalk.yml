@@ -5,8 +5,9 @@ on:
         - dev
 jobs:
     deploy:
-        runs-on: ubuntu-latest
-        steps:
+      environment: dev-deployment
+      runs-on: ubuntu-latest
+      steps:
         - uses: actions/checkout@v2
         - name: Use Node.js 14.x
           uses: actions/setup-node@v1
@@ -17,7 +18,7 @@ jobs:
           run: |
                 npm run install-all
                 npm run build
-            
+
         - name: Deploy to AWS Elastic Beanstalk
           uses: einaregilsson/beanstalk-deploy@v15
           with:
