@@ -16,7 +16,8 @@ jobs:
               node-version: 18.18.0
 
         - name: install dependencies
-          NODE_OPTIONS: --openssl-legacy-provider
+          env:
+            NODE_OPTIONS: --openssl-legacy-provider
           run: |
                 npm run install-all
 
