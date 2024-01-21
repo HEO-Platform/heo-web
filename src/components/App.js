@@ -16,7 +16,7 @@ import '../css/app.css';
 import '../css/modal.css';
 import { Switch, Route, Link, withRouter } from "react-router-dom";
 import { Nav, Navbar, Container, Button, Modal, NavLink} from 'react-bootstrap';
-import { CheckCircle, ExclamationTriangle, HourglassSplit, XCircle, InfoCircle } from 'react-bootstrap-icons';
+import { CheckCircle, ExclamationTriangle, HourglassSplit, XCircle } from 'react-bootstrap-icons';
 import { Trans } from 'react-i18next';
 import { GetLanguage } from '../util/Utilities';
 import {UserContext} from './UserContext';
