@@ -71,5 +71,5 @@ jobs:
             AWS_REGION: ${{ vars.AWS_REGION }}
           run: |
                 eb init ${{ vars.EB_APP_NAME }} -r ${{ vars.AWS_REGION }} -p "Node.js 18 running on 64bit Amazon Linux 2023"
-                eb deploy ${{ vars.EB_ENV_NAME }} --region ${{ vars.AWS_REGION }}
+                eb deploy ${{ vars.EB_ENV_NAME }} --region ${{ vars.AWS_REGION }} --label ${{ github.sha }}
 
