@@ -1,6 +1,6 @@
 import React from 'react';
 import countries from '../countries';
-import {Container, Form, Col, Button, Image, Modal, Row, Dropdown, DropdownButton} from 'react-bootstrap';
+import {Container, Form, Col, Button, Image, Modal, Row} from 'react-bootstrap';
 import ReactPlayer from 'react-player';
 import config from "react-global-configuration";
 import { Link, withRouter } from "react-router-dom";
@@ -8,18 +8,15 @@ import uuid from 'react-uuid';
 import axios from 'axios';
 import { Trans } from 'react-i18next';
 import i18n from '../util/i18n';
-import {UserContext} from './UserContext';
-import {initWeb3, checkAuth, initWeb3Modal, initTronadapter, checkAuthTron, initTron,LogInTron,LogIn } from '../util/Utilities';
+import {initWeb3, initWeb3Modal, initTronadapter} from '../util/Utilities';
 import {getEditorStateEn, getEditorStateRu, TextEditorEn, TextEditorRu, setEditorStateEn, setEditorStateRu} from '../components/TextEditor';
 import { ChevronLeft, CheckCircle, ExclamationTriangle, HourglassSplit, XCircle } from 'react-bootstrap-icons';
-import { compress } from 'shrink-string';
 import '../css/createCampaign.css';
 import '../css/modal.css';
 import '../css/campaignPage.css';
 //import TronWeb from "tronweb";
 import ReactGA from "react-ga4";
 ReactGA.initialize("G-C657WZY5VT");
-var CAMPAIGNINSTANCE;
 class CreateCampaign extends React.Component {
     constructor(props) {
         super(props);
@@ -38,7 +35,7 @@ class CreateCampaign extends React.Component {
             ln:"",
             orgEn:"",
             orgRu:"",
-            cn:"",
+            cn:"International",
             vl:"",
             titleEn:"",
             titleRu:"",
@@ -209,7 +206,7 @@ class CreateCampaign extends React.Component {
         try {
             let help_value = '';  
             for(let i = 0; i < this.state.orgEn.length; i++){
-              if ((/^[A-Za-z0-9]*$/.test(this.state.orgEn[i]) === true)||(this.state.orgEn[i] == ' '))
+              if ((/^[A-Za-z0-9]*$/.test(this.state.orgEn[i]) === true)||(this.state.orgEn[i] === ' '))
                help_value += this.state.orgEn[i];
             }
             let key = help_value.toLowerCase().replaceAll(" ", "-");
@@ -249,7 +246,7 @@ class CreateCampaign extends React.Component {
             campaignData.fiatPayments = this.state.fiatPayments;
             let res = await axios.post('/api/campaign/add', {mydata : campaignData},
                 {headers: {"Content-Type": "application/json"}});
-            if (res.data == 'success'){
+            if (res.data === 'success'){
                 this.setState({showModal:true, goHome: true,
                     modalMessage: 'campaignwWillBePublished',
                     modalTitle: 'success',
@@ -358,33 +355,32 @@ class CreateCampaign extends React.Component {
     render() {
         return (
             <div>
-               <Modal size='xl' show={this.state.showModalPrevent} onHide={()=>{}} className='myModal'>
-               <Modal.Header>
-                <p className='modalTitle'><Trans i18nKey={'preventionTitle'}/></p>   
-                </Modal.Header> 
-                <Modal.Body className='createFormPlaceHolder'> 
+               <Modal size='xl' show={this.state.showModalPrevent} onHide={()=>{}} className='myModal' centered>
+               <Modal.Body className='createFormPlaceHolder'> 
+                <Row class="justify-content-center">
+                <Col class="my-auto">
+                <p className='modalTitle'><Trans i18nKey={'preventionTitle'}/></p>  
+                </Col>
+                </Row> 
+                <Row><Col><Button style={{backgroundColor : "white", borderColor : "white"}}></Button></Col></Row>
+                <Row><Col><Button style={{backgroundColor : "white", borderColor : "white"}}></Button></Col></Row>
                 <Container fluid>
                 <Row>
                  <Col xs lg="1"><p>1</p></Col> 
                  <Col><p><Trans i18nKey={'prevention1'}/></p></Col>  
                 </Row> 
+                <Row><Col><Button style={{backgroundColor : "white", borderColor : "white"}}></Button></Col></Row>
                 <Row>
                  <Col xs lg="1">2</Col> 
                  <Col><p><Trans i18nKey={'prevention2'}/></p></Col>  
                 </Row> 
+                <Row><Col><Button style={{backgroundColor : "white", borderColor : "white"}}></Button></Col></Row>
                 <Row>
                  <Col xs lg="1">3</Col> 
                  <Col><p><Trans i18nKey={'prevention3'}/></p></Col>  
                 </Row> 
-                <Row>
-                 <Col xs lg="1"> </Col> 
-                 <Col><p><Trans i18nKey={'preventionNB'}/></p></Col>  
-                </Row>
-                <Row>
-                 <Col xs lg="1">4</Col>
-                 <Col><p><Trans i18nKey={'prevention4'}/></p></Col>  
-                </Row>
                 </Container>
+                <Row><Col><Button style={{backgroundColor : "white", borderColor : "white"}}></Button></Col></Row>
                 <Button className='myModalButton' 
                   style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
                   onClick={ async () => { this.setState({showModalPrevent:false});
@@ -395,16 +391,16 @@ class CreateCampaign extends React.Component {
                 </Modal>  
                <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' centered>
                     <Modal.Body><p className='modalIcon'>
-                        {this.state.modalIcon == 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
-                        {this.state.modalIcon == 'ExclamationTriangle' && <ExclamationTriangle/>}
-                        {this.state.modalIcon == 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
-                        {this.state.modalIcon == 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
+                        {this.state.modalIcon === 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
+                        {this.state.modalIcon === 'ExclamationTriangle' && <ExclamationTriangle/>}
+                        {this.state.modalIcon === 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
+                        {this.state.modalIcon === 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
                         </p>
                         <p className='modalTitle'><Trans i18nKey={this.state.modalTitle}/></p>
                         <p className='modalMessage'><Trans i18nKey={this.state.modalMessage}>
                             Your account has not been cleared to create campaigns.
                             Please fill out this
-                            <a target='_blank' href='https://docs.google.com/forms/d/e/1FAIpQLSdTo_igaNjF-1E51JmsjJgILv68RN2v5pisTcqTLvZvuUvLDQ/viewform'>form</a>
+                            <a target='_blank' rel="noopener noreferrer" href='https://docs.google.com/forms/d/e/1FAIpQLSdTo_igaNjF-1E51JmsjJgILv68RN2v5pisTcqTLvZvuUvLDQ/viewform'>form</a>
                             to ne granted permission to fundraise on HEO Platform
                         </Trans></p>
                        { !this.state.waitToClose &&
@@ -501,7 +497,7 @@ class CreateCampaign extends React.Component {
                                           placeholder={i18n.t('linkToYouTube')}
                                           name='vl' value={this.state.vl} onChange={this.handleChange}/>
                         </Form.Group>
-                        {this.state.vl != "" && <ReactPlayer url={this.state.vl} id='createCampaignVideoPlayer'/>}
+                        {this.state.vl !== "" && <ReactPlayer url={this.state.vl} id='createCampaignVideoPlayer'/>}
                         <Form.Group>
                         <Form.Label><Trans i18nKey='title'/><span className='redAsterisk'>*</span></Form.Label>
                             <Row>

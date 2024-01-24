@@ -131,7 +131,7 @@ class CampaignPage extends Component {
 
     getCurChaincCoins= (value) =>{
      for (let i = 0; i < this.state.chains_coins.length; i++){
-        if (this.state.chains_coins._id == value){
+        if (this.state.chains_coins._id === value){
             this.setState({cur_chain: i});
             return(i);
         }
@@ -168,7 +168,7 @@ class CampaignPage extends Component {
         var donateAmount;
         await axios.post('/api/campaign/getalldonations', {mydata: data}, {headers: {"Content-Type": "application/json"}})
             .then(res => {
-                donateAmount = (res.data == 0) ? 0 : parseFloat(res.data[0].totalQuantity);
+                donateAmount = (res.data === 0) ? 0 : parseFloat(res.data[0].totalQuantity);
             }).catch(err => {
                 if (err.response) {
                     modalMessage = 'technicalDifficulties'}
@@ -338,7 +338,7 @@ class CampaignPage extends Component {
             this.setState({
                 showModal: true, modalTitle: 'failed',
                 errorIcon: 'XCircle', modalButtonMessage: 'tryAgain',
-                modalButtonVariant: '#E63C36', waitToClose: false, tryAgainCC: (this.state.fiatPaymentProvider != 'stripe')
+                modalButtonVariant: '#E63C36', waitToClose: false, tryAgainCC: (this.state.fiatPaymentProvider !== 'stripe')
             });
             if(!errorFound) {
                 if (this.state.fiatPaymentProvider === 'circle') {
@@ -360,18 +360,18 @@ class CampaignPage extends Component {
 
     saveDonateToDb = async (value, decimals, transactionHash, chainId, coinAddress) => {
         let accounts = this.state.accounts;
-        if (window.blockChainOrt == "ethereum"){
-            if(decimals == 18) {
+        if (window.blockChainOrt === "ethereum"){
+            if(decimals === 18) {
                 value = parseFloat(web3.utils.fromWei(value));
             } else {
                 value = parseFloat(value/Math.pow(10, decimals));
             }
         }
-        else if (window.blockChainOrt == "tron"){
+        else if (window.blockChainOrt === "tron"){
             value = parseFloat(window.tronWeb.fromSun(value));
         }
         let donateData
-        if (window.blockChainOrt == "ethereum"){
+        if (window.blockChainOrt === "ethereum"){
             donateData = {
                 campaignID : this.state.campaignId,
                 donatorID: accounts[0],
@@ -380,7 +380,7 @@ class CampaignPage extends Component {
                 chainId: chainId,
                 coinAddress: coinAddress
               };
-        } else if (window.blockChainOrt == "tron"){
+        } else if (window.blockChainOrt === "tron"){
             donateData = {
                 campaignID : this.state.campaignId,
                 donatorID: window.tronAdapter.address,
@@ -390,7 +390,7 @@ class CampaignPage extends Component {
                 coinAddress: coinAddress
               };
         }
-        let result = await axios.post('/api/donate/adddanate', {mydata: donateData}, {headers: {"Content-Type": "application/json"}});
+        await axios.post('/api/donate/adddanate', {mydata: donateData}, {headers: {"Content-Type": "application/json"}});
         this.setState({showModal:true, goHome: true,
             modalMessage: 'thankYouDonation',
             modalTitle: 'complete',
@@ -402,12 +402,12 @@ class CampaignPage extends Component {
     }
 
     handleDonateClick = async(chain_name, coin_address, blockChainOrt) =>{
-      if(blockChainOrt == "ethereum"){
+      if(blockChainOrt === "ethereum"){
         window.blockChainOrt = "ethereum";
-        if (this.state.campaign.new == false) await this.handleDonateOld(chain_name, coin_address);
+        if (this.state.campaign.new === false) await this.handleDonateOld(chain_name, coin_address);
        else await this.handleDonateNew(chain_name, coin_address);
       }
-      else if(blockChainOrt == "tron"){
+      else if(blockChainOrt === "tron"){
         window.blockChainOrt = "tron";
         await this.handleDonateTron(chain_name, coin_address);
       }
@@ -433,7 +433,7 @@ class CampaignPage extends Component {
             });
             //check if donating to oneself
             let beneficiaryAdres = await campaignInstance.methods.beneficiary().call();
-            if(window.tronWeb.address.toHex(window.tronAdapter.address).toLowerCase() == beneficiaryAdres.toLowerCase()) {
+            if(window.tronWeb.address.toHex(window.tronAdapter.address).toLowerCase() === beneficiaryAdres.toLowerCase()) {
                 this.setState({
                     showModal: true, modalTitle: 'notAllowed',
                     modalMessage: 'donateToYourSelf',
@@ -463,8 +463,8 @@ class CampaignPage extends Component {
                 if(txnObject){
                   if (txnObject.receipt)  break;
                 }
-            }while(m != 2);
-            if (txnObject.receipt.result == "SUCCESS"){
+            }while(m !== 2);
+            if (txnObject.receipt.result === "SUCCESS"){
                this.setState({
                    showModal: true, modalTitle: 'complete',
                    modalMessage: 'thankYouDonation',
@@ -530,7 +530,7 @@ class CampaignPage extends Component {
                 nonInteraction: false
             });
             //check if donating to oneself
-            if(accounts[0].toLowerCase() == this.state.campaign.beneficiaryId.toLowerCase()) {
+            if(accounts[0].toLowerCase() === this.state.campaign.beneficiaryId.toLowerCase()) {
                 this.setState({
                     showModal: true, modalTitle: 'notAllowed',
                     modalMessage: 'donateToYourSelf',
@@ -618,7 +618,7 @@ class CampaignPage extends Component {
                 try {
                     let decimals = 6;
                     toDonate = new web3.utils.BN(""+this.state.donationAmount).mul(new web3.utils.BN("1000000"));
-                    if(currentProvider != "metamask") {
+                    if(currentProvider !== "metamask") {
                         ReactGA.event({
                             category: "provider",
                             action: "using_noninjected_provider",
@@ -795,7 +795,7 @@ class CampaignPage extends Component {
                 nonInteraction: false
             });
             //check if donating to oneself
-            if(accounts[0].toLowerCase() == this.state.campaign.beneficiaryId.toLowerCase()) {
+            if(accounts[0].toLowerCase() === this.state.campaign.beneficiaryId.toLowerCase()) {
                 this.setState({
                     showModal: true, modalTitle: 'notAllowed',
                     modalMessage: 'donateToYourSelf',
@@ -896,7 +896,7 @@ class CampaignPage extends Component {
                 try {
                     let decimals = 6;
                     toDonate = new web3.utils.BN(""+this.state.donationAmount).mul(new web3.utils.BN("1000000"));
-                    if(currentProvider != "metamask") {
+                    if(currentProvider !== "metamask") {
                         ReactGA.event({
                             category: "provider",
                             action: "using_noninjected_provider",
@@ -968,7 +968,6 @@ class CampaignPage extends Component {
                         decimals = await coinInstance.methods.decimals().call();
 
                         toDonate = new web3.utils.BN(""+that.state.donationAmount).mul(new web3.utils.BN(new web3.utils.BN("10").pow(new web3.utils.BN(""+decimals))));
-                        var curTransactionHash;
                         let result = await coinInstance.methods.transfer(campaignAddress, toDonate).send(
                             {from:accounts[0]}
                         ).once('transactionHash', function(transactionHash) {
@@ -1046,10 +1045,10 @@ class CampaignPage extends Component {
             <div>
                 <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' centered>
                     <Modal.Body><p className='errorIcon'>
-                        {this.state.errorIcon == 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
-                        {this.state.errorIcon == 'ExclamationTriangle' && <ExclamationTriangle style={{color: '#E63C36'}}/>}
-                        {this.state.errorIcon == 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
-                        {this.state.errorIcon == 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
+                        {this.state.errorIcon === 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
+                        {this.state.errorIcon === 'ExclamationTriangle' && <ExclamationTriangle style={{color: '#E63C36'}}/>}
+                        {this.state.errorIcon === 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
+                        {this.state.errorIcon === 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
                         </p>
                         <p className='modalTitle'><Trans i18nKey={this.state.modalTitle} /></p>
                         <p className='modalMessage'>
@@ -1127,16 +1126,16 @@ class CampaignPage extends Component {
                             <Row id='acceptingRow'>
                                 <div id='acceptingDiv'>
                                     <p><Trans i18nKey='accepting'/>:
-                                        {this.state.fiatPaymentEnabled && this.state.campaign.stripeURL && <span className='coinRewardInfo'><img src={visaMcLogo} witdth={21} height={20} style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        {this.state.fiatPaymentEnabled && this.state.campaign.stripeURL && <span className='coinRewardInfo'><img src={visaMcLogo} witdth={21} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
                                         {this.state.chains_coins.map((item, i) =>
-                                            <span className='coinRewardInfo'><img src={IMG_MAP[item.coin.name]} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span>
+                                            <span className='coinRewardInfo'><img src={IMG_MAP[item.coin.name]} width={20} height={20}alt='some value'style={{marginRight:5, marginLeft:5}} /> </span>
                                             )}
-                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={ethIcon} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span> }
-                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={btcLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span> }
-                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={daiLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span> }
-                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={usdcIcon} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span> }
-                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={usdtLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span> }
-                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={ltcLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={ethIcon} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={btcLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={daiLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={usdcIcon} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={usdtLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={ltcLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
                                     </p>
                                 </div>
                             </Row>
@@ -1165,27 +1164,27 @@ class CampaignPage extends Component {
                                                     this.setState({showCCinfoModal: true});
                                                 }
                                             }
-                                            }><img src={visaMcLogo} width={17} height={16} style={{marginRight:5}} />USD</Dropdown.Item> }
+                                            }><img src={visaMcLogo} width={17} height={16} alt='some value' style={{marginRight:5}} />USD</Dropdown.Item> }
 
                                             {this.state.chains_coins.map((item, i) =>
-                                                    <Dropdown.Item key={item.chain.address} as="button" onClick={() => this.handleDonateClick(item.chain, item.coin.address, item.blockChainOrt)}><img src={IMG_MAP[item.coin.name]} width={16} height={16} style={{marginRight:5}} />{item.coin.name} ({item.chain_name })</Dropdown.Item>
+                                                    <Dropdown.Item key={item.chain.address} as="button" onClick={() => this.handleDonateClick(item.chain, item.coin.address, item.blockChainOrt)}><img src={IMG_MAP[item.coin.name]} width={16} height={16} alt='some value' style={{marginRight:5}} />{item.coin.name} ({item.chain_name })</Dropdown.Item>
                                                 )}
                                             <Dropdown.Item className='coinRewardInfo' onClick={
                                                 () => {
                                                     this.handleDonateCoinbaseCommerce();
                                                 }
-                                            } ><img src={ethIcon} width={20} height={20} style={{marginRight:5, marginLeft:5}} />ETH</Dropdown.Item>
+                                            } ><img src={ethIcon} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} />ETH</Dropdown.Item>
 
                                             <Dropdown.Item className='coinRewardInfo' onClick={
                                                 () => {
                                                     this.handleDonateCoinbaseCommerce();
                                                 }
-                                            } ><img src={btcLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} />BTC</Dropdown.Item>
+                                            } ><img src={btcLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} />BTC</Dropdown.Item>
                                             <Dropdown.Item className='coinRewardInfo' onClick={
                                                 () => {
                                                     this.handleDonateCoinbaseCommerce();
                                                 }
-                                            } ><img src={daiLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} />DAI (ERC20)</Dropdown.Item>
+                                            } ><img src={daiLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} />DAI (ERC20)</Dropdown.Item>
                                             <Dropdown.Item className='coinRewardInfo' onClick={
                                                 () => {
                                                     this.handleDonateCoinbaseCommerce();
@@ -1196,12 +1195,12 @@ class CampaignPage extends Component {
                                                 () => {
                                                     this.handleDonateCoinbaseCommerce();
                                                 }
-                                            } ><img src={usdtLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} />USDT (ERC20)</Dropdown.Item>
+                                            } ><img src={usdtLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} />USDT (ERC20)</Dropdown.Item>
                                             <Dropdown.Item className='coinRewardInfo' onClick={
                                                 () => {
                                                     this.handleDonateCoinbaseCommerce();
                                                 }
-                                            } ><img src={ltcLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} />LTC</Dropdown.Item>
+                                            } ><img src={ltcLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} />LTC</Dropdown.Item>
                                         </DropdownButton>
 
                                     </InputGroup.Append>
@@ -1260,12 +1259,13 @@ class CampaignPage extends Component {
         this.state.donationAmount = campaign.defaultDonationAmount ? campaign.defaultDonationAmount : "10";
         campaign.percentRaised = 100 * (this.state.raisedAmount)/campaign.maxAmount;
         var contentState = {};
+        var lng
         if(campaign.descriptionEditor[i18n.language]) {
-            for(var lng in campaign.descriptionEditor) {
+            for(lng in campaign.descriptionEditor) {
                 contentState[lng] = convertFromRaw(campaign.descriptionEditor[lng]);
             }
         } else if(campaign.descriptionEditor["default"]) {
-            for(var lng in campaign.descriptionEditor) {
+            for(lng in campaign.descriptionEditor) {
                 contentState[lng] = convertFromRaw(campaign.descriptionEditor[lng]);
             }
             contentState[i18n.language] = convertFromRaw(campaign.descriptionEditor["default"]);
@@ -1333,7 +1333,7 @@ class CampaignPage extends Component {
                 if(campaign.addresses[res.data[i].chain])
                 {
                     for (let j = 0; j < chains.length; j++){
-                     if (chains[j].CHAIN == res.data[i].chain){
+                     if (chains[j].CHAIN === res.data[i].chain){
                         res.data[i].chain_name = chains[j].CHAIN_NAME;
                         break;
                      }
@@ -1382,7 +1382,7 @@ class CampaignPage extends Component {
                     donationAmount: params.am
                 });
             } else if(params.fp === 'pa' && params.state) {
-                if(params.state=='declined' || params.state=='cancelled') {
+                if(params.state ==='declined' || params.state==='cancelled') {
                     this.setState({
                         showModal: true, modalTitle: 'failed', modalMessage: 'cardPaymentDeclined',
                         errorIcon: 'XCircle', modalButtonMessage: 'tryAgain',
@@ -1429,7 +1429,7 @@ function findLinkEntities(contentBlock, callback, contentState) {
   const editorLink = (props) => {
     const {url} = props.contentState.getEntity(props.entityKey).getData();
     return (
-      <a href={url} target='_blank'>
+      <a href={url} rel="noopener noreferrer" target='_blank'>
         {props.children}
       </a>
     );

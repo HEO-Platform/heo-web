@@ -6,7 +6,6 @@ import WalletConnectProvider from '@walletconnect/web3-provider';
 import ReactGA from "react-ga4";
 import { createMessage, encrypt, readKey } from 'openpgp';
 import {TronLinkAdapter} from '@tronweb3/tronwallet-adapter-tronlink';
-import TronWeb from 'tronweb';
 
 ReactGA.initialize("G-C657WZY5VT");
 
@@ -132,7 +131,7 @@ function DescriptionPreview(description, lang) {
         } else if (preview.length <= 200) {
             return preview;
         } else {
-            while(preview.charAt(i) != ' '  && i > 0){
+            while(preview.charAt(i) !== ' '  && i > 0){
                 i--;
             }
             if(preview.charAt(i-1).match(/[.,?!]/)){
@@ -174,7 +173,7 @@ const initTron = async (chainId, that) => {
     await window.tronAdapter.connect();
     let chainConfig = config.get("CHAINS")[chainId];
     if(!chainConfig) {
-      throw(`Unsupported blockchain: ${chainId}`);
+        throw new Error(`Unsupported blockchain: ${chainId}`);
     }
     try {
         ReactGA.event({
@@ -222,11 +221,11 @@ const initWeb3 = async (chainId, that) => {
     if(provider && provider.isMetaMask) {
         let chainConfig = config.get("CHAINS")[chainId];
         if(!chainConfig) {
-            throw(`Unsupported blockchain: ${chainId}`);
+            throw new Error(`Unsupported blockchain: ${chainId}`);
         }
         var hexChainID = chainConfig["WEB3_HEX_CHAIN_ID"];
         var currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
-        if(currentChainId != hexChainID) {
+        if(currentChainId !== hexChainID) {
             try {
                 ReactGA.event({
                     category: "provider",
@@ -322,7 +321,7 @@ const checkAuth = async (chainId, that, skipError=false) => {
                 await initWeb3(chainId, that);
             }
             if(that.state.accounts && that.state.accounts[0]) {
-                if (that.state.accounts[0].toLowerCase() == res.data.addr.toLowerCase()) {
+                if (that.state.accounts[0].toLowerCase() === res.data.addr.toLowerCase()) {
                     that.setState({isLoggedIn: true, showModal: false});
                 } else {
                     //must have logged in with different account before
@@ -359,7 +358,7 @@ const initWeb3Modal = async(chainId) => {
         let chains = config.get("CHAINS");
         let chainConfig = chains[chainId];
         if(!chainConfig) {
-            throw(`Unsupported blockchain: ${chainId}`);
+            throw new Error(`Unsupported blockchain: ${chainId}`);
         }
         for(let chainId in chains) {
             rpc[chains[chainId]["WEB3_RPC_CHAIN_ID"]] = chains[chainId]["WEB3_RPC_NODE_URL"];
@@ -387,7 +386,7 @@ const initWeb3Modal = async(chainId) => {
                     }
                 },
                 binancechainwallet: {
-                    package: (chainId == "bsctest" || chainId == "bsc")
+                    package: (chainId === "bsctest" || chainId === "bsc")
                 }
             }
         });

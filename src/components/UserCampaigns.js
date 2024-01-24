@@ -3,7 +3,7 @@ import config from 'react-global-configuration';
 import '../css/modal.css';
 import '../css/campaignList.css';
 import '../css/campaignPage.css';
-import { Container, Row, Col, Card, ProgressBar, Button, Modal, Dropdown, DropdownButton } from 'react-bootstrap';
+import { Container, Row, Col, Card, ProgressBar, Button, Modal} from 'react-bootstrap';
 import { ChevronLeft,CheckCircle, ExclamationTriangle, HourglassSplit, XCircle} from 'react-bootstrap-icons';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
@@ -53,7 +53,7 @@ class UserCampaigns extends Component {
                 modalButtonVariant: "gold", waitToClose: true
             });
             let res = await axios.post('/api/campaign/campaignstouser', data, {headers: {"Content-Type": "application/json"}});
-            if (res.data == "success"){
+            if (res.data === "success"){
                 this.setState({showModal:true,
                     goHome: false,
                     waitToClose: false,
@@ -86,7 +86,7 @@ class UserCampaigns extends Component {
             let account = window.tronAdapter._wallet.tronWeb.defaultAddress.hex;
             let data = {chain: this.state.tronChainId, account: account};
             let res = await axios.post('/api/campaign/campaignstouser', data, {headers: {"Content-Type": "application/json"}});
-            if (res.data == "success"){
+            if (res.data === "success"){
                 await this.loadCampaigns();
                 this.setState({showModal:true,
                     goHome: false,
@@ -178,7 +178,7 @@ class UserCampaigns extends Component {
         })
         
         campaigns.forEach( campaign => {
-            const found = donates.find(element => element._id == campaign._id);
+            const found = donates.find(element => element._id === campaign._id);
             let raisedDonations = found ? found.totalQuantity  : 0;
             let raisedAmount = campaign.raisedAmount ? parseFloat(campaign.raisedAmount) : 0;
             let fiatDonations = campaign.fiatDonations ? parseFloat(campaign.fiatDonations) : 0;
@@ -217,8 +217,8 @@ class UserCampaigns extends Component {
         this.setState({showModal: true, modalMessage: 'waitingForOperation', modalIcon:'HourglassSplit',modalTitle: 'processingWait',
             showTwoButtons: false, modalButtonVariant: "gold", waitToClose: true});
         try {
-           let res1 = await this.deleteimage();
-           let res2 = await this.deActivateInDB();
+           await this.deleteimage();
+           await this.deActivateInDB();
         } catch (err) {
             console.log(err);
             this.setState({
@@ -285,16 +285,16 @@ class UserCampaigns extends Component {
                <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' centered>
                 <Modal.Body>  
                     <p className='modalIcon'>
-                        {this.state.modalIcon == 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
-                        {this.state.modalIcon == 'ExclamationTriangle' && <ExclamationTriangle/>}
-                        {this.state.modalIcon == 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
-                        {this.state.modalIcon == 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
+                        {this.state.modalIcon === 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
+                        {this.state.modalIcon === 'ExclamationTriangle' && <ExclamationTriangle/>}
+                        {this.state.modalIcon === 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
+                        {this.state.modalIcon === 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
                         </p>
                     <div><p className='modalTitle'><Trans i18nKey={this.state.modalTitle}/></p></div>
                      <p className='modalMessage'><Trans i18nKey={this.state.modalMessage}>
                             Your account has not been cleared to create campaigns.
                             Please fill out this
-                            <a target='_blank' href='https://docs.google.com/forms/d/e/1FAIpQLSdTo_igaNjF-1E51JmsjJgILv68RN2v5pisTcqTLvZvuUvLDQ/viewform'>form</a>
+                            <a target='_blank' rel="noopener noreferrer" href='https://docs.google.com/forms/d/e/1FAIpQLSdTo_igaNjF-1E51JmsjJgILv68RN2v5pisTcqTLvZvuUvLDQ/viewform'>form</a>
                             to ne granted permission to fundraise on HEO Platform
                         </Trans></p>
                         { !this.state.waitToClose &&

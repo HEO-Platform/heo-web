@@ -1,9 +1,7 @@
 import React from 'react';
 import {Form, Col, Button, Modal, Row} from 'react-bootstrap';
-import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { Trans } from 'react-i18next';
-import i18n from '../util/i18n';
 import { CheckCircle, ExclamationTriangle, HourglassSplit, XCircle, InfoCircle } from 'react-bootstrap-icons';
 import '../css/createCampaign.css';
 import '../css/modal.css';
@@ -40,7 +38,7 @@ class Registration extends React.Component {
         }); 
      let res = await axios.post('/api/auth/deautor',
                           {headers: {"Content-Type": "application/json"}});
-      if ((res.data.success)&&(res.data.success == true)) {
+      if ((res.data.success)&&(res.data.success === true)) {
         this.setState({showModal: true, goHome: true,
               modalTitle: 'success',
               modalMessage: 'authorizationComplete',  showModalDisconnect:false,
@@ -197,7 +195,7 @@ class Registration extends React.Component {
               });
           return false;
         }
-        if(this.state.password != this.state.repeetpass) {
+        if(this.state.password !== this.state.repeetpass) {
           this.setState(
             {showModal:true, modalTitle: 'requiredFieldsTitle',
                 modalMessage: 'passwordsNoMatch', modalIcon: 'ExclamationTriangle',
@@ -249,7 +247,7 @@ class Registration extends React.Component {
         userData.code = this.state.confcode;
         let res = await axios.post('/api/auth/check_code', {mydata : userData},
                           {headers: {"Content-Type": "application/json"}}); 
-        if (res.data == false){
+        if (res.data === false){
           this.setState(
             {showModal:true, modalTitle: 'requiredFieldsTitle',
                 modalMessage: 'badcode', modalIcon: 'ExclamationTriangle',
@@ -281,13 +279,13 @@ class Registration extends React.Component {
         userData.to_email = this.state.email;
         userData.password = this.password;
         let res;
-        if(this.state.key == "registr")
+        if(this.state.key === "registr")
         res = await axios.post('/api/auth/registr_start', {mydata : userData},
                  {headers: {"Content-Type": "application/json"}}); 
-        else if(this.state.key == "connect")
+        else if(this.state.key === "connect")
         res = await axios.post('/api/auth/autor_start', {mydata : userData},
                            {headers: {"Content-Type": "application/json"}}); 
-        if (res.data == 'no_user'){
+        if (res.data === 'no_user'){
          this.setState(
            {showModal:true, modalTitle: 'failed',
                modalMessage: 'noUser', modalIcon: 'ExclamationTriangle',
@@ -296,7 +294,7 @@ class Registration extends React.Component {
          });
          return (false);  
         }    
-        if (res.data == 'bad_password'){
+        if (res.data === 'bad_password'){
           this.setState(
             {showModal:true, modalTitle: 'failed',
                 modalMessage: 'badPassword', modalIcon: 'ExclamationTriangle',
@@ -334,7 +332,7 @@ class Registration extends React.Component {
         userData.password = this.state.password;
         let res = await axios.post('/api/auth/check_code', {mydata : userData},
                           {headers: {"Content-Type": "application/json"}}); 
-        if (res.data == false){
+        if (res.data === false){
           this.setState(
             {showModal:true, modalTitle: 'requiredFieldsTitle',
                 modalMessage: 'badcode', modalIcon: 'ExclamationTriangle',
@@ -346,7 +344,7 @@ class Registration extends React.Component {
         else{
           res = await axios.post('/api/auth/autor_end', {mydata : userData},
                           {headers: {"Content-Type": "application/json"}});
-          if (res.data.success == true) {
+          if (res.data.success === true) {
             this.setState({showModal: true, goHome: true,
               modalTitle: 'success',
               modalMessage: 'authorizationComplete',
@@ -416,7 +414,7 @@ class Registration extends React.Component {
         userData.password = this.state.password;
         let res = await axios.post('/api/auth/new_pass', {mydata : userData},
                           {headers: {"Content-Type": "application/json"}});
-        if (res.data == 'success') {
+        if (res.data === 'success') {
             this.setState({showModal: true, goHome: true,
               modalTitle: 'success',
               modalMessage: 'changePassComplete',
@@ -460,7 +458,7 @@ class Registration extends React.Component {
         userData.password = this.state.password;
         let res = await axios.post('/api/auth/check_code', {mydata : userData},
                           {headers: {"Content-Type": "application/json"}});  
-        if (res.data == false){
+        if (res.data === false){
           this.setState(
             {showModal:true, modalTitle: 'requiredFieldsTitle',
                 modalMessage: 'badcode', modalIcon: 'ExclamationTriangle',
@@ -472,7 +470,7 @@ class Registration extends React.Component {
         else{
           res = await axios.post('/api/auth/registr_end', {mydata : userData},
                           {headers: {"Content-Type": "application/json"}});
-          if (res.data == 'success') {
+          if (res.data === 'success') {
             this.setState({showModal: true, goHome: true,
               modalTitle: 'success',
               modalMessage: 'registrationComplete',
@@ -518,11 +516,11 @@ class Registration extends React.Component {
            <div>
             <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' centered>
                     <Modal.Body><p className='modalIcon'>
-                        {this.state.modalIcon == 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
-                        {this.state.modalIcon== 'ExclamationTriangle' && <ExclamationTriangle/>}
-                        {this.state.modalIcon== 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
-                        {this.state.modalIcon == 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
-                        {this.state.modalIcon == 'InfoCircle' && <InfoCircle style={{color: '#588157'}}/>}
+                        {this.state.modalIcon === 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
+                        {this.state.modalIcon=== 'ExclamationTriangle' && <ExclamationTriangle/>}
+                        {this.state.modalIcon=== 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
+                        {this.state.modalIcon === 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
+                        {this.state.modalIcon === 'InfoCircle' && <InfoCircle style={{color: '#588157'}}/>}
                         </p>
                         <p className='modalTitle'><Trans i18nKey={this.state.modalTitle}/></p>
                         <p className='modalMessage'><Trans i18nKey={this.state.modalMessage}/></p>
@@ -530,8 +528,8 @@ class Registration extends React.Component {
                         <Button className='modalButtonError'
                             style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
                             onClick={ async() => {this.setState({showModal:false, modalButtonVariant: '#588157'});
-                               if(this.state.modalButtonMessage == 'returnHome') await this.props.history.push('/');
-                               else if(this.state.modalTitle == 'attention') 
+                               if(this.state.modalButtonMessage === 'returnHome') await this.props.history.push('/');
+                               else if(this.state.modalTitle === 'attention') 
                                   this.setState({showModalCode: true, showModalRegistr: false, showModalConnect: false});
                             }}> 
                             <Trans i18nKey={this.state.modalButtonMessage} />

@@ -88,7 +88,7 @@
     "ok" : "OK",
     "campaignDeleted" : "Your campaign has been closed and will be removed from the website within two minutes",
     "failed" : "Failed",
-    "shortDescription" : "short description/tag line",
+    "shortDescription" : "Short description / tag line",
     "signThePhrase": "Please follow the prompt in your wallet to sign the login message",
     "logInSuccess": "You are logged in",
     "donateToYourSelf": "You cannot donate to yourself",
@@ -185,11 +185,9 @@
     "withdrawDonations" : "Withdraw donations",
     "donationsSize" : "Donations size",
     "preventionTitle" : "ATTENTION! IMPORTANT INFORMATION",
-    "prevention1" : "The main language of our platform is English, so the fields describing your campaign in English are obligatory. Additionally, if you wish, you can also fill in the fields describing your campaign for other language versions (currently the Russian language version is available). If you don't do this, your campaign will be displayed in English on all language versions.",
-    "prevention2" : "Once you fill in all the fields, you will need to choose the main blockchain on which your campaign will be deployed: Tron, BNB Chain, or Ethereum. Depending on this choice, you will receive donations in USDT TRC20, USDT BEP20, or USDT ERC20, respectively. At the moment, we recommend choosing Tron, as it has the lowest fees, and USDT TRC20 is the easiest to exchange for fiat money in most countries worldwide.",
-    "prevention3" : "To deploy your campaign to the blockchain, you will need to pay a transaction fee, which amounts to 10-40 TRX ($0.7-$3) for the Tron blockchain, 0.02-0.04 BNB ($0.5-$10) for BNB Chain, and 0.01-0.03 ETH ($20-$60) for the Ethereum blockchain. These funds must be available in your wallet, so you need to top it up in advance before creating the campaign.",
-    "preventionNB" : "NB: IIf you are unable to figure out how to buy cryptocurrency but believe that your campaign is of public interest, please contact us at support@heo.finance or via Telegram @heosupport, and we will try to assist you.",
-    "prevention4" : "After your campaign is deployed to the blockchain, it will undergo a verification process, which takes 1-3 working days. Therefore, we strongly recommend providing your up-to-date contact information. Our managers may get in touch with you to clarify details and verify the accuracy of the information you provided.",
+    "prevention1" : "The main language of our platform is English. The fields describing your campaign in English are obligatory. If you wish, you can also fill in the fields describing your campaign in Russian. If you don't do this, your campaign will be displayed in English on all language versions.",
+    "prevention2" : "Once you click on “Save”, your campaign will undergo a verification process, which takes 1-3 working days. We strongly recommend providing your up-to-date contact information. Our managers may get in touch with you to verify the campaign and clarify its details.",
+    "prevention3" : "Following the verification, you will receive an email with further instructions. In case of any difficulties, please contact us by email support@heo.finance or via Telegram @heosupport and we will try to help you.",
     "registration" : "Sign up",
     "authorization" : "Log in",
     "deauthorization" : "Log out",
@@ -226,6 +224,7 @@
     "campaignInTron": "Campaign saved in Tron",
     "updateInTronFailed": "Failed to save changes to Tron",
     "updateInEthereumFailed": "Failed to save changes to Ethereum",
-    "forgotPass": "Recover Password"
+    "forgotPass": "Recover Password",
+    "editorPlaceholder":"Full description of the campaign, links to external resources, any other information that may be useful for donors."
 }
 
