@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import config from "react-global-configuration";
 import { Container, Form, Row, Col, Button, Modal } from 'react-bootstrap';
 import { CheckCircle, ExclamationTriangle, HourglassSplit, XCircle} from 'react-bootstrap-icons';
@@ -56,7 +56,7 @@ class TokenSale extends React.Component {
                 modalButtonMessage: 'abortBtn',
             });
             try {
-                if(window.web3Modal.cachedProvider != "injected") {
+                if(window.web3Modal.cachedProvider !== "injected") {
                     // Binance Chain Extension Wallet does not support network events
                     // so we have to poll for transaction status instead of using
                     // event listeners and promises.
@@ -87,7 +87,7 @@ class TokenSale extends React.Component {
                     });
                 } else {
                     console.log(`Using provider ${window.web3Modal.cachedProvider}`);
-                    let result = await currencyInstance.methods.approve(that.state.saleContractAddress, toPay).send(
+                    await currencyInstance.methods.approve(that.state.saleContractAddress, toPay).send(
                         {from:accounts[0]}
                     ).once('transactionHash', function(transactionHash) {
                         that.setState({modalMessage: "waitingForNetwork"})
@@ -98,7 +98,7 @@ class TokenSale extends React.Component {
                         modalMessage: "approveInvest",
                         errorIcon: 'HourglassSplit', modalButtonVariant: "gold", waitToClose: true
                     });
-                    result = await HEOSale.methods.sell(toPay).send(
+                    await HEOSale.methods.sell(toPay).send(
                         {from:accounts[0]}
                     ).once('transactionHash', function(transactionHash) {
                         console.log(`transaction hash for sell ${transactionHash}`);
@@ -139,10 +139,10 @@ class TokenSale extends React.Component {
             <div>
                 <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' centered>
                     <Modal.Body><p className='errorIcon'>
-                        {this.state.errorIcon == 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
-                        {this.state.errorIcon == 'ExclamationTriangle' && <ExclamationTriangle style={{color: '#E63C36'}}/>}
-                        {this.state.errorIcon == 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
-                        {this.state.errorIcon == 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
+                        {this.state.errorIcon === 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
+                        {this.state.errorIcon === 'ExclamationTriangle' && <ExclamationTriangle style={{color: '#E63C36'}}/>}
+                        {this.state.errorIcon === 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
+                        {this.state.errorIcon === 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
                     </p>
                         <p className='modalTitle'><Trans i18nKey={this.state.modalTitle} /></p>
                         <p className='modalMessage'>
@@ -166,9 +166,9 @@ class TokenSale extends React.Component {
                 </Modal>
                 <Container id='mainContainer'>
                     <Row id={"topRow"}>
-                        <h1>Current price of <img src={IMG_MAP["HEO"]} width={20} height={20} style={{marginRight:5}} />HEO token {this.state.heoPrice} <img src={IMG_MAP[this.state.currencyName]} width={20} height={20} style={{marginRight:5}} /> {this.state.currencyName}</h1>
-                        <h2><img src={IMG_MAP["HEO"]} width={20} height={20} style={{marginRight:5}} />HEO tokens available for sale at this price: {this.state.unsoldHeo}</h2>
-                        <h2>Minimum investment amount: {this.state.minInvestment} <img src={IMG_MAP[this.state.currencyName]} width={18} height={18} style={{marginRight:5}} /> {this.state.currencyName}</h2>
+                        <h1>Current price of <img src={IMG_MAP["HEO"]} width={20} height={20} alt="for sell" style={{marginRight:5}} />HEO token {this.state.heoPrice} <img src={IMG_MAP[this.state.currencyName]} width={20} height={20} alt="for sell" style={{marginRight:5}} /> {this.state.currencyName}</h1>
+                        <h2><img src={IMG_MAP["HEO"]} width={20} height={20} alt="for sell" style={{marginRight:5}} />HEO tokens available for sale at this price: {this.state.unsoldHeo}</h2>
+                        <h2>Minimum investment amount: {this.state.minInvestment} <img src={IMG_MAP[this.state.currencyName]} width={18} height={18} alt="for sell" style={{marginRight:5}} /> {this.state.currencyName}</h2>
                     </Row>
                     <Row id={"buyRow"}>
                         <Form>
@@ -178,7 +178,7 @@ class TokenSale extends React.Component {
                                     <Form.Control id='amount' value={this.state.amount} onChange={this.handleAmountChange} />
                                 </Col>
                                 <Col>
-                                    <Button id='buyButton' onClick={this.handleBuy}>Invest <img src={IMG_MAP[this.state.currencyName]} width={16} height={16} style={{marginRight:5}} /></Button>
+                                    <Button id='buyButton' onClick={this.handleBuy}>Invest <img src={IMG_MAP[this.state.currencyName]} width={16} height={16} alt="for sell" style={{marginRight:5}} /></Button>
                                 </Col>
                             </Form.Group>
                         </Form>
@@ -190,8 +190,8 @@ class TokenSale extends React.Component {
                     {this.state.myInvestments.map((item, i) =>
                         <Row style={{marginBottom: '20px'}} key={i}>
                             <Col>{new Date(item.ts * 1000).toLocaleString()}</Col>
-                            <Col>{item.amnt} <img src={IMG_MAP[this.state.currencyName]} width={16} height={16} style={{marginRight:5}} /></Col>
-                            <Col>{item.heo} <img src={IMG_MAP["HEO"]} width={18} height={18} style={{marginRight:5}} /></Col>
+                            <Col>{item.amnt} <img src={IMG_MAP[this.state.currencyName]} width={16} height={16} alt="for sell" style={{marginRight:5}} /></Col>
+                            <Col>{item.heo} <img src={IMG_MAP["HEO"]} width={18} height={18} alt="for sell" style={{marginRight:5}} /></Col>
                             <Col>{item.vested}</Col>
                             <Col>{item.claimed}</Col>
                         </Row>
@@ -262,8 +262,6 @@ class TokenSale extends React.Component {
 function checkSellTransaction(txnObject, that) {
     if(txnObject.blockNumber) {
         console.log(`Sale transaction successful in block ${txnObject.blockNumber}`);
-        let accounts = that.state.accounts;
-        let web3 = that.state.web3;
         that.setState({
             showModal: true, modalTitle: 'complete',
             modalMessage: 'thankYouInvestor',

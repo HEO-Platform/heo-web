@@ -204,7 +204,7 @@ class TextEditor extends React.Component {
     const popover = (
       <Popover id="popover-basic">
         <Popover.Content>
-          <a target='_blank' href={url} as='a'>{url}</a>
+          <a target='_blank' rel="noopener noreferrer" href={url} as='a'>{url}</a>
         </Popover.Content>
       </Popover>);
     return (
@@ -285,7 +285,7 @@ class TextEditor extends React.Component {
               handleKeyCommand={this.handleKeyCommand}
               keyBindingFn={this.mapKeyToEditorCommand}
               onChange={this.onChange}
-              placeholder="Tell a story..."
+              placeholder={i18n.t('editorPlaceholder')}
               ref="editor"
               spellCheck={true}
             />           

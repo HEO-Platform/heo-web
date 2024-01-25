@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import config from "react-global-configuration";
 import axios from 'axios';
-import { Container, Row, Col, ProgressBar, Button, DropdownButton, Dropdown, Modal, Image, InputGroup, FormControl } from 'react-bootstrap';
+import { Container, Row, Col, ProgressBar, Button, DropdownButton, Dropdown, Modal, Image, InputGroup } from 'react-bootstrap';
 import { ChevronLeft, CheckCircle, ExclamationTriangle, HourglassSplit, XCircle} from 'react-bootstrap-icons';
 import ReactPlayer from 'react-player';
 import { Link } from "react-router-dom";
@@ -20,19 +20,7 @@ import { Editor, EditorState, convertFromRaw, CompositeDecorator } from "draft-j
 import '../css/campaignPage.css';
 import '../css/modal.css';
 import ReactGA from "react-ga4";
-import bnbIcon from '../images/binance-coin-bnb-logo.png';
-import busdIcon from '../images/binance-usd-busd-logo.png';
-import usdcIcon from '../images/usd-coin-usdc-logo.png';
-import ethIcon from '../images/eth-diamond-purple.png';
-import cusdIcon from '../images/cusd-celo-logo.png';
 import CCData from '../components/CCData';
-
-const IMG_MAP = {"BUSD": busdIcon,
-    "BNB": bnbIcon,
-    "USDC": usdcIcon,
-    "ETH": ethIcon,
-    "cUSD": cusdIcon};
-
 ReactGA.initialize("G-C657WZY5VT");
 var HEOCampaign, ERC20Coin;
 
@@ -101,7 +89,7 @@ class WithdrawDonations extends Component {
         var modalMessage;
         await axios.post('/api/campaign/getalldonations', {mydata: data}, {headers: {"Content-Type": "application/json"}})
             .then(res => {
-                donateAmount = (res.data == 0) ? 0 : parseFloat(res.data[0].totalQuantity);
+                donateAmount = (res.data === 0) ? 0 : parseFloat(res.data[0].totalQuantity);
             }).catch(err => {
                 if (err.response) {
                     modalMessage = 'technicalDifficulties'}
@@ -194,11 +182,11 @@ class WithdrawDonations extends Component {
     }
 
     handleDonateClick = async (chainId, coin_adres, blockChainOrt) => {
-        if(blockChainOrt == "ethereum"){
+        if(blockChainOrt === "ethereum"){
             window.blockChainOrt = "ethereum";
            this.handleDonateClickEthereum(chainId, coin_adres);
 
-        } else if (blockChainOrt == "tron"){
+        } else if (blockChainOrt === "tron"){
             window.blockChainOrt = "tron";
             this.handleDonateClickTron(chainId, coin_adres);
         }
@@ -216,7 +204,6 @@ class WithdrawDonations extends Component {
             let campaignInstance = await window.tronWeb.contract(HEOCampaign, window.tronWeb.address.fromHex(campaignAddress));
             let userCoinInstance = await window.tronWeb.contract(TRC20Coin, window.tronWeb.address.fromHex(coin_adres));
             let campaignBalance = await userCoinInstance.methods.balanceOf(campaignAddress).call();
-            var that = this;
             ReactGA.event({
                 category: "donation",
                 action: "donate_button_click",
@@ -238,9 +225,9 @@ class WithdrawDonations extends Component {
                     if(txnObject){
                       if (txnObject.receipt)  break;
                     }
-                }while(m != 2);
+                }while(m !== 2);
 
-                if (txnObject.receipt.result != "SUCCESS"){
+                if (txnObject.receipt.result !== "SUCCESS"){
                     this.setState({
                         showModal: true, modalTitle: 'failed',
                         errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
@@ -256,7 +243,7 @@ class WithdrawDonations extends Component {
                    return;
                 }
                 for (let j = 0; j < chains_coins.length; j++){
-                    if ((chains_coins.chain == chainId)&&(chains_coins.coin.address == coin_adres)){
+                    if ((chains_coins.chain === chainId)&&(chains_coins.coin.address === coin_adres)){
                         chains_coins.donate = await this.getDaonateSizeTron(chainId, this.state.campaignId, coin_adres);
                         break;
                     }
@@ -296,12 +283,6 @@ class WithdrawDonations extends Component {
             let web3 = this.state.web3;
             let accounts = this.state.accounts;
             var chains_coins = this.state.chains_coins;
-            var currentProvider = "";
-            if(web3.currentProvider && web3.currentProvider.isMetaMask) {
-                currentProvider = "metamask";
-            } else if(web3.currentProvider && web3.currentProvider.isWalletConnect) {
-                currentProvider = "walletconnect";
-            }
             HEOCampaign = (await import("../remote/"+ chainId + "/HEOCampaign")).default;
             ERC20Coin = (await import("../remote/"+ chainId + "/ERC20")).default;
             let campaignAddress = this.state.campaign.addresses[chainId];
@@ -342,7 +323,7 @@ class WithdrawDonations extends Component {
                     return;
                 }
                 for (let j = 0; j < chains_coins.length; j++){
-                    if ((chains_coins.chain == chainId)&&(chains_coins.coin.address == coin_adres)){
+                    if ((chains_coins.chain === chainId)&&(chains_coins.coin.address === coin_adres)){
                         chains_coins.donate = await this.getDaonateSize(chainId, this.state.campaignId, coin_adres);
                         break;
                     }
@@ -379,10 +360,10 @@ class WithdrawDonations extends Component {
             <div>
                 <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' centered>
                     <Modal.Body><p className='errorIcon'>
-                        {this.state.errorIcon == 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
-                        {this.state.errorIcon == 'ExclamationTriangle' && <ExclamationTriangle style={{color: '#E63C36'}}/>}
-                        {this.state.errorIcon == 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
-                        {this.state.errorIcon == 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
+                        {this.state.errorIcon === 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
+                        {this.state.errorIcon === 'ExclamationTriangle' && <ExclamationTriangle style={{color: '#E63C36'}}/>}
+                        {this.state.errorIcon === 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
+                        {this.state.errorIcon === 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
                         </p>
                         <p className='modalTitle'><Trans i18nKey={this.state.modalTitle} /></p>
                         <p className='modalMessage'>
@@ -490,16 +471,16 @@ class WithdrawDonations extends Component {
           this.props.history.push("/404");
           return;
         }
-
+        var lng;
         this.state.donationAmount = campaign.defaultDonationAmount ? campaign.defaultDonationAmount : "10";
         campaign.percentRaised = 100 * (campaign.raisedAmount)/campaign.maxAmount;
         var contentState = {};
         if(campaign.descriptionEditor[i18n.language]) {
-            for(var lng in campaign.descriptionEditor) {
+            for(lng in campaign.descriptionEditor) {
                 contentState[lng] = convertFromRaw(campaign.descriptionEditor[lng]);
             }
         } else if(campaign.descriptionEditor["default"]) {
-            for(var lng in campaign.descriptionEditor) {
+            for(lng in campaign.descriptionEditor) {
                 contentState[lng] = convertFromRaw(campaign.descriptionEditor[lng]);
             }
             contentState[i18n.language] = convertFromRaw(campaign.descriptionEditor["default"]);
@@ -528,7 +509,7 @@ class WithdrawDonations extends Component {
             for (let i = 0; i <  res.data.length; i++){
                 res.data[i].chain_name = "";
                 for (let j = 0; j < chains.length; j++){
-                  if (chains[j].CHAIN == res.data[i].chain){
+                  if (chains[j].CHAIN === res.data[i].chain){
                    res.data[i].chain_name = chains[j].CHAIN_NAME;
                    res.data[i].donate = 0;
                    chains_coins.push(res.data[i]);
@@ -548,9 +529,9 @@ class WithdrawDonations extends Component {
             })
         })
         for(let j = 0; j < chains_coins.length; j++){
-            if (chains_coins[j].blockChainOrt == "ethereum")
+            if (chains_coins[j].blockChainOrt === "ethereum")
             chains_coins[j].donate = await this.getDaonateSize(chains_coins[j].chain, campaign, chains_coins[j].coin.address);
-            else if (chains_coins[j].blockChainOrt == "tron")
+            else if (chains_coins[j].blockChainOrt === "tron")
             chains_coins[j].donate = await this.getDaonateSizeTron(chains_coins[j].chain, campaign, chains_coins[j].coin.address);
         }
         this.setState({chains_coins:chains_coins});
@@ -611,7 +592,7 @@ class WithdrawDonations extends Component {
                     donationAmount: params.am
                 });
             } else if(params.fp === 'pa' && params.state) {
-                if(params.state=='declined' || params.state=='cancelled') {
+                if(params.state==='declined' || params.state==='cancelled') {
                     that.setState({
                         showModal: true, modalTitle: 'failed', modalMessage: 'cardPaymentDeclined',
                         errorIcon: 'XCircle', modalButtonMessage: 'tryAgain',
@@ -658,7 +639,7 @@ function findLinkEntities(contentBlock, callback, contentState) {
 const editorLink = (props) => {
     const {url} = props.contentState.getEntity(props.entityKey).getData();
     return (
-      <a href={url} target='_blank'>
+      <a href={url} target='_blank' rel="noopener noreferrer">
         {props.children}
       </a>
     );

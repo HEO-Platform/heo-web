@@ -14,18 +14,6 @@ import { initWeb3, checkAuth, initWeb3Modal, initTronadapter, checkAuthTron, ini
 import '../css/createCampaign.css';
 import '../css/modal.css';
 import ReactGA from "react-ga4";
-import bnbIcon from '../images/binance-coin-bnb-logo.png';
-import busdIcon from '../images/binance-usd-busd-logo.png';
-import usdcIcon from '../images/usd-coin-usdc-logo.png';
-import ethIcon from '../images/eth-diamond-purple.png';
-import cusdIcon from '../images/cusd-celo-logo.png';
-import usdcAurora from '../images/usd-coin-aurora-logo.png';
-const IMG_MAP = {"BUSD-0xe9e7cea3dedca5984780bafc599bd69add087d56": busdIcon,
-    "BNB-0x0000000000000000000000000000000000000000": bnbIcon,
-    "USDC-0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48": usdcIcon,
-    "ETH-0x0000000000000000000000000000000000000000": ethIcon,
-    "cUSD-0x765DE816845861e75A25fCA122bb6898B8B1282a": cusdIcon,
-    "USDC-0xb12bfca5a55806aaf64e99521918a4bf0fc40802": usdcAurora};
 
 var CAMPAIGNINSTANCE;
 ReactGA.initialize("G-C657WZY5VT");
@@ -178,7 +166,6 @@ class EditCampaign extends React.Component {
             return false;
         }
         let n = 0;
-        let i = 0;
         let EditorStateEn = await getEditorStateEn();
         if (EditorStateEn){
             for (let i = 0; i < EditorStateEn.blocks.length; i++){
@@ -274,8 +261,8 @@ class EditCampaign extends React.Component {
              if(txnObject){
                if (txnObject.receipt)  break;
              }
-            }while(m != 2);
-            if(txnObject.receipt.result != "SUCCESS") return false;
+            }while(m !== 2);
+            if(txnObject.receipt.result !== "SUCCESS") return false;
             else{
                 this.state.line_accounts[this.state.tronChainId]  = window.tronAdapter._wallet.tronWeb.defaultAddress.hex;
                 return (true);
@@ -305,7 +292,7 @@ class EditCampaign extends React.Component {
                         if(txnObject && txnObject.receipt) {
                             break;
                         }
-                    } while(m != 2);
+                    } while(m !== 2);
 
                     if (txnObject.receipt.result === "SUCCESS") {
                       m = 1;
@@ -316,7 +303,7 @@ class EditCampaign extends React.Component {
                          if (transEvent && transEvent.length > 0) {
                              break;
                          }
-                      } while(m != 2);
+                      } while(m !== 2);
 
                       console.log(`createCampaign transaction successful ${transEvent}`);
                       this.state.addresses[this.state.tronChainId] = transEvent[0].result.campaignAddress;
@@ -414,7 +401,7 @@ class EditCampaign extends React.Component {
                 var that = this;
                 var web3 = this.state.web3;
                 var result;
-                if(window.web3Modal.cachedProvider == "binancechainwallet") {
+                if(window.web3Modal.cachedProvider === "binancechainwallet") {
                     HEOCampaignFactory.methods.createCampaign(
                         this.state.web3.utils.toWei(`${this.state.maxAmount}`), this.state.accounts[0], compressed_meta)
                         .send({from:this.state.accounts[0]})
@@ -611,10 +598,10 @@ class EditCampaign extends React.Component {
             <div>
                 <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' centered>
                     <Modal.Body><p className='modalIcon'>
-                        {this.state.modalIcon == 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
-                        {this.state.modalIcon == 'ExclamationTriangle' && <ExclamationTriangle/>}
-                        {this.state.modalIcon == 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
-                        {this.state.modalIcon == 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
+                        {this.state.modalIcon === 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
+                        {this.state.modalIcon === 'ExclamationTriangle' && <ExclamationTriangle/>}
+                        {this.state.modalIcon === 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
+                        {this.state.modalIcon === 'XCircle' && <XCircle style={{color: '#E63C36'}}/>}
                         </p>
                         <p className='modalTitle'><Trans i18nKey={this.state.modalTitle}/></p>
                         <p className='modalMessage'><Trans i18nKey={this.state.modalMessage}/></p>
@@ -721,7 +708,7 @@ class EditCampaign extends React.Component {
                             <Form.Control type="text" className="createFormPlaceHolder" placeholder={i18n.t('linkToYouTube')}
                                 name='vl' value={this.state.vl} onChange={this.handleChange}/>
                         </Form.Group>
-                        { this.state.vl != "" && <ReactPlayer url={this.state.vl} id='createCampaignVideoPlayer' />}
+                        { this.state.vl !== "" && <ReactPlayer url={this.state.vl} id='createCampaignVideoPlayer' />}
                         <Form.Group>
                             <Form.Label><Trans i18nKey='title'/><span className='redAsterisk'>*</span></Form.Label>
                             <Row>
