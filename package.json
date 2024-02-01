@@ -15,6 +15,7 @@
     "@testing-library/user-event": "^12.6.2",
     "@tronweb3/tronwallet-adapter-tronlink": "^1.1.7",
     "@types/crypto-js": "^3.1.43",
+    "awesome-phonenumber": "^6.4.0",
     "aws-sdk": "^2.1450.0",
     "axios": "^0.21.1",
     "body-parser": "^1.19.0",

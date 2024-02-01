@@ -2,6 +2,7 @@ import React from 'react';
 import countries from '../countries';
 import {Container, Form, Col, Button, DropdownButton, Dropdown, Image, Modal, Row} from 'react-bootstrap';
 import ReactPlayer from 'react-player';
+import {getCountryCodeForRegionCode} from 'awesome-phonenumber';
 import config from "react-global-configuration";
 import axios from 'axios';
 import { Trans } from 'react-i18next';
@@ -10,7 +11,7 @@ import { ChevronLeft, CheckCircle, ExclamationTriangle, HourglassSplit, XCircle 
 import { Link } from 'react-router-dom';
 import { getEditorStateEn, getEditorStateRu, TextEditorEn, TextEditorRu, setEditorStateEn, setEditorStateRu, editorStateHasChangedRu,
         editorStateHasChangedEn } from '../components/TextEditor';
-import { initWeb3, checkAuth, initWeb3Modal, initTronadapter, checkAuthTron, initTron} from '../util/Utilities';
+import { initWeb3, checkAuth, initWeb3Modal, initTronadapter, checkAuthTron, initTron, checkEmail, isValidUrl} from '../util/Utilities';
 import '../css/createCampaign.css';
 import '../css/modal.css';
 import ReactGA from "react-ga4";
@@ -62,13 +63,19 @@ class EditCampaign extends React.Component {
             addresses: {},
             defDonationAmount: 0,
             fiatPayments: true,
+            key: "",
             chainId:"",
             tronChainId:"",
             isInTron:false,
             isInEtherium:false,
             resultEtherium : true,
             resultTron: true,
-            active:false
+            active:false,
+            email:"",
+            countryCode:"",
+            number:"",
+            website:"",
+            telegram:""
         };
 
     }
@@ -83,6 +90,7 @@ class EditCampaign extends React.Component {
     }
 
     handleChange = (e) => {
+        let help_value;
         const name = e.target.name
         const value = e.target.value;
         const checked = e.target.checked;
@@ -92,6 +100,15 @@ class EditCampaign extends React.Component {
         this.setState({isInEtherium: checked});
         else if (name === 'TronCheckbox')
         this.setState({isInTron: checked});
+        else if(e.target.name === 'number'){
+            help_value = '';  
+            for(let i = 0; i < e.target.value.length; i++){
+             if ((/^[-0-9]*$/.test(e.target.value[i]) === true)||(e.target.value[i] === ' '))
+              help_value += e.target.value[i];
+            }
+            e.target.value = help_value;
+            this.setState({ [e.target.name]: e.target.value });
+          }
         else
         this.setState({ [name] : value, updateMeta : true });
     }
@@ -105,6 +122,7 @@ class EditCampaign extends React.Component {
     }
 
     handleClick = async () => {
+        let result;
         if (this.state.maxAmount_old !== this.state.maxAmount){
           if ((window.ethereum)&&(this.state.isInEtherium)){
             await initWeb3Modal(this.state.chainId, this);
@@ -147,10 +165,50 @@ class EditCampaign extends React.Component {
                 });
             return false;
         }
+        if(this.state.website){
+            result =  await isValidUrl(this.state.website);
+            if(!result){
+             this.setState(
+                 {showModal:true, modalTitle: 'requiredFieldsTitle',
+                     modalMessage: 'badWebsite', modalIcon: 'ExclamationTriangle',
+                     waitToClose: false,
+                     modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
+                 });
+                 return false; 
+            }
+         } 
         if(!this.state.titleEn) {
             this.setState(
                 {showModal:true, modalTitle: 'requiredFieldsTitle',
                     modalMessage: 'titleRequired', modalIcon: 'ExclamationTriangle',
+                    waitToClose: false,
+                    modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
+                });
+            return false;
+        }
+        if(!this.state.email) {
+            this.setState(
+                {showModal:true, modalTitle: 'requiredFieldsTitle',
+                    modalMessage: 'emailRequired', modalIcon: 'ExclamationTriangle',
+                    waitToClose: false,
+                    modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
+                });
+            return false;
+        }
+        result = await checkEmail(this.state.email);
+        if(!result) {
+            this.setState(
+                {showModal:true, modalTitle: 'requiredFieldsTitle',
+                    modalMessage: 'emailFaulty', modalIcon: 'ExclamationTriangle',
+                    waitToClose: false,
+                    modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
+                });
+            return false;
+        }
+        if ((this.state.number)&&(this.state.countryCode.trim()==="")){
+            this.setState(
+                {showModal:true, modalTitle: 'requiredFieldsTitle',
+                    modalMessage: 'countryCodeRequired', modalIcon: 'ExclamationTriangle',
                     waitToClose: false,
                     modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
                 });
@@ -222,7 +280,7 @@ class EditCampaign extends React.Component {
                 return;
             }
         }
-        let result = await this.updateCampaign();
+        result = await this.updateCampaign();
         if (result === false)
         this.setState({showModal : true,
                 modalTitle: 'failed',
@@ -487,6 +545,7 @@ class EditCampaign extends React.Component {
                 defaultDonationAmount: this.state.defDonationAmount,
                 fiatPayments: this.state.fiatPayments,
             };
+            data.key = this.state.key;
             data.description = this.state.ogDescription;
             data.description["en"] = this.state.descriptionEn;
             data.description["ru"] = this.state.descriptionRu;
@@ -496,8 +555,11 @@ class EditCampaign extends React.Component {
             data.title["ru"] = this.state.titleRu;
             data.title["default"] = this.state.titleEn;
             data.descriptionEditor = this.state.ogDescriptionEditor;
-            console.log("ogDescriptionEditor:");
-            console.log(this.state.ogDescriptionEditor);
+            data.email = this.state.email;
+            data.countryCode = this.state.countryCode;
+            data.number = this.state.number;
+            data.telegram = this.state.telegram;
+            data.website = this.state.website;
             if (editorStateHasChangedEn()){
               let EditorStateEn = await getEditorStateEn();  
               data.descriptionEditor["en"] = EditorStateEn;
@@ -657,18 +719,19 @@ class EditCampaign extends React.Component {
                             </Col>
                             </Row>
                         </Form.Group>
-                        <hr/>
-                        <Form.Row>
-                            <Form.Group as={Col}>
+                        <Form.Group as={Col}>
                                 <Form.Label><Trans i18nKey='selectConuntry'/><span className='redAsterisk'>*</span></Form.Label>
                                 <Form.Control required as="select" name='cn' value={this.state.cn} onChange={this.handleChange} >
                                 {countries.map( (data)=>
                                     <option value={data.value}>{data.text}</option>
                                 )}
                                 </Form.Control>
-                            </Form.Group>
-                        </Form.Row>
-                        <hr/>
+                        </Form.Group>
+                        <Form.Group> 
+                          <Form.Label>{i18n.t('website')}</Form.Label>
+                          <Form.Control required type="text" className="createFormPlaceHolder" value={this.state.website}
+                            placeholder={i18n.t('website')} name='website' onChange={this.handleChange}/>
+                        </Form.Group> 
                         <div className='titles'> <Trans i18nKey='campaignDetails'/></div>
                         <Form.Group>
                             <Form.Label>{i18n.t('howMuchYouNeed')}<span className='redAsterisk'>*</span></Form.Label>
@@ -733,7 +796,7 @@ class EditCampaign extends React.Component {
                             </Row>
                         </Form.Group>
                         <Form.Group>
-                        <Form.Label><Trans i18nKey='shortDescription'/><span className='redAsterisk'>*</span></Form.Label>
+                          <Form.Label><Trans i18nKey='shortDescription'/><span className='redAsterisk'>*</span></Form.Label>
                             <Row>
                             <Col>
                             <Form.Label><Trans i18nKey='english'/><span className='redAsterisk'>*</span></Form.Label>
@@ -773,6 +836,45 @@ class EditCampaign extends React.Component {
                             {this.state.updatedEditorStateRu && <TextEditorRu  />}
                             </Col>
                             </Row>
+                        </Form.Group>
+                        <div className='titles'><Trans i18nKey='contactInform'/></div>
+                        <Form.Group>
+                         <Form.Group>  
+                          <Form.Label><Trans i18nKey='email'/><span className='redAsterisk'>*</span></Form.Label>
+                          <Form.Control required type="text" className="createFormPlaceHolder"
+                           placeholder={i18n.t('contactPlaceHolder')} name='email' value={this.state.email} onChange={this.handleChange}/>
+                         </Form.Group>
+                         <Form.Group>  
+                          <Form.Label><Trans i18nKey='phoneNumber'/></Form.Label>
+                          <Row>
+                            <Col xs = {5}>  
+                            <Form.Label><Trans i18nKey='countryCode'/><span className='redAsterisk'></span></Form.Label>
+                            </Col>
+                            <Col xs={7}> 
+                            <Form.Label><Trans i18nKey='number'/><span className='redAsterisk'></span></Form.Label> 
+                            </Col>
+                          </Row>
+                          <Row>
+                           <Col xs = {5}>
+                           <Form.Control required as="select" name='countryCode' value={this.state.countryCode} onChange={this.handleChange}>
+                                <option> </option>
+                                {countries.map((data) => 
+                                   <option disabled={getCountryCodeForRegionCode(data.value) === 0} value={"+" + getCountryCodeForRegionCode(data.value)} >{data.text} {"+" + getCountryCodeForRegionCode(data.value)}</option>
+                                    )}
+                                </Form.Control>
+                           </Col> 
+                           <Col xs={7}>
+                            <Form.Control required type="text" className="createFormPlaceHolder"
+                             placeholder={i18n.t('contactPlaceHolder')} name='number' value={this.state.number} onChange={this.handleChange}/>
+                           </Col>  
+                          </Row> 
+                         </Form.Group>  
+                         <Form.Group>  
+                          <Form.Label>Telegram</Form.Label>
+                          <Form.Control required type="text" className="createFormPlaceHolder"
+                           placeholder={i18n.t('contactPlaceHolder')} name='telegram' value={this.state.telegram} onChange={this.handleChange}/>
+                         </Form.Group>           
+                        </Form.Group>
                             <Row>
                              <Col>
                               {this.state.addresses[this.state.chainId] &&
@@ -785,7 +887,6 @@ class EditCampaign extends React.Component {
                                 <Trans i18nKey='campaignInTron'/><span className='redAsterisk'></span></Form.Label>}
                              </Col>
                             </Row>
-                        </Form.Group>
                         <Row>
                          <Col>
                           <Button onClick={() => this.handleClick()} id='createCampaignBtn' name='ff3'>
@@ -936,6 +1037,18 @@ class EditCampaign extends React.Component {
             setEditorStateRu({}, false);
             this.setState({updatedEditorStateRu : true});
         }
+        if (dbCampaignObj.key)
+          this.setState({key : dbCampaignObj.key});
+        if (dbCampaignObj.email)
+          this.setState({email : dbCampaignObj.email});
+        if (dbCampaignObj.countryCode)
+          this.setState({countryCode : dbCampaignObj.countryCode});
+        if (dbCampaignObj.number)
+          this.setState({number : dbCampaignObj.number});
+        if (dbCampaignObj.website)
+          this.setState({website : dbCampaignObj.website});
+        if (dbCampaignObj.telegram)
+          this.setState({telegram : dbCampaignObj.telegram});
         console.log(`Set title to`);
         console.log(this.state.ogTitle);
         console.log(`Set org to`);

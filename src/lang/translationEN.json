@@ -45,6 +45,7 @@
     "selectConuntry": "Select your country",
     "selectCoin": "Select crypto-currency",
     "campaignDetails": "Campaign Details",
+    "contactInform": "Contact information",
     "howMuchYouNeed": "How much do you need to raise (in USD)?",
     "selectCoverImage": "Select cover image",
     "coverImageHint": "This cover image will be displayed on the main page",
@@ -110,6 +111,7 @@
     "titleRequired": "Please enter the name of the campaign in English",
     "shortDescRequired": "Please provide a short description/tag line for your campaign in English",
     "longDescRequired": "Please provide a description of your campaign (at least 3 words) in English",
+    "campaignURLRequired": "Please provide URL of your campaign",
     "longDescEnIncludRu": "The description of the company in English contains Kirilic characters, which is not permissible",
     "thankYouInvestor": "Congratulations you are an investor in HEO!",
     "approveInvest": "Please follow the prompts in your wallet to approve purchase transaction",
@@ -118,7 +120,6 @@
     "otherCoinsCoinbase": "Other coins (via Coinbase)",
     "beneficiaryAddress": "Beneficiary address",
     "selectQRCodeImage": "Optional QR Code for credit card donations",
-    "coinbaseCommerceURL": "URL of Coinbase Commerce Checkout",
     "Text404": "Campaign with this ID does not exist. Please check the URL or click 'Back to Campaigns' to see the list of all active campaigns.",
     "cardPaymentGatewayFailure": "Card payment failed due to gateway error. Please try again later.",
     "cardPaymentDeclined": "Payment declined. Please check payment details and try again.",
@@ -225,6 +226,16 @@
     "updateInTronFailed": "Failed to save changes to Tron",
     "updateInEthereumFailed": "Failed to save changes to Ethereum",
     "forgotPass": "Recover Password",
-    "editorPlaceholder":"Full description of the campaign, links to external resources, any other information that may be useful for donors."
+    "editorPlaceholder":"Full description of the campaign, links to external resources, any other information that may be useful for donors.",
+    "contactPlaceHolder":"Please write your up-to-date contacts because we may get in touch with you to verify your campaign",
+    "countryCode": "Country code",
+    "number": "Number",
+    "selectCountryCode": "Select Country Code",
+    "website":"Website",
+    "badWebsite":"There are errors in writing the website address",
+    "campaignURL":"Campaign URL",
+    "campaignURLPlaceHolder":"Symbols which will appear in campaign’s address after https://app.heo.finance/campaign/",
+    "campaignURLBad":"This campaign URL already exists in the database, enter another",
+    "countryCodeRequired": "Please select the country code for the tefon number"
 }
 
