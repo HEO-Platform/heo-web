@@ -199,6 +199,11 @@ class ServerLib {
             addresses: req.body.mydata.addresses,
             accounts: req.body.mydata.accounts,
             active: false,
+            email: req.body.mydata.email,
+            countryCode: req.body.mydata.countryCode,
+            number: req.body.mydata.number,
+            telegram: req.body.mydata.telegram,
+            website: req.body.mydata.website,
             new: true
         }
         try {
@@ -323,6 +328,15 @@ class ServerLib {
             let result = await myCollection.findOne({"key" : req.body.KEY, "deleted":{ $exists : false }});
             if (result) res.send(result._id)
             else res.send(req.body.KEY);
+        } catch (err) {Sentry.captureException(new Error(err));}
+    }
+
+    async handlecheckKey(req, res, Sentry, DB) {
+        try {
+            const myCollection = await DB.collection('campaigns');
+            let result = await myCollection.findOne({"key" : req.body.KEY, "deleted":{ $exists : false }});
+            if (result) res.send(true)
+            else res.send(false);
         } catch (err) {Sentry.captureException(new Error(err));}
     }
 

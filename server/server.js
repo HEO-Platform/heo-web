@@ -172,7 +172,6 @@ APP.post('/api/sendemail', async (req, res) => {
 APP.post('/api/campaign/add', async (req, res) => {
     if(serverLib.authenticated(req, res, Sentry)) {
         const DB = CLIENT.db(DBNAME);
-
         let walletId, fiatPayment;
         try {
             fiatPayment = await serverLib.handleGetFiatPaymentSettings(DB, Sentry);
@@ -180,7 +179,6 @@ APP.post('/api/campaign/add', async (req, res) => {
                 walletId = await circleLib.createCircleWallet(req.body.mydata.address, CIRCLE_API_KEY, Sentry)
             }
         } catch (err) {Sentry.captureException(new Error(err));}
-
        if (serverLib.handleAddCampaign(req, res, Sentry, DB, walletId)){
         const text = "There is a new campaign. Please review. " + "Сampaign title - " + req.body.mydata.title["default"] +
         ". Сampaign name " + req.body.mydata.org["default"] + ". Сampaign ID - " +  req.body.mydata.id + ". Сampaign beneficiary - " +
@@ -265,6 +263,11 @@ APP.post('/api/campaign/loadOne', (req, res) => {
     serverLib.handleLoadOneCampaign(req, res, Sentry, DB);
 });
 
+APP.post('/api/campaign/checkKey', (req, res) => {
+    const DB = CLIENT.db(DBNAME);
+    serverLib.handlecheckKey(req, res, Sentry, DB);
+});
+
 APP.post('/api/campaign/loadUserCampaigns', (req, res) => {
     if(serverLib.authenticated(req, res, Sentry)) {
         const DB = CLIENT.db(DBNAME);
@@ -315,7 +318,6 @@ APP.post('/api/auth/change_pass', async (req, res) => {
 
 
 APP.post('/api/auth/check_code', async (req, res) => {
-    const DB = CLIENT.db(DBNAME);
     await serverLib.handleCheckCode(req, res);
 })
 

@@ -390,8 +390,17 @@ const initWeb3Modal = async(chainId) => {
                 }
             }
         });
-    
 }
+
+const checkEmail = async(email) => {
+    let re = /^[^\s()<>@,;:/]+@\w[\w.-]+\.[a-z]{2,}$/i;
+    return re.test(email);
+}
+
+const isValidUrl = async(url) => {
+    var objRE = /(^https?:\/\/)?[a-z0-9~_\-.]+\.[a-z]{2,9}(\/|:|\?[!-~]*)?$/i;
+    return objRE.test(url);
+} 
 
 const getPCIPublicKey = async() => {
     let res = await axios.get('/api/circle/publickey');
@@ -406,5 +415,5 @@ const encryptCardData = async(keyData, cardData) => {
 }
 
 export {DescriptionPreview, i18nString, GetLanguage, LogIn, initWeb3, checkAuth, initWeb3Modal, clearWeb3Provider,clearTronProvider,
-    getPCIPublicKey, encryptCardData, LogInTron, initTronadapter, checkAuthTron, initTron, getTronWeb };
+    getPCIPublicKey, encryptCardData, LogInTron, initTronadapter, checkAuthTron, initTron, getTronWeb, checkEmail, isValidUrl};
 export default Utilities;

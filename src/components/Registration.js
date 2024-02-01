@@ -41,12 +41,12 @@ class Registration extends React.Component {
       if ((res.data.success)&&(res.data.success === true)) {
         this.setState({showModal: true, goHome: true,
               modalTitle: 'success',
-              modalMessage: 'authorizationComplete',  showModalDisconnect:false,
+              modalMessage: 'deauthorizationComplete',  showModalDisconnect:false,
               modalIcon: 'CheckCircle',
               showModalCode: false,
               modalButtonMessage: 'returnHome',
               modalButtonVariant: "#16a1e1", waitToClose: false
-            }); 
+        }); 
       }
     }  
 
@@ -70,8 +70,6 @@ class Registration extends React.Component {
         userData.to_email = this.state.email;
         let res = await axios.post('/api/auth/change_pass', {mydata : userData},
                            {headers: {"Content-Type": "application/json"}}); 
-        console.log("res:");
-        console.log(res);
         if(res.data === 'no_user'){
          this.setState(
            {showModal:true, modalTitle: 'failed',
