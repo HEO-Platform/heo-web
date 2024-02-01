@@ -1,14 +1,14 @@
 import React from 'react';
 import countries from '../countries';
 import {Container, Form, Col, Button, Image, Modal, Row} from 'react-bootstrap';
-import {getCountryCodeForRegionCode} from 'awesome-phonenumber';
 import ReactPlayer from 'react-player';
+import config from "react-global-configuration";
 import { Link, withRouter } from "react-router-dom";
 import uuid from 'react-uuid';
 import axios from 'axios';
 import { Trans } from 'react-i18next';
 import i18n from '../util/i18n';
-import {checkEmail,isValidUrl} from '../util/Utilities';
+import {initWeb3, initWeb3Modal, initTronadapter} from '../util/Utilities';
 import {getEditorStateEn, getEditorStateRu, TextEditorEn, TextEditorRu, setEditorStateEn, setEditorStateRu} from '../components/TextEditor';
 import { ChevronLeft, CheckCircle, ExclamationTriangle, HourglassSplit, XCircle } from 'react-bootstrap-icons';
 import '../css/createCampaign.css';
@@ -40,6 +40,8 @@ class CreateCampaign extends React.Component {
             titleEn:"",
             titleRu:"",
             maxAmount:10000,
+            tronAccountAddress:"",
+            ethAccountAddress:"",
             coinbaseCommerceURL:"",
             descriptionEn :"",
             descriptionRu :"",
@@ -51,6 +53,11 @@ class CreateCampaign extends React.Component {
             goHome:false,
             getContent: false,
             editorContent: {},
+            chains:{},
+            chainConfig:{},
+            tronChainConfig:{},            
+            chainId:"",
+            tronChainId:"",
             defDonationAmount: 10,
             fiatPayments: true,
             key: "",
@@ -65,11 +72,6 @@ class CreateCampaign extends React.Component {
             campaignData:{},
             line_accounts:{},
             addresses: {},
-            email:"",
-            countryCode:"",
-            number:"",
-            website:"",
-            telegram:""
         }
     };
 
@@ -83,49 +85,17 @@ class CreateCampaign extends React.Component {
     };
 
     handleChange = e => {
-        let help_value;
-        let i;
         if((e.target.name === 'orgEn')||(e.target.name === 'titleEn')||(e.target.name === 'descriptionEn')||(e.target.name === 'descriptionEn')){
-            help_value = '';  
-            for(i = 0; i < e.target.value.length; i++){
+            let help_value = '';  
+            for(let i = 0; i < e.target.value.length; i++){
              if (/^[А-Яа-я]*$/.test(e.target.value[i]) === false)
               help_value += e.target.value[i];
             }
             e.target.value = help_value;
             this.setState({ [e.target.name]: e.target.value });
-            if(e.target.name === 'orgEn'){
-                help_value = '';  
-                for(i = 0; i <  e.target.value.length; i++){
-                  if ((/^[A-Za-z0-9]*$/.test(e.target.value[i]) === true)||(e.target.value[i] === ' '))
-                   help_value += e.target.value[i];
-                }
-                let key = help_value.toLowerCase().replaceAll(" ", "-"); 
-                this.setState({key: key}); 
-            }
           }
           else if(e.target.name === 'fiatPayments')
            this.setState({fiatPayments: e.target.checked});
-          else if(e.target.name === 'countryCode'){
-            this.setState({ countryCode: e.target.value });
-          }
-          else if(e.target.name === 'campaignURL'){
-            help_value = '';  
-            for(i = 0; i <  e.target.value.length; i++){
-              if ((/^[-A-Za-z0-9]*$/.test(e.target.value[i]) === true)||(e.target.value[i] === ' '))
-               help_value += e.target.value[i];
-            }
-            let key = help_value.toLowerCase().replaceAll(" ", "-"); 
-            this.setState({key: key}); 
-          }
-          else if(e.target.name === 'number'){
-            help_value = '';  
-            for(let i = 0; i < e.target.value.length; i++){
-             if ((/^[-0-9]*$/.test(e.target.value[i]) === true)||(e.target.value[i] === ' '))
-              help_value += e.target.value[i];
-            }
-            e.target.value = help_value;
-            this.setState({ [e.target.name]: e.target.value });
-          }
          else
           this.setState({ [e.target.name]: e.target.value });
     };
@@ -139,9 +109,9 @@ class CreateCampaign extends React.Component {
     };
 
     async handleClick (event) {
+        
         let imgID = uuid();
         let qrImgID = uuid();
-        let result;
         try {
             if(!this.state.orgEn) {
                 this.setState(
@@ -152,27 +122,16 @@ class CreateCampaign extends React.Component {
                     });
                 return false;
             }
+            
             if(!this.state.cn) {
                 this.setState(
                     {showModal:true, modalTitle: 'requiredFieldsTitle',
                         modalMessage: 'cnRequired', modalIcon: 'ExclamationTriangle',
                         waitToClose: false,
                         modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                });
+                    });
                 return false;
             }
-            if(this.state.website){
-               result =  await isValidUrl(this.state.website);
-               if(!result){
-                this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle',
-                        modalMessage: 'badWebsite', modalIcon: 'ExclamationTriangle',
-                        waitToClose: false,
-                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                    });
-                    return false; 
-               }
-            } 
             if(!this.state.titleEn) {
                 this.setState(
                     {showModal:true, modalTitle: 'requiredFieldsTitle',
@@ -186,58 +145,6 @@ class CreateCampaign extends React.Component {
                 this.setState(
                     {showModal:true, modalTitle: 'requiredFieldsTitle',
                         modalMessage: 'shortDescRequired', modalIcon: 'ExclamationTriangle',
-                        waitToClose: false,
-                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                });
-                return false;
-            }
-            if(!this.state.key) {
-                this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle',
-                        modalMessage: 'campaignURLRequired', modalIcon: 'ExclamationTriangle',
-                        waitToClose: false,
-                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                    });
-                return false;
-            }
-            if(this.state.key){
-                let data = {KEY : this.state.key};
-                let res = await axios.post('/api/campaign/checkKey', data,
-                                   {headers: {"Content-Type": "application/json"}});
-                if (res.data === true) {
-                    this.setState(
-                        {showModal:true, modalTitle: 'requiredFieldsTitle',
-                            modalMessage: 'campaignURLBad', modalIcon: 'ExclamationTriangle',
-                            waitToClose: false,
-                            modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                        });
-
-                    return false;  
-                }                        
-            }
-            if(!this.state.email) {
-                this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle',
-                        modalMessage: 'emailRequired', modalIcon: 'ExclamationTriangle',
-                        waitToClose: false,
-                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                    });
-                return false;
-            }
-            result = await checkEmail(this.state.email);
-            if(!result) {
-                this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle',
-                        modalMessage: 'emailFaulty', modalIcon: 'ExclamationTriangle',
-                        waitToClose: false,
-                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                    });
-                return false;
-            }
-            if ((this.state.number)&&(this.state.countryCode.trim()==="")){
-                this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle',
-                        modalMessage: 'countryCodeRequired', modalIcon: 'ExclamationTriangle',
                         waitToClose: false,
                         modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
                     });
@@ -258,6 +165,7 @@ class CreateCampaign extends React.Component {
                     });
                   return false;
                }
+
                for (let i = 0; i < EditorStateEn.blocks.length; i++){
                   for(let j = 0; j < getEditorStateEn().blocks[i].text.length; j++){
                     if (/^[А-Яа-я]*$/.test(getEditorStateEn().blocks[i].text[j]) === true){
@@ -279,10 +187,15 @@ class CreateCampaign extends React.Component {
               qrImgUrl = await this.uploadImageS3('qrCode', qrImgID);
               if(qrImgUrl) this.setState({imgUrl:imgUrl});
             }
+
             if(imgUrl) {
-              let campaignData = {mainImageURL:imgUrl, 
-               qrCodeImageURL:qrImgUrl} 
-               await this.addCampaignToDb(campaignData);
+              
+            
+                    console.log(imgUrl);
+
+                    let campaignData = {mainImageURL:imgUrl, 
+                    qrCodeImageURL:qrImgUrl} 
+                     await this.addCampaignToDb(campaignData);
             }
         } catch(error)  {
             console.log(error);
@@ -291,7 +204,13 @@ class CreateCampaign extends React.Component {
 
     async addCampaignToDb(campaignData) {
         try {
-            campaignData.key = this.state.key;
+            let help_value = '';  
+            for(let i = 0; i < this.state.orgEn.length; i++){
+              if ((/^[A-Za-z0-9]*$/.test(this.state.orgEn[i]) === true)||(this.state.orgEn[i] === ' '))
+               help_value += this.state.orgEn[i];
+            }
+            let key = help_value.toLowerCase().replaceAll(" ", "-");
+            campaignData.key = key;
             campaignData.id = uuid();
             campaignData.title = {};
             campaignData.title["default"] = this.state.titleEn;
@@ -325,11 +244,6 @@ class CreateCampaign extends React.Component {
             campaignData.coinbaseCommerceURL = this.state.coinbaseCommerceURL;
             campaignData.defaultDonationAmount = parseInt(this.state.defDonationAmount,10);
             campaignData.fiatPayments = this.state.fiatPayments;
-            campaignData.email = this.state.email;
-            campaignData.countryCode = this.state.countryCode;
-            campaignData.number = this.state.number;
-            campaignData.telegram = this.state.telegram;
-            campaignData.website = this.state.website;
             let res = await axios.post('/api/campaign/add', {mydata : campaignData},
                 {headers: {"Content-Type": "application/json"}});
             if (res.data === 'success'){
@@ -363,6 +277,8 @@ class CreateCampaign extends React.Component {
             console.log('error adding campaign to the database ' + err.message);
         }
     }
+
+  
 
     async uploadImageS3 (type, imgID) {
         this.setState(
@@ -521,35 +437,36 @@ class CreateCampaign extends React.Component {
                             </Col>
                             </Row>     
                         </Form.Group>
-                        <Form.Group>
+                        <Form.Row>
+                            <Form.Group as={Col}>
                                 <Form.Label><Trans i18nKey='selectConuntry'/><span className='redAsterisk'>*</span></Form.Label>
                                 <Form.Control as="select" name='cn' value={this.state.cn} onChange={this.handleChange}>
                                     {countries.map((data) =>
                                         <option value={data.value}>{data.text}</option>
                                     )}
                                 </Form.Control>
-                        </Form.Group>
-                        <Form.Group> 
-                          <Form.Label>{i18n.t('website')}</Form.Label>
-                          <Form.Control required type="text" className="createFormPlaceHolder" value={this.state.website}
-                            placeholder={i18n.t('website')} name='website' onChange={this.handleChange}/>
-                        </Form.Group> 
+                            </Form.Group>
+                        </Form.Row>
+                        <hr/>
                         <div className='titles'><Trans i18nKey='campaignDetails'/></div>
                         <Form.Group>
-                            <Form.Group> 
                             <Form.Label>{i18n.t('howMuchYouNeed')}<span className='redAsterisk'>*</span></Form.Label>
                             <Form.Control required type="number" className="createFormPlaceHolder"
                                           value={this.state.maxAmount} placeholder={this.state.maxAmount}
                                           name='maxAmount' onChange={this.handleChange} onwheel="this.blur()" />
-                            </Form.Group> 
-                            <Form.Group>             
+                           
+                            <Form.Label><Trans i18nKey='coinbaseCommerceURL'/><span
+                                className='optional'>(<Trans i18nKey='optional'/>)</span></Form.Label>
+                            <Form.Control ria-describedby="currencyHelpBlock"
+                                          className="createFormPlaceHolder"
+                                          value={this.state.coinbaseCommerceURL} placeholder={this.state.coinbaseCommerceURL}
+                                          name='coinbaseCommerceURL' onChange={this.handleChange} onwheel="this.blur()" />
+
                             <Form.Label><Trans i18nKey='defDonationAmount'/><span
                                 className='redAsterisk'></span></Form.Label>
                             <Form.Control required type="number" className="createFormPlaceHolder"
                                           value={this.state.defDonationAmount} placeholder={this.state.defDonationAmount}
                                           name='defDonationAmount' onChange={this.handleChange} onwheel="this.blur()" />
-                            </Form.Group>
-                            <Form.Group>
                             <Row>
                             <Col xs="auto">
                             <Form.Label><Trans i18nKey='fiatPayments'/><span
@@ -560,8 +477,8 @@ class CreateCampaign extends React.Component {
                                         value={this.state.fiatPayments} placeholder={this.state.fiatPayments}
                                         name='fiatPayments' onChange={this.handleChange} onwheel="this.blur()"/>
                             </Col>
-                            </Row> 
-                            </Form.Group>
+                            </Row>
+
                         </Form.Group>
                         <Form.Group>
                             <Form.Label><Trans i18nKey='selectCoverImage'/><span className='redAsterisk'>*</span></Form.Label>
@@ -645,49 +562,6 @@ class CreateCampaign extends React.Component {
                             <TextEditorRu />
                             </Col>   
                             </Row>
-                         <Form.Group>
-                         <Form.Label><Trans i18nKey='campaignURL'/><span className='redAsterisk'>*</span></Form.Label>  
-                         <Form.Control required type="text" className="createFormPlaceHolder"
-                           placeholder={i18n.t('campaignURLPlaceHolder')} name='campaignURL' value={this.state.key} onChange={this.handleChange}/>
-                         </Form.Group>
-                         </Form.Group> 
-                        <div className='titles'><Trans i18nKey='contactInform'/></div>
-                        <Form.Group>
-                         <Form.Group>  
-                          <Form.Label><Trans i18nKey='email'/><span className='redAsterisk'>*</span></Form.Label>
-                          <Form.Control required type="text" className="createFormPlaceHolder"
-                           placeholder={i18n.t('contactPlaceHolder')} name='email' value={this.state.email} onChange={this.handleChange}/>
-                         </Form.Group>
-                         <Form.Group>  
-                          <Form.Label><Trans i18nKey='phoneNumber'/></Form.Label>
-                          <Row>
-                            <Col xs = {5}>  
-                            <Form.Label><Trans i18nKey='countryCode'/><span className='redAsterisk'></span></Form.Label>
-                            </Col>
-                            <Col xs={7}> 
-                            <Form.Label><Trans i18nKey='number'/><span className='redAsterisk'></span></Form.Label> 
-                            </Col>
-                          </Row>
-                          <Row>
-                           <Col xs = {5}>
-                           <Form.Control required as="select" name='countryCode' value={this.state.countryCode} onChange={this.handleChange}>
-                                <option> </option>
-                                {countries.map((data) => 
-                                   <option disabled={getCountryCodeForRegionCode(data.value) === 0} value={"+" + getCountryCodeForRegionCode(data.value)} >{data.text} {"+" + getCountryCodeForRegionCode(data.value)}</option>
-                                    )}
-                                </Form.Control>
-                           </Col> 
-                           <Col xs={7}>
-                            <Form.Control required type="text" className="createFormPlaceHolder"
-                             placeholder={i18n.t('contactPlaceHolder')} name='number' value={this.state.n} onChange={this.handleChange}/>
-                           </Col>  
-                          </Row> 
-                         </Form.Group>  
-                         <Form.Group>  
-                          <Form.Label>Telegram</Form.Label>
-                          <Form.Control required type="text" className="createFormPlaceHolder"
-                           placeholder={i18n.t('contactPlaceHolder')} name='telegram' value={this.state.telegram} onChange={this.handleChange}/>
-                         </Form.Group>           
                         </Form.Group>
                         <Row>
                           <Col>    
@@ -703,11 +577,145 @@ class CreateCampaign extends React.Component {
         );
     }
 
+    async checkWLTron(chainId) {
+        //is white list enabled?
+        try {
+            console.log(`Tron initialized. Account1: ${window.tronWeb.toHex(window.tronAdapter.address)}`);
+            console.log(`Loading HEOParameters on ${chainId}`);
+            let abi = (await import("../remote/" + chainId + "/HEOParameters")).abi;
+            let address = (await import("../remote/" + chainId + "/HEOParameters")).address;
+            var HEOParameters = await window.tronWeb.contract(abi, address);
+            let wlEnabled = await HEOParameters.methods.intParameterValue(11).call();
+            if(wlEnabled > 0) {
+                console.log('WL enabled')
+                //is user white listed?
+                let whiteListed = await HEOParameters.methods.addrParameterValue(5, window.tronWeb.toHex(window.tronAdapter.address).toLowerCase()).call();
+                if(whiteListed > 0) {
+                    this.setState({
+                        isLoggedInTron : true,
+                        whiteListed: true,
+                        tronAccountAddress: window.tronWeb.toHex(window.tronAdapter.address),
+                        showModal: false,
+                        goHome: false
+                    });
+                    console.log(`User logged in and in WL`)
+                } else {
+                    console.log(`User not in WL`)
+                    //user is not in the white list
+                    this.setState({
+                        goHome: true,
+                        showModal:true,
+                        isLoggedInTron: true,
+                        whiteListed: false,
+                        modalTitle: 'nonWLTitle',
+                        modalMessage: 'nonWLMessage',
+                        modalIcon: 'XCircle', modalButtonMessage: 'closeBtn',
+                        modalButtonVariant: "#E63C36", waitToClose: false
+                    });
+                }
+            } else {
+                console.log('WL disabled')
+                //white list is disabled
+                this.setState({
+                    isLoggedInTron : true,
+                    whiteListed: true,
+                    goHome: false,
+                    showModal: false
+                });
+            }
+        } catch (err) {
+            console.log(err);
+            this.setState({
+                showModal: true, modalTitle: 'Failed',
+                errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
+                modalButtonVariant: '#E63C36', waitToClose: false,
+                modalMessage: 'blockChainConnectFailed'
+            });
+        }
+    }
+
+    async checkWL(chainId) {
+        //is white list enabled?
+        try {
+            if(!this.state.web3 || !this.state.accounts) {
+                console.log(`Web3 not initialized`);
+                await initWeb3(chainId, this);
+            }
+            console.log(`Web 3 initialized. Account1: ${this.state.accounts[0]}`);
+            console.log(`Loading HEOParameters on ${chainId}`);
+            let abi = (await import("../remote/" + chainId + "/HEOParameters")).abi;
+            let address = (await import("../remote/" + chainId + "/HEOParameters")).address;
+            var HEOParameters = new this.state.web3.eth.Contract(abi, address);
+            let wlEnabled = await HEOParameters.methods.intParameterValue(11).call();
+            let accounts = await this.state.web3.eth.getAccounts();
+            if(wlEnabled > 0) {
+                console.log('WL enabled')
+                //is user white listed?
+                this.setState({accounts: accounts});
+                let whiteListed = await HEOParameters.methods.addrParameterValue(5, accounts[0].toLowerCase()).call();
+                if(whiteListed > 0) {
+                    this.setState({
+                        isLoggedIn : true,
+                        whiteListed: true,
+                        ethAccountAddress: accounts[0],
+                        showModal: false,
+                        goHome: false
+                    });
+                    console.log(`User logged in and in WL`)
+                } else {
+                    console.log(`User not in WL`)
+                    //user is not in the white list
+                    this.setState({
+                        goHome: true,
+                        showModal:true,
+                        isLoggedIn: true,
+                        whiteListed: false,
+                        modalTitle: 'nonWLTitle',
+                        modalMessage: 'nonWLMessage',
+                        modalIcon: 'XCircle', modalButtonMessage: 'closeBtn',
+                        modalButtonVariant: "#E63C36", waitToClose: false
+                    });
+                }
+            } else {
+                console.log('WL disabled')
+                //white list is disabled
+                this.setState({
+                    isLoggedIn : true,
+                    whiteListed: true,
+                    goHome: false,
+                    showModal: false,
+                    beneficiaryAddress: accounts[0]
+                });
+            }
+        } catch (err) {
+            console.log(err);
+            this.setState({
+                showModal: true, modalTitle: 'Failed',
+                errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
+                modalButtonVariant: '#E63C36', waitToClose: false,
+                modalMessage: 'blockChainConnectFailed'
+            });
+        }
+    }
+
     async componentDidMount() {
         setEditorStateEn({}, false);
         setEditorStateRu({}, false);
         ReactGA.send({ hitType: "pageview", page: this.props.location.pathname });
+        let chains = config.get("CHAINS");
+        let chainId = config.get("CHAIN");
+        let tronChainId = config.get("TRON_CHAIN");
+        let chainConfig = chains[chainId];
+        let tronChainConfig = chains[tronChainId];
+        
+        if(window.ethereum) await initWeb3Modal(chainId, this);
+        if(window.tron) await initTronadapter();
         this.setState({
+                chains: chains,
+                chainId: chainId,
+                chainConfig: chainConfig,
+                tronChainId: tronChainId,
+                 tronChainConfig: tronChainConfig,
                 isLoggedIn : false,
                 whiteListed: false
                });
