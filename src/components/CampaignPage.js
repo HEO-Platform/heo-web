@@ -1133,12 +1133,12 @@ class CampaignPage extends Component {
                                         {this.state.chains_coins.map((item, i) =>
                                             <span className='coinRewardInfo'><img src={IMG_MAP[item.coin.name]} width={20} height={20}alt='some value'style={{marginRight:5, marginLeft:5}} /> </span>
                                             )}
-                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={ethIcon} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
-                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={btcLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
-                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={daiLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
-                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={usdcIcon} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
-                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={usdtLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
-                                        {this.state.campaign.coinbaseCommerceURL && <span className='coinRewardInfo'><img src={ltcLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        {<span className='coinRewardInfo'><img src={ethIcon} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        {<span className='coinRewardInfo'><img src={btcLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        {<span className='coinRewardInfo'><img src={daiLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        {<span className='coinRewardInfo'><img src={usdcIcon} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        {<span className='coinRewardInfo'><img src={usdtLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        {<span className='coinRewardInfo'><img src={ltcLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
                                     </p>
                                 </div>
                             </Row>
@@ -1192,7 +1192,7 @@ class CampaignPage extends Component {
                                                 () => {
                                                     this.handleDonateCoinbaseCommerce();
                                                 }
-                                            } >USDC (ERC20)</Dropdown.Item>
+                                            } ><img src={usdcIcon} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} />USDC (ERC20)</Dropdown.Item>
 
                                             <Dropdown.Item className='coinRewardInfo' onClick={
                                                 () => {
