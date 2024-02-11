@@ -181,6 +181,9 @@ class CampaignPage extends Component {
                     modalMessage: modalMessage,
                 })
             })
+            if(!donateAmount) {
+                donateAmount = 0;
+            }
             let baseAmount = this.state.campaign.raisedAmount ? parseFloat(this.state.campaign.raisedAmount) : 0;
             let fiatDonations = this.state.campaign.fiatDonations ? parseFloat(this.state.campaign.fiatDonations) : 0;
             let raisedOnCoinbase = this.state.campaign.raisedOnCoinbase ? parseFloat(this.state.campaign.raisedOnCoinbase) : 0;
@@ -1270,7 +1273,7 @@ class CampaignPage extends Component {
             }
             contentState[i18n.language] = convertFromRaw(campaign.descriptionEditor["default"]);
         } else {
-            
+
            // contentState[i18n.language] = convertFromRaw(campaign.descriptionEditor);
         }
 
