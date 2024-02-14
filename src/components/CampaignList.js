@@ -146,7 +146,7 @@ class CampaignList extends Component {
             })
         })
         campaigns.forEach( campaign => {
-            const found = donates.find(element => element._id == campaign._id);
+            const found = donates.find(element => element._id === campaign._id);
             let totalQuantity = found ? found.totalQuantity : 0;
             let raisedAmount = campaign.raisedAmount ? parseFloat(campaign.raisedAmount) : 0;
             let fiatDonations = campaign.fiatDonations ? parseFloat(campaign.fiatDonations) : 0;
@@ -158,7 +158,7 @@ class CampaignList extends Component {
             let dedupedCoinNames = [];
             for(var chain in campaign.addresses){
              for(let i = 0; i < that.state.coinslist.length; i++){
-              if (that.state.coinslist[i].chain == chain){
+              if (that.state.coinslist[i].chain === chain){
                let coinName = that.state.coinslist[i].coin.name;
                if(!dedupedCoinNames.includes(coinName)) {
                 dedupedCoinNames.push(coinName);
@@ -211,17 +211,17 @@ class CampaignList extends Component {
                                                 <Col className='buttonCol'>
                                                     <div id='acceptingBtn' className='cardButtons'><p><Trans i18nKey='accepting'/></p>
                                                         <p id='currencyName'>
-                                                            {this.state.fiatPaymentEnabled && item.stripeURL && <span className='coinRewardInfo'><img src={visaMcLogo} width={21} height={20} style={{marginRight:5, marginLeft:5}} /> </span>}
+                                                            {this.state.fiatPaymentEnabled && item.stripeURL && <span className='coinRewardInfo'><img src={visaMcLogo} width={21} height={20} alt="for sell" style={{marginRight:5, marginLeft:5}} /> </span>}
                                                             {item.dedupedCoinNames.map((coin, j) =>
-                                                                <span key={item._id + "-" + coin}><img src={IMG_MAP[coin]} width={20} height={20} style={{marginLeft:5, marginRight:5}} /> </span>
+                                                                <span key={item._id + "-" + coin}><img src={IMG_MAP[coin]} width={20} height={20} alt="for sell" style={{marginLeft:5, marginRight:5}} /> </span>
                                                             )}
 
-                                                            <span className='coinRewardInfo'><img src={ethIcon} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span>
-                                                            <span className='coinRewardInfo'><img src={btcLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span>
-                                                            <span className='coinRewardInfo'><img src={daiLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span>
-                                                            <span className='coinRewardInfo'><img src={usdcIcon} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span>
-                                                            <span className='coinRewardInfo'><img src={usdtLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span>
-                                                            <span className='coinRewardInfo'><img src={ltcLogo} width={20} height={20} style={{marginRight:5, marginLeft:5}} /> </span>
+                                                            <span className='coinRewardInfo'><img src={ethIcon} width={20} height={20} alt="for sell" style={{marginRight:5, marginLeft:5}} /> </span>
+                                                            <span className='coinRewardInfo'><img src={btcLogo} width={20} height={20} alt="for sell" style={{marginRight:5, marginLeft:5}} /> </span>
+                                                            <span className='coinRewardInfo'><img src={daiLogo} width={20} height={20} alt="for sell" style={{marginRight:5, marginLeft:5}} /> </span>
+                                                            <span className='coinRewardInfo'><img src={usdcIcon} width={20} height={20} alt="for sell" style={{marginRight:5, marginLeft:5}} /> </span>
+                                                            <span className='coinRewardInfo'><img src={usdtLogo} width={20} height={20} alt="for sell" style={{marginRight:5, marginLeft:5}} /> </span>
+                                                            <span className='coinRewardInfo'><img src={ltcLogo} width={20} height={20} alt="for sell" style={{marginRight:5, marginLeft:5}} /> </span>
 
                                                         </p>
                                                     </div></Col>

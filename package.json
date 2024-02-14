@@ -69,6 +69,7 @@
   "devDependencies": {
     "@types/crypto-js": "^3.1.43",
     "microbundle": "^0.13.0",
+    "classnames": "2.3.1",
     "tronweb-typings": "^1.0.1",
     "typescript": "^3.9.9"
   },
