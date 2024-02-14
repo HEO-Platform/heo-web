@@ -1,12 +1,12 @@
 // React component for displaying finished campaigns
-import React, { Component } from 'react'; 
-import { Link } from 'react-router-dom';
+import React, { Component, createRef } from 'react'; 
+import { ChevronLeft, ChevronRight} from 'react-bootstrap-icons';
 import '../css/finishedCampaigns.css';
-import { Card, Container, ProgressBar } from 'react-bootstrap';
+import cn from "classnames";
+import "../css/styles.css";
+import { Card, Container, ProgressBar,Row, Button, Col } from 'react-bootstrap';
 import { i18nString, DescriptionPreview } from '../util/Utilities';
-import { Trans } from 'react-i18next';
 import i18n from '../util/i18n';
-import ReactGA from "react-ga4";
 import axios from 'axios';
 
 class FinishedCampaigns extends Component {
@@ -16,22 +16,62 @@ class FinishedCampaigns extends Component {
             campaigns: [],
             showError:false,
             errorMessage:"",
-            lang:''        
+            lang:'',
+            canScrollLeft:true,
+            canScrollRight:false,
         };
+        this.scrollRef = createRef(null);
     }
-    
+
+      
     async componentDidMount() {
-        this.setState({
+        let result = await axios.post('/api/campaign/getCountInFinishPage', {headers: {"Content-Type": "application/json"}});
+        window.finishCompPerPg = result.data;
+         this.setState({
             campaigns : (await this.getCampaigns())
         });
     }
-
+  
+    checkForScrollPosition = async(e) => {
+        let scrollLeft = e.target.scrollLeft;
+        let scrollWidth = e.target.scrollWidth;
+        let clientWidth = e.target.clientWidth;
+        let canScrollRight = (scrollLeft > 0);
+        let canScrollLeft = (scrollWidth > (scrollLeft + clientWidth + 2));
+        if (canScrollLeft !== this.state.canScrollLeft)
+        this.setState({canScrollLeft:canScrollLeft}); 
+        if (canScrollRight !== this.state.canScrollRight)
+        this.setState({canScrollRight:canScrollRight}); 
+        if ((canScrollLeft === false)&&((window.firstFinishComp + window.finishCompPerPg) < window.finishCompCount)){
+            if((window.firstFinishComp + window.finishCompPerPg + 3)> window.finishCompCount){
+                window.firstFinishComp =  window.finishCompCount+ window.firstFinishComp - window.finishCompPerP;
+            }
+            else window.firstFinishComp =  window.firstFinishComp +3;    
+            e.target.scrollLeft = 10;       
+            this.setState({
+                campaigns : (await this.getCampaigns())
+            });
+        }
+        
+        else if((canScrollRight === false)&&(window.firstFinishComp > 0)){
+            window.firstFinishComp =  window.firstFinishComp - 3;
+            if (window.firstFinishComp < 0) window.firstFinishComp = 0;
+            e.target.scrollLeft = 10;
+            this.setState({
+                campaigns : (await this.getCampaigns())
+            });
+        }
+      
+    }
+    
     async getCampaigns() {
         var campaigns = [];
         var errorMessage = 'Failed to load campaigns';
-        await axios.post('/api/campaign/loadFinishedCampaigns')
+        let data = {startRec : window.firstFinishComp, compaignsCount:window.finishCompPerPg};
+        await axios.post('/api/campaign/loadFinishedCampaigns', data, {headers: {"Content-Type": "application/json"}})
         .then(res => {
-          campaigns = res.data;
+          campaigns = res.data.curArr;
+          window.finishCompCount = res.data.arCount;
         }).catch(err => {
             if (err.response) {
                 errorMessage = 'Failed to load campaigns. We are having technical difficulties'}
@@ -44,7 +84,6 @@ class FinishedCampaigns extends Component {
                 errorMessage,
             })
         })
-        
         campaigns.forEach( campaign => {
             let raisedAmount = campaign.raisedAmount ? parseFloat(campaign.raisedAmount) : 0;
             let fiatDonations = campaign.fiatDonations ? parseFloat(campaign.fiatDonations) : 0;
@@ -60,10 +99,13 @@ class FinishedCampaigns extends Component {
 
     render() {
         return (
-            
-                <Container id="finishedCampaignsMainDiv">
-                {this.state.campaigns.map((item, i) =>    
-                        <Card key={i}>
+            <div>
+            <div className="finishedCampaignsMainDiv" >
+               <ul className="list" ref = {this.scrollRef} onScroll={this.checkForScrollPosition}> 
+                {this.state.campaigns.map((item, i) =>  
+                 <Container id="finishedCampaignsMainDiv">
+                 <li className="item">
+                       <Card key={i}>
                             <Card.Body>
                                 <div id='finishedCardHeader'>
                                     <Card.Img src={item.mainImageURL} fluid='true' />
@@ -78,7 +120,7 @@ class FinishedCampaigns extends Component {
                                     </svg>
                                 </div>
                                 <Card.Title>{i18nString(item.title, i18n.language)}</Card.Title>
-                                <Card.Text>
+                                <Card.Text><span className={"h2"}>{i18nString(item.org, i18n.language)}</span><br/>
                                     {`${DescriptionPreview(item.description, i18n.language)}...`}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                                 </Card.Text>
                                 <p id='progressBarLabel'><span id='progressBarLabelStart'>
@@ -86,8 +128,25 @@ class FinishedCampaigns extends Component {
                             <ProgressBar now={100 * item.raisedAmount/item.maxAmount} />
                             </Card.Body>
                         </Card>
+                        
+                        </li>
+                        </Container>   
                 )}
-                </Container>
+                </ul>
+         </div>
+         
+         {(this.state.campaigns.length > 3)&&<Row>
+         <Col>
+          <Button style={{cursor:"pointer"}} onClick={() => this.scrollRef.current?.scrollBy({ left: 350, behavior: "smooth" })} 
+           className={cn("button","buttonLeft",{"button--hidden":!this.state.canScrollLeft})} disabled = {!this.state.canScrollLeft}>
+            <span><ChevronLeft/></span></Button>  
+          <Button style={{cursor:"pointer"}}onClick={() => this.scrollRef.current?.scrollBy({ left: -350, behavior: "smooth" })} 
+           className={cn("button","buttonRight",{"button--hidden":!this.state.canScrollRight})} disabled={!this.state.canScrollRight}>
+            <span><ChevronRight/></span></Button>  
+          </Col>
+         </Row>}
+         <Row><Col><Button style={{backgroundColor : "rgba(255,255,255,.1)", borderColor : "rgba(255,255,255,.1)"}}></Button></Col></Row>    
+        </div>        
             
         );
     };   

@@ -260,9 +260,16 @@ class ServerLib {
 
     async handleLoadFinishedCampaigns(req, res, Sentry, DB) {
         try{
-            const myCollection = await DB.collection('campaigns');
-            const campaigns = await myCollection.find({successful: true}, {limit:3, sort:{raisedAmount: -1, raisedOnCoinbase: -1}});
-            const result = await campaigns.toArray();
+            
+            let pipeline = [
+                { $match: {successful: true, deleted:{ $exists : false}}},
+                 {$sort: {raisedAmount: -1, raisedOnCoinbase: -1, _id: 1}},
+                 { $skip : req.body.startRec},
+                 { $limit:req.body.compaignsCount}
+            ];
+            let curArr =  await DB.collection('campaigns').aggregate(pipeline).toArray();
+            let arCount = await DB.collection('campaigns').count({successful: true, deleted:{ $exists : false }});    
+            let result = {curArr:curArr, arCount:arCount};
             res.send(result);
         } catch (err) {
             console.log(err);
@@ -455,6 +462,18 @@ class ServerLib {
         try {
             let configCollection = await DB.collection('global_configs');
             let fiatSettingsRAW = await configCollection.find({_id : 'campaigns_per_page'});
+            let fiatSettings = await fiatSettingsRAW.toArray();
+            res.send(fiatSettings[0].count);
+        } catch (err){
+            Sentry.captureException(new Error(err));
+            res.sendStatus(500);
+        } 
+    }
+
+    async handleGetCountInFinashpage(res, Sentry, DB) {
+        try {
+            let configCollection = await DB.collection('global_configs');
+            let fiatSettingsRAW = await configCollection.find({_id : 'finish_canpaigns_per_page'});
             let fiatSettings = await fiatSettingsRAW.toArray();
             res.send(fiatSettings[0].count);
         } catch (err){

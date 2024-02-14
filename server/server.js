@@ -258,6 +258,11 @@ APP.post('/api/campaign/getCountInPage', (req, res) => {
     serverLib.handleGetCountInPage(res, Sentry, DB);
 });
 
+APP.post('/api/campaign/getCountInFinishPage', (req, res) => {
+    const DB = CLIENT.db(DBNAME);
+    serverLib.handleGetCountInFinashpage(res, Sentry, DB);
+});
+
 APP.post('/api/campaign/loadOne', (req, res) => {
     const DB = CLIENT.db(DBNAME);
     serverLib.handleLoadOneCampaign(req, res, Sentry, DB);
