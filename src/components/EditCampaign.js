@@ -101,7 +101,7 @@ class EditCampaign extends React.Component {
         else if (name === 'TronCheckbox')
         this.setState({isInTron: checked});
         else if(e.target.name === 'number'){
-            help_value = '';  
+            help_value = '';
             for(let i = 0; i < e.target.value.length; i++){
              if ((/^[-0-9]*$/.test(e.target.value[i]) === true)||(e.target.value[i] === ' '))
               help_value += e.target.value[i];
@@ -174,9 +174,9 @@ class EditCampaign extends React.Component {
                      waitToClose: false,
                      modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
                  });
-                 return false; 
+                 return false;
             }
-         } 
+         }
         if(!this.state.titleEn) {
             this.setState(
                 {showModal:true, modalTitle: 'requiredFieldsTitle',
@@ -313,15 +313,18 @@ class EditCampaign extends React.Component {
               .send({from:window.tronAdapter._wallet.tronWeb.defaultAddress.hex,callValue:0,feeLimit:15000000000,shouldPollResponse:false});
             let txnObject;
             let m = 1;
-            do{
-             console.log("Waiting for transaction record");
-             txnObject = await window.tronWeb.trx.getTransactionInfo(result);
-             if(txnObject){
-               if (txnObject.receipt)  break;
-             }
-            }while(m !== 2);
-            if(txnObject.receipt.result !== "SUCCESS") return false;
-            else{
+            do {
+                console.log("Waiting for transaction record");
+                txnObject = await window.tronWeb.trx.getTransactionInfo(result);
+                if(txnObject){
+                   if (txnObject.receipt)  break;
+                }
+                // wait for 5 seconds
+                await new Promise(resolve => setTimeout(resolve, 5000));
+            } while(m !== 2);
+            if(txnObject.receipt.result !== "SUCCESS") {
+                return false;
+            } else {
                 this.state.line_accounts[this.state.tronChainId]  = window.tronAdapter._wallet.tronWeb.defaultAddress.hex;
                 return (true);
             }
@@ -367,8 +370,8 @@ class EditCampaign extends React.Component {
                       this.state.addresses[this.state.tronChainId] = transEvent[0].result.campaignAddress;
                       this.state.line_accounts[this.state.tronChainId]  = window.tronAdapter._wallet.tronWeb.defaultAddress.hex;
                       this.state.maxAmount_old = this.state.maxAmount;
-                      
-                      let res =await this.updateCampaign();  
+
+                      let res =await this.updateCampaign();
                       if (res === false)
                         this.setState({showModal : true,
                           modalTitle: 'failed',
@@ -381,7 +384,7 @@ class EditCampaign extends React.Component {
                         modalMessage: 'updateSuccessfull',
                         modalIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
                         modalButtonVariant: '#588157', waitToClose: false
-                      });    
+                      });
                       return (true);
                     } else {
                         this.setState({showModal : true,
@@ -495,7 +498,7 @@ class EditCampaign extends React.Component {
                         this.state.addresses[this.state.chainId] = result.events.CampaignDeployed.returnValues.campaignAddress;
                         this.state.line_accounts[this.state.chainId]  = this.state.accounts[0];
                         this.state.maxAmount_old = this.state.maxAmount;
-                        let res =await this.updateCampaign();  
+                        let res =await this.updateCampaign();
                         if (res === false)
                           this.setState({showModal : true,
                             modalTitle: 'failed',
@@ -508,7 +511,7 @@ class EditCampaign extends React.Component {
                           modalMessage: 'updateSuccessfull',
                           modalIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
                           modalButtonVariant: '#588157', waitToClose: false
-                        });  
+                        });
                       return (true);
                     } else {
                         this.setState({showModal : true,
@@ -516,7 +519,7 @@ class EditCampaign extends React.Component {
                             modalMessage: 'blockChainTransactionFailed',
                             modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
                             modalButtonVariant: "#E63C36", waitToClose: false
-                        });  
+                        });
                         return false;
                     }
                 }
@@ -561,12 +564,12 @@ class EditCampaign extends React.Component {
             data.telegram = this.state.telegram;
             data.website = this.state.website;
             if (editorStateHasChangedEn()){
-              let EditorStateEn = await getEditorStateEn();  
+              let EditorStateEn = await getEditorStateEn();
               data.descriptionEditor["en"] = EditorStateEn;
               data.descriptionEditor["default"] = EditorStateEn;
             }
             if (editorStateHasChangedRu()){
-                let EditorStateRu = await getEditorStateRu();  
+                let EditorStateRu = await getEditorStateRu();
                 data.descriptionEditor["ru"] = EditorStateRu;
             }
             data.maxAmount = this.state.maxAmount;
@@ -727,11 +730,11 @@ class EditCampaign extends React.Component {
                                 )}
                                 </Form.Control>
                         </Form.Group>
-                        <Form.Group> 
+                        <Form.Group>
                           <Form.Label>{i18n.t('website')}</Form.Label>
                           <Form.Control required type="text" className="createFormPlaceHolder" value={this.state.website}
                             placeholder={i18n.t('website')} name='website' onChange={this.handleChange}/>
-                        </Form.Group> 
+                        </Form.Group>
                         <div className='titles'> <Trans i18nKey='campaignDetails'/></div>
                         <Form.Group>
                             <Form.Label>{i18n.t('howMuchYouNeed')}<span className='redAsterisk'>*</span></Form.Label>
@@ -839,41 +842,41 @@ class EditCampaign extends React.Component {
                         </Form.Group>
                         <div className='titles'><Trans i18nKey='contactInform'/></div>
                         <Form.Group>
-                         <Form.Group>  
+                         <Form.Group>
                           <Form.Label><Trans i18nKey='email'/><span className='redAsterisk'>*</span></Form.Label>
                           <Form.Control required type="text" className="createFormPlaceHolder"
                            placeholder={i18n.t('contactPlaceHolder')} name='email' value={this.state.email} onChange={this.handleChange}/>
                          </Form.Group>
-                         <Form.Group>  
+                         <Form.Group>
                           <Form.Label><Trans i18nKey='phoneNumber'/></Form.Label>
                           <Row>
-                            <Col xs = {5}>  
+                            <Col xs = {5}>
                             <Form.Label><Trans i18nKey='countryCode'/><span className='redAsterisk'></span></Form.Label>
                             </Col>
-                            <Col xs={7}> 
-                            <Form.Label><Trans i18nKey='number'/><span className='redAsterisk'></span></Form.Label> 
+                            <Col xs={7}>
+                            <Form.Label><Trans i18nKey='number'/><span className='redAsterisk'></span></Form.Label>
                             </Col>
                           </Row>
                           <Row>
                            <Col xs = {5}>
                            <Form.Control required as="select" name='countryCode' value={this.state.countryCode} onChange={this.handleChange}>
                                 <option> </option>
-                                {countries.map((data) => 
+                                {countries.map((data) =>
                                    <option disabled={getCountryCodeForRegionCode(data.value) === 0} value={"+" + getCountryCodeForRegionCode(data.value)} >{data.text} {"+" + getCountryCodeForRegionCode(data.value)}</option>
                                     )}
                                 </Form.Control>
-                           </Col> 
+                           </Col>
                            <Col xs={7}>
                             <Form.Control required type="text" className="createFormPlaceHolder"
                              placeholder={i18n.t('contactPlaceHolder')} name='number' value={this.state.number} onChange={this.handleChange}/>
-                           </Col>  
-                          </Row> 
-                         </Form.Group>  
-                         <Form.Group>  
+                           </Col>
+                          </Row>
+                         </Form.Group>
+                         <Form.Group>
                           <Form.Label>Telegram</Form.Label>
                           <Form.Control required type="text" className="createFormPlaceHolder"
                            placeholder={i18n.t('contactPlaceHolder')} name='telegram' value={this.state.telegram} onChange={this.handleChange}/>
-                         </Form.Group>           
+                         </Form.Group>
                         </Form.Group>
                             <Row>
                              <Col>
