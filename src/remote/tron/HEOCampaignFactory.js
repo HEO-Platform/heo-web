@@ -3,7 +3,7 @@ const abi=[
     {
         "inputs": [
             {
-                "internalType": "contract HEODAO",
+                "internalType": "address",
                 "name": "dao",
                 "type": "address"
             }
@@ -12,58 +12,31 @@ const abi=[
         "type": "constructor"
     },
     {
-        "anonymous": false,
         "inputs": [
             {
-                "indexed": true,
-                "internalType": "address",
-                "name": "campaignAddress",
-                "type": "address"
-            },
-            {
-                "indexed": true,
                 "internalType": "address",
                 "name": "owner",
                 "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "beneficiary",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "maxAmount",
-                "type": "uint256"
             }
         ],
-        "name": "CampaignDeployed",
-        "type": "event"
+        "name": "OwnableInvalidOwner",
+        "type": "error"
     },
     {
         "inputs": [
             {
-                "internalType": "uint256",
-                "name": "maxAmount",
-                "type": "uint256"
-            },
-            {
-                "internalType": "address payable",
-                "name": "beneficiary",
+                "internalType": "address",
+                "name": "account",
                 "type": "address"
-            },
-            {
-                "internalType": "string",
-                "name": "metaData",
-                "type": "string"
             }
         ],
-        "name": "createCampaign",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
+        "name": "OwnableUnauthorizedAccount",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "ReentrancyGuardReentrantCall",
+        "type": "error"
     },
     {
         "anonymous": false,
@@ -85,21 +58,19 @@ const abi=[
         "type": "event"
     },
     {
-        "inputs": [],
-        "name": "renounceOwnership",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
         "inputs": [
             {
-                "internalType": "address",
-                "name": "newOwner",
+                "internalType": "uint256",
+                "name": "maxAmount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address payable",
+                "name": "beneficiary",
                 "type": "address"
             }
         ],
-        "name": "transferOwnership",
+        "name": "createCampaign",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -116,8 +87,29 @@ const abi=[
         ],
         "stateMutability": "view",
         "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "renounceOwnership",
+        "outputs": [],
+        "stateMutability": "pure",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "newOwner",
+                "type": "address"
+            }
+        ],
+        "name": "transferOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
     }
 ];
-const address = "TNgGB4t616EGAx1dyhU1TWvhxoWVpFp6dF";
+const address = "TFE9nVsohRHMpE8g72hdbXxFSxTyYJHfD1";
+//new TKyoMVJwVnyeUTF63EYJVDAWEFHqdTWwaA
 
 export {abi, address};
