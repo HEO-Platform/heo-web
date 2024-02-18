@@ -3,6 +3,7 @@ on:
     push:
       branches:
         - dev
+        - stage
     workflow_dispatch:
 
 jobs:
@@ -22,14 +23,14 @@ jobs:
           uses: actions/cache@v2
           with:
               path: node_modules
-              key: ${{ runner.OS }}-build-${{ hashFiles('package-lock.json') }}
+              key: ${{ runner.OS }}-build-${{ hashFiles('package.json') }}
 
         - name: cache server node modules
           id: cache_server_deps
           uses: actions/cache@v2
           with:
             path: server/node_modules
-            key: ${{ runner.OS }}-build-${{ hashFiles('server/package-lock.json') }}
+            key: ${{ runner.OS }}-build-${{ hashFiles('server/package.json') }}
 
         - name: install dependencies
           if: steps.cache_ui_deps.outputs.cache-hit != 'true'
@@ -66,7 +67,9 @@ jobs:
           run: |
                 pip install awsebcli --upgrade --user
 
-        - name: Use eb cli to deploy to Elastic Beanstalk
+        - name: Deploy to dev.heo.finance
+          # only run if branch is dev
+          if: github.ref == 'refs/heads/dev'
           env:
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -74,4 +77,15 @@ jobs:
           run: |
                 eb init ${{ vars.EB_APP_NAME }} -r ${{ vars.AWS_REGION }} -p "Node.js 18 running on 64bit Amazon Linux 2023"
                 eb deploy ${{ vars.EB_ENV_NAME }} --region ${{ vars.AWS_REGION }} --label ${{ github.sha }}
+
+        - name: Deploy to stage.heo.finance
+          # only run if branch is dev
+          if: github.ref == 'refs/heads/stage'
+          env:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_REGION: ${{ vars.AWS_REGION }}
+          run: |
+            eb init ${{ vars.EB_APP_NAME }} -r ${{ vars.AWS_REGION }} -p "Node.js 18 running on 64bit Amazon Linux 2023"
+            eb deploy ${{ vars.EB_ENV_NAME }} --region ${{ vars.AWS_REGION }} --label ${{ github.sha }}
 
