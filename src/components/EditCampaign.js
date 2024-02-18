@@ -298,38 +298,11 @@ class EditCampaign extends React.Component {
     async savetoTron(new_record){
       try{
         this.setState({showModal:false});
-        if(!window.tronWeb) {
-            await initTron(this.state.tronChainId , this);
-        }
-        await window.tronAdapter.connect();
-        let compressed_meta = {};
-        if(!new_record){
-            let HEOCampaign = (await import("../remote/"+ this.state.tronChainId + "/HEOCampaign")).default;
-            CAMPAIGNINSTANCE = await window.tronWeb.contract(HEOCampaign, window.tronWeb.address.fromHex(this.state.addresses[this.state.tronChainId]));
-            this.setState({showModal:true,modalTitle: 'processingWait',
-                modalMessage: 'updatingCampaignOnBlockchain', modalIcon:'HourglassSplit',
-                modalButtonVariant: "gold", waitToClose: true});
-            let result =await CAMPAIGNINSTANCE.update(window.tronWeb.toSun(this.state.maxAmount), compressed_meta)
-              .send({from:window.tronAdapter._wallet.tronWeb.defaultAddress.hex,callValue:0,feeLimit:15000000000,shouldPollResponse:false});
-            let txnObject;
-            let m = 1;
-            do {
-                console.log("Waiting for transaction record");
-                txnObject = await window.tronWeb.trx.getTransactionInfo(result);
-                if(txnObject){
-                   if (txnObject.receipt)  break;
-                }
-                // wait for 5 seconds
-                await new Promise(resolve => setTimeout(resolve, 5000));
-            } while(m !== 2);
-            if(txnObject.receipt.result !== "SUCCESS") {
-                return false;
-            } else {
-                this.state.line_accounts[this.state.tronChainId]  = window.tronAdapter._wallet.tronWeb.defaultAddress.hex;
-                return (true);
+        if (new_record) {
+            if(!window.tronWeb) {
+                await initTron(this.state.tronChainId , this);
             }
-        }
-        else {
+            await window.tronAdapter.connect();
             try {
                 this.setState({showModal:true,modalTitle: 'processingWait',
                 modalMessage: 'updatingCampaignOnBlockchain', modalIcon:'HourglassSplit',
@@ -339,9 +312,8 @@ class EditCampaign extends React.Component {
                 address = window.tronWeb.address.toHex(address);
                 var HEOCampaignFactory = await window.tronWeb.contract(abi, address);
                 try {
-                    let result = await HEOCampaignFactory.methods.createCampaign(window.tronWeb.toSun(this.state.maxAmount),
-                    window.tronAdapter._wallet.tronWeb.defaultAddress.hex, compressed_meta)
-                    .send({from:window.tronAdapter._wallet.tronWeb.defaultAddress.hex,callValue:0,feeLimit:15000000000,shouldPollResponse:false});
+                    let result = await HEOCampaignFactory.methods.createCampaign(window.tronAdapter._wallet.tronWeb.defaultAddress.hex)
+                    .send({from:window.tronAdapter._wallet.tronWeb.defaultAddress.hex, callValue:0, feeLimit:4000000000, shouldPollResponse:false});
                     this.setState({showModal:true, modalTitle: 'processingWait',
                         modalMessage: 'waitingForNetwork', modalIcon:'HourglassSplit',
                         modalButtonVariant: "gold", waitToClose: true});
@@ -434,7 +406,6 @@ class EditCampaign extends React.Component {
             if(!this.state.accounts || !this.state.web3) {
              await initWeb3(this.state.chainId, this);
             }
-            let compressed_meta = {};
             if (!new_record){
                 this.setState({showModal:true, modalTitle: 'processingWait',
                 modalMessage: 'waitingForNetwork', modalIcon: 'HourglassSplit',
@@ -443,7 +414,7 @@ class EditCampaign extends React.Component {
                 let HEOCampaign = (await import("../remote/"+ this.state.chainId + "/HEOCampaign")).default;
                 CAMPAIGNINSTANCE = new this.state.web3.eth.Contract(HEOCampaign, this.state.addresses[this.state.chainId]);
                 await CAMPAIGNINSTANCE.methods.update(
-                    this.state.web3.utils.toWei(`${this.state.maxAmount}`), compressed_meta).send({from:this.state.accounts[0]});
+                    this.state.web3.utils.toWei(`${this.state.maxAmount}`)).send({from:this.state.accounts[0]});
                 this.state.line_accounts[this.state.chainId]  = this.state.accounts[0];
                 this.setState(
                     {showModal:true, modalTitle: 'processingWait',
@@ -464,7 +435,7 @@ class EditCampaign extends React.Component {
                 var result;
                 if(window.web3Modal.cachedProvider === "binancechainwallet") {
                     HEOCampaignFactory.methods.createCampaign(
-                        this.state.web3.utils.toWei(`${this.state.maxAmount}`), this.state.accounts[0], compressed_meta)
+                        this.state.web3.utils.toWei(`${this.state.maxAmount}`), this.state.accounts[0])
                         .send({from:this.state.accounts[0]})
                         .once('transactionHash', function(transactionHash) {
                             that.setState({showModal:true, modalTitle: 'processingWait',
@@ -485,7 +456,7 @@ class EditCampaign extends React.Component {
                         });
                 } else {
                     result = await HEOCampaignFactory.methods.createCampaign(
-                            this.state.web3.utils.toWei(`${this.state.maxAmount}`), this.state.accounts[0], compressed_meta)
+                            this.state.web3.utils.toWei(`${this.state.maxAmount}`), this.state.accounts[0])
                             .send({from:this.state.accounts[0]})
                             .on('transactionHash',
                                 function(transactionHash) {
