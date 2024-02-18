@@ -6,16 +6,23 @@ branch-defaults:
     environment: heoweb-dev3
     group_suffix: null
   master:
+    application_name: heo-web
     environment: heoweb-prod
   stage:
-    environment: heoweb-stage
-    default_region: us-west-2
+    application_name: heo-web
     default_platform: Node.js 18 running on 64bit Amazon Linux 2023
+    default_region: eu-west-2
+    environment: stage
+    group_suffix: null
+environment-defaults:
+  stage:
+    branch: null
+    repository: null
 global:
-  application_name: heoweb
+  application_name: heo-web
   branch: null
   default_ec2_keyname: aws-eb
-  default_platform: Node.js 18 running on 64bit Amazon Linux 2023/6.0.1
+  default_platform: Node.js 18 running on 64bit Amazon Linux 2023
   default_region: eu-west-2
   include_git_submodules: true
   instance_profile: null
