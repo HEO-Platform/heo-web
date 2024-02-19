@@ -28,11 +28,6 @@ const abi=[
         "type": "error"
     },
     {
-        "inputs": [],
-        "name": "ReentrancyGuardReentrantCall",
-        "type": "error"
-    },
-    {
         "anonymous": false,
         "inputs": [
             {
@@ -98,6 +93,6 @@ const abi=[
         "type": "function"
     }
 ];
-const address = "TG6JPUHsQxhfSEGbJQJyeqJrfHiW1uXGkb";
+const address = "TWbkkc4B5aL9PNs5e7N7iwfxAz9yuw3JFM";
 
 export {abi, address};
