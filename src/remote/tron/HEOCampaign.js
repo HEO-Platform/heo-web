@@ -4,82 +4,27 @@ const abi= [
         "inputs": [
             {
                 "internalType": "uint256",
-                "name": "m",
+                "name": "maxAmount",
                 "type": "uint256"
             },
             {
                 "internalType": "address payable",
-                "name": "b",
+                "name": "beneficiary",
                 "type": "address"
             },
             {
-                "internalType": "address",
+                "internalType": "contract HEODAO",
                 "name": "dao",
                 "type": "address"
+            },
+            {
+                "internalType": "string",
+                "name": "metaData",
+                "type": "string"
             }
         ],
         "stateMutability": "nonpayable",
         "type": "constructor"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "target",
-                "type": "address"
-            }
-        ],
-        "name": "AddressEmptyCode",
-        "type": "error"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "account",
-                "type": "address"
-            }
-        ],
-        "name": "AddressInsufficientBalance",
-        "type": "error"
-    },
-    {
-        "inputs": [],
-        "name": "FailedInnerCall",
-        "type": "error"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
-            }
-        ],
-        "name": "OwnableInvalidOwner",
-        "type": "error"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "account",
-                "type": "address"
-            }
-        ],
-        "name": "OwnableUnauthorizedAccount",
-        "type": "error"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "token",
-                "type": "address"
-            }
-        ],
-        "name": "SafeERC20FailedOperation",
-        "type": "error"
     },
     {
         "anonymous": false,
@@ -121,6 +66,13 @@ const abi= [
         "type": "function"
     },
     {
+        "inputs": [],
+        "name": "donateNative",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
         "inputs": [
             {
                 "internalType": "address",
@@ -135,7 +87,59 @@ const abi= [
     },
     {
         "inputs": [],
+        "name": "fee",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "feeDecimals",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "heoLocked",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "heoPrice",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "heoPriceDecimals",
         "outputs": [
             {
                 "internalType": "uint256",
@@ -174,6 +178,19 @@ const abi= [
     },
     {
         "inputs": [],
+        "name": "metaData",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "owner",
         "outputs": [
             {
@@ -202,7 +219,7 @@ const abi= [
         "inputs": [],
         "name": "renounceOwnership",
         "outputs": [],
-        "stateMutability": "pure",
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -224,6 +241,11 @@ const abi= [
                 "internalType": "uint256",
                 "name": "newMaxAmount",
                 "type": "uint256"
+            },
+            {
+                "internalType": "string",
+                "name": "newMetaData",
+                "type": "string"
             }
         ],
         "name": "update",
@@ -243,6 +265,23 @@ const abi= [
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "string",
+                "name": "newMetaData",
+                "type": "string"
+            }
+        ],
+        "name": "updateMetaData",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "stateMutability": "payable",
+        "type": "receive"
     }
 ];
 
