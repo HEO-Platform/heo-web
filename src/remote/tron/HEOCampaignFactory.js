@@ -94,5 +94,4 @@ const abi=[
     }
 ];
 const address = "TWbkkc4B5aL9PNs5e7N7iwfxAz9yuw3JFM";
-
 export {abi, address};
