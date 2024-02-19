@@ -82,10 +82,10 @@ jobs:
           # only run if branch is dev
           if: github.ref == 'refs/heads/stage'
           env:
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_REGION: ${{ vars.AWS_REGION }}
+            AWS_ACCESS_KEY_ID: ${{ secrets.STAGE_AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGE_AWS_SECRET_ACCESS_KEY }}
+            AWS_REGION: ${{ vars.STAGE_AWS_REGION }}
           run: |
-            eb init ${{ vars.EB_APP_NAME }} -r ${{ vars.AWS_REGION }} -p "Node.js 18 running on 64bit Amazon Linux 2023"
-            eb deploy ${{ vars.EB_ENV_NAME }} --region ${{ vars.AWS_REGION }} --label ${{ github.sha }}
+            eb init ${{ vars.STAGE_EB_APP_NAME }} -r ${{ vars.STAGE_AWS_REGION }} -p "Node.js 18 running on 64bit Amazon Linux 2023"
+            eb deploy ${{ vars.STAGE_EB_ENV_NAME }} --region ${{ vars.STAGE_AWS_REGION }} --label ${{ github.sha }}
 
