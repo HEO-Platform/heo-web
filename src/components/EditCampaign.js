@@ -321,6 +321,7 @@ class EditCampaign extends React.Component {
                     let m = 1;
                     do {
                         console.log("Waiting for transaction record");
+                        await new Promise(resolve => setTimeout(resolve, 5000))
                         txnObject = await window.tronWeb.trx.getTransactionInfo(result);
                         if(txnObject && txnObject.receipt) {
                             break;
@@ -332,6 +333,7 @@ class EditCampaign extends React.Component {
                       let transEvent;
                       do {
                          console.log("Waiting for event to be recorded per transaction");
+                          await new Promise(resolve => setTimeout(resolve, 5000))
                          transEvent = await window.tronWeb.getEventByTransactionID(result);
                          if (transEvent && transEvent.length > 0) {
                              break;
