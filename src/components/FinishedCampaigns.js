@@ -21,6 +21,7 @@ class FinishedCampaigns extends Component {
             canScrollRight:false,
         };
         this.scrollRef = createRef(null);
+    
     }
 
       
@@ -61,7 +62,6 @@ class FinishedCampaigns extends Component {
                 campaigns : (await this.getCampaigns())
             });
         }
-      
     }
     
     async getCampaigns() {
@@ -104,9 +104,8 @@ class FinishedCampaigns extends Component {
                <ul className="list" ref = {this.scrollRef} onScroll={this.checkForScrollPosition}> 
                 {this.state.campaigns.map((item, i) =>  
                  <Container id="finishedCampaignsMainDiv">
-                 <li className="item">
-                       <Card key={i}>
-                            <Card.Body>
+                    <li className="item"  key={i}>
+                        <Card.Body>
                                 <div id='finishedCardHeader'>
                                     <Card.Img src={item.mainImageURL} fluid='true' />
                                     <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -126,11 +125,9 @@ class FinishedCampaigns extends Component {
                                 <p id='progressBarLabel'><span id='progressBarLabelStart'>
                                 &#36;{item.raisedAmount}</span>{i18n.t('raised')}&#36;{item.maxAmount} {i18n.t('goal')}</p>
                             <ProgressBar now={100 * item.raisedAmount/item.maxAmount} />
-                            </Card.Body>
-                        </Card>
-                        
-                        </li>
-                        </Container>   
+                        </Card.Body>
+                    </li>
+                 </Container>   
                 )}
                 </ul>
          </div>
