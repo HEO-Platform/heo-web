@@ -104,7 +104,7 @@ class FinishedCampaigns extends Component {
                <ul className="list" ref = {this.scrollRef} onScroll={this.checkForScrollPosition}> 
                 {this.state.campaigns.map((item, i) =>  
                  <Container id="finishedCampaignsMainDiv">
-                    <li className="item"  key={i}>
+                    <Card className="item"  key={i}>
                         <Card.Body>
                                 <div id='finishedCardHeader'>
                                     <Card.Img src={item.mainImageURL} fluid='true' />
@@ -126,7 +126,7 @@ class FinishedCampaigns extends Component {
                                 &#36;{item.raisedAmount}</span>{i18n.t('raised')}&#36;{item.maxAmount} {i18n.t('goal')}</p>
                             <ProgressBar now={100 * item.raisedAmount/item.maxAmount} />
                         </Card.Body>
-                    </li>
+                    </Card>
                  </Container>   
                 )}
                 </ul>
