@@ -45,7 +45,7 @@ class Registration extends React.Component {
               modalIcon: 'CheckCircle',
               showModalCode: false,
               modalButtonMessage: 'returnHome',
-              modalButtonVariant: "#16a1e1", waitToClose: false
+              modalButtonVariant: "#588157", waitToClose: false
         }); 
       }
     }  
@@ -82,7 +82,7 @@ class Registration extends React.Component {
         this.setState({showModal: true, modalTitle: "attention", modalMessage: 'sendcode',
            modalIcon: 'InfoCircle', 
            modalButtonMessage: 'ok',
-           modalButtonVariant: "#16a1e1", waitToClose: false, changePass:true
+           modalButtonVariant: "#588157", waitToClose: false, changePass:true
         });                   
       }catch(error)  {
         this.setState({showModal: true, goHome: true,
@@ -146,7 +146,7 @@ class Registration extends React.Component {
         this.setState({showModal: true, modalTitle: "attention", modalMessage: 'sendcode',
            modalIcon: 'InfoCircle', 
            modalButtonMessage: 'ok',
-           modalButtonVariant: "#16a1e1", waitToClose: false
+           modalButtonVariant: "#588157", waitToClose: false
         });                   
       }catch(error)  {
         this.setState({showModal: true, goHome: true,
@@ -220,7 +220,7 @@ class Registration extends React.Component {
         this.setState({showModal: true, modalTitle: "attention", modalMessage: 'sendcode',
           modalIcon: 'InfoCircle', 
           modalButtonMessage: 'ok',
-          modalButtonVariant: "#16a1e1", waitToClose: false
+          modalButtonVariant: "#588157", waitToClose: false
         });
       } catch(error)  {
         this.setState({showModal: true, goHome: true,
@@ -304,7 +304,7 @@ class Registration extends React.Component {
         this.setState({showModal: true, modalTitle: "attention", modalMessage: 'sendcode',
           modalIcon: 'InfoCircle', 
           modalButtonMessage: 'ok',
-          modalButtonVariant: "#16a1e1", waitToClose: false
+          modalButtonVariant: "#588157", waitToClose: false
         });
       } catch(error)  {
         this.setState({showModal: true, goHome: true,
@@ -349,7 +349,7 @@ class Registration extends React.Component {
               modalIcon: 'CheckCircle',
               showModalCode: false,
               modalButtonMessage: 'returnHome',
-              modalButtonVariant: "#16a1e1", waitToClose: false
+              modalButtonVariant: "#588157", waitToClose: false
             }); 
           }else{
             this.setState({showModal: true, goHome: true,
@@ -419,7 +419,7 @@ class Registration extends React.Component {
               modalIcon: 'CheckCircle',
               showModalCode: false,
               modalButtonMessage: 'returnHome',
-              modalButtonVariant: "#16a1e1", waitToClose: false
+              modalButtonVariant: "#588157", waitToClose: false
             });
              
         }else{
@@ -475,7 +475,7 @@ class Registration extends React.Component {
               modalIcon: 'CheckCircle',
               showModalCode: false,
               modalButtonMessage: 'returnHome',
-              modalButtonVariant: "#16a1e1", waitToClose: false
+              modalButtonVariant: "#588157", waitToClose: false
             });
              
           }else{
@@ -566,7 +566,7 @@ class Registration extends React.Component {
                 </Form> 
                <Row md = {2}>
                 <Col>
-                <Button className='myModalButton'
+                <Button className='myModalButton' style={{backgroundColor : "#588157", borderColor : "#588157"}}
                       onClick={ async() => {
                         if (this.state.changePass) await this.endChangePassword();
                         else await this.startRegistration();
@@ -577,6 +577,7 @@ class Registration extends React.Component {
                 </Col>
                 <Col>
                 <Button className='myModalButton'
+                  style={{backgroundColor : "#588157", borderColor : "#588157"}}
                   onClick={ async() => {
                  await this.props.history.push('/');
                 }}>
@@ -604,7 +605,7 @@ class Registration extends React.Component {
                <Row>
                 <Col>
                 <Button className='myModalButton'
-                 style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
+                 style={{backgroundColor : "#588157", borderColor : "#588157"}}
                        onClick={ async() => {
                         if (this.state.changePass){
                           let res = await this.checkCode();
@@ -620,14 +621,14 @@ class Registration extends React.Component {
                  </Col>
                  <Col>
                  <Button className='myModalButton'
-                 style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
+                 style={{backgroundColor : "#588157", borderColor : "#588157"}}
                        onClick={ async() => {await this.props.history.push('/');}}>
                   <Trans i18nKey= 'closeBtn' />
                  </Button>
                  </Col>
                  <Col>
                  <Button className='myModalButton'
-                 style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant, width: '200px'}}
+                 style={{backgroundColor : "#588157", borderColor : "#588157", width: '200px'}}
                        onClick={ async() =>{await this.resendCode();}}>
                   <Trans i18nKey= 'resendcode' />
                  </Button>
@@ -665,7 +666,7 @@ class Registration extends React.Component {
                <Row>
                 <Col>
                 <Button className='myModalButton'
-                    style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
+                    style={{backgroundColor : "#588157", borderColor : "#588157"}}
                       onClick={ async() => {
                         await this.startAuthorization();
                        }}>
@@ -674,7 +675,7 @@ class Registration extends React.Component {
                 </Col>
                 <Col>
                 <Button className='myModalButton'
-                   style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
+                   style={{backgroundColor : "#588157", borderColor : "#588157"}}
                    onClick={ () => {
                     this.setState({showModalRegistr: true, modalTitle: "registration", key: "registr", showModalConnect:false})}}>
                   <Trans i18nKey= 'registerBtn' />
@@ -682,7 +683,7 @@ class Registration extends React.Component {
                 </Col>
                 <Col>
                 <Button className='myModalButton'
-                  style={{backgroundColor : this.state.modalButtonVariant, borderColor : this.state.modalButtonVariant}}
+                  style={{backgroundColor : "#588157", borderColor : "#588157"}}
                   onClick={ async() => {
                    await this.props.history.push('/');}}>
                   <Trans i18nKey= 'closeBtn' />
@@ -697,6 +698,7 @@ class Registration extends React.Component {
             <Row md = {2}>
                 <Col>
                 <Button className='myModalButton'
+                      style={{backgroundColor : "#588157", borderColor : "#588157"}}
                       onClick={ async() => {
                        await this.deAutorisation();
                        }}>
@@ -705,6 +707,7 @@ class Registration extends React.Component {
                 </Col>
                 <Col>
                 <Button className='myModalButton'
+                  style={{backgroundColor : "#588157", borderColor : "#588157"}}
                   onClick={ async() => {
                    await this.props.history.push('/');}} >
                   <Trans i18nKey= 'closeBtn' />
