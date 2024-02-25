@@ -7,8 +7,6 @@ import {
 import {ChevronLeft} from "react-bootstrap-icons";
 import {Trans} from "react-i18next";
 import {Link} from "react-router-dom";
-import {i18nString} from "../util/Utilities";
-import i18n from "../util/i18n";
 
 
 class Page404 extends Component {
