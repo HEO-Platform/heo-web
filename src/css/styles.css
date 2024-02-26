@@ -16,6 +16,14 @@
   list-style: none;
   height: auto;
 }
+.list1 {
+  display: flex;
+  overflow-x: auto;
+  list-style: none;
+  height: auto;
+  overflow: hidden;
+}
+
 
 .item {
   display: flex;
