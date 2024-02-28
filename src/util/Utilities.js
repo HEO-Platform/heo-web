@@ -110,6 +110,7 @@ function i18nString(value, lang) {
     return value[lang] ? value[lang] : value["default"];
 }
 
+
 function DescriptionPreview(description, lang) {
     var i = 200;
     var text = "";
@@ -414,6 +415,11 @@ const encryptCardData = async(keyData, cardData) => {
     return btoa(encrypted);
 }
 
+const blockchains = [
+    {value:"Ethereum"},
+    {value:"Tron"}
+];
+
 export {DescriptionPreview, i18nString, GetLanguage, LogIn, initWeb3, checkAuth, initWeb3Modal, clearWeb3Provider,clearTronProvider,
-    getPCIPublicKey, encryptCardData, LogInTron, initTronadapter, checkAuthTron, initTron, getTronWeb, checkEmail, isValidUrl};
+    getPCIPublicKey, encryptCardData, LogInTron, initTronadapter, checkAuthTron, initTron, getTronWeb, checkEmail, isValidUrl,blockchains};
 export default Utilities;

@@ -8,7 +8,7 @@ import uuid from 'react-uuid';
 import axios from 'axios';
 import { Trans } from 'react-i18next';
 import i18n from '../util/i18n';
-import {checkEmail,isValidUrl} from '../util/Utilities';
+import {checkEmail,isValidUrl,blockchains} from '../util/Utilities';
 import {getEditorStateEn, getEditorStateRu, TextEditorEn, TextEditorRu, setEditorStateEn, setEditorStateRu} from '../components/TextEditor';
 import { ChevronLeft, CheckCircle, ExclamationTriangle, HourglassSplit, XCircle } from 'react-bootstrap-icons';
 import '../css/createCampaign.css';
@@ -69,7 +69,9 @@ class CreateCampaign extends React.Component {
             countryCode:"",
             number:"",
             website:"",
-            telegram:""
+            telegram:"",
+            blockchain:"",
+            wallet:""
         }
     };
 
@@ -126,6 +128,14 @@ class CreateCampaign extends React.Component {
             e.target.value = help_value;
             this.setState({ [e.target.name]: e.target.value });
           }
+          else if(e.target.name === 'wallet'){
+            help_value = '';  
+                for(i = 0; i <  e.target.value.length; i++){
+                  if (/^[A-Za-z0-9]*$/.test(e.target.value[i]) === true)
+                   help_value += e.target.value[i];
+                }
+                this.setState({wallet: help_value}); 
+          }  
          else
           this.setState({ [e.target.name]: e.target.value });
     };
@@ -243,6 +253,48 @@ class CreateCampaign extends React.Component {
                     });
                 return false;
             }
+            if (!this.state.blockchain){
+                this.setState(
+                    {showModal:true, modalTitle: 'requiredFieldsTitle',
+                        modalMessage: 'selectBlockchain', modalIcon: 'ExclamationTriangle',
+                        waitToClose: false,
+                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
+                    });
+                return false;
+            }
+            if (!this.state.wallet){
+                this.setState(
+                    {showModal:true, modalTitle: 'requiredFieldsTitle',
+                        modalMessage: 'enterWallet', modalIcon: 'ExclamationTriangle',
+                        waitToClose: false,
+                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
+                    });
+                return false;
+            }
+            if (this.state.blockchain === "Ethereum"){
+                if((this.state.wallet.substring(0,2) !== "0x")||(this.state.wallet.length !== 42))
+                 {
+                    this.setState(
+                        {showModal:true, modalTitle: 'requiredFieldsTitle',
+                            modalMessage: 'notValidAddr', modalIcon: 'ExclamationTriangle',
+                            waitToClose: false,
+                            modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
+                        });
+                    return false;
+                 }
+            }
+            if (this.state.blockchain === "Tron"){
+                if((this.state.wallet.substring(0,1) !== "T")||(this.state.wallet.length !== 34))
+                 {
+                    this.setState(
+                        {showModal:true, modalTitle: 'requiredFieldsTitle',
+                            modalMessage: 'notValidAddr', modalIcon: 'ExclamationTriangle',
+                            waitToClose: false,
+                            modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
+                        });
+                    return false;
+                 }
+            }
             let n = 0; 
             let EditorStateEn = await getEditorStateEn();
             if (EditorStateEn){
@@ -330,6 +382,8 @@ class CreateCampaign extends React.Component {
             campaignData.number = this.state.number;
             campaignData.telegram = this.state.telegram;
             campaignData.website = this.state.website;
+            campaignData.payout_chain = this.state.blockchain;
+            campaignData.payout_address = this.state.wallet;
             let res = await axios.post('/api/campaign/add', {mydata : campaignData},
                 {headers: {"Content-Type": "application/json"}});
             if (res.data === 'success'){
@@ -687,6 +741,31 @@ class CreateCampaign extends React.Component {
                           <Form.Label>Telegram</Form.Label>
                           <Form.Control required type="text" className="createFormPlaceHolder"
                            placeholder={i18n.t('contactPlaceHolder')} name='telegram' value={this.state.telegram} onChange={this.handleChange}/>
+                         </Form.Group>  
+                         <Form.Group>  
+                          <Form.Label><Trans i18nKey='payout'/></Form.Label>
+                          <Row>
+                            <Col xs = {2}>  
+                            <Form.Label><Trans i18nKey='blockchain'/><span className='redAsterisk'>*</span></Form.Label>
+                            </Col>
+                            <Col xs={10}> 
+                            <Form.Label><Trans i18nKey='wallet'/><span className='redAsterisk'>*</span></Form.Label> 
+                            </Col>
+                          </Row>
+                          <Row>
+                           <Col xs = {2}>
+                           <Form.Control required as="select" name='blockchain' value={this.state.blockchain} onChange={this.handleChange}>
+                                <option> </option>
+                                {blockchains.map((data) =>
+                                        <option value={data.value}>{data.value}</option>
+                                    )}
+                                </Form.Control>
+                           </Col> 
+                           <Col xs={10}>
+                            <Form.Control required type="text" className="createFormPlaceHolder"
+                             placeholder={i18n.t('contactPlaceHolder')} name='wallet' value={this.state.wallet} onChange={this.handleChange}/>
+                           </Col>  
+                          </Row> 
                          </Form.Group>           
                         </Form.Group>
                         <Row>

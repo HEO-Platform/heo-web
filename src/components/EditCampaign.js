@@ -11,12 +11,11 @@ import { ChevronLeft, CheckCircle, ExclamationTriangle, HourglassSplit, XCircle 
 import { Link } from 'react-router-dom';
 import { getEditorStateEn, getEditorStateRu, TextEditorEn, TextEditorRu, setEditorStateEn, setEditorStateRu, editorStateHasChangedRu,
         editorStateHasChangedEn } from '../components/TextEditor';
-import { initWeb3, checkAuth, initWeb3Modal, initTronadapter, checkAuthTron, initTron, checkEmail, isValidUrl} from '../util/Utilities';
+import { initWeb3, checkAuth, initWeb3Modal, initTronadapter, checkAuthTron, initTron, checkEmail, isValidUrl,blockchains} from '../util/Utilities';
 import '../css/createCampaign.css';
 import '../css/modal.css';
 import ReactGA from "react-ga4";
 
-var CAMPAIGNINSTANCE;
 ReactGA.initialize("G-C657WZY5VT");
 
 class EditCampaign extends React.Component {
@@ -75,7 +74,9 @@ class EditCampaign extends React.Component {
             countryCode:"",
             number:"",
             website:"",
-            telegram:""
+            telegram:"",
+            blockchain:"",
+            wallet:""
         };
 
     }
@@ -109,6 +110,14 @@ class EditCampaign extends React.Component {
             e.target.value = help_value;
             this.setState({ [e.target.name]: e.target.value });
           }
+        else if(e.target.name === 'wallet'){
+            help_value = '';  
+                for(let i = 0; i <  e.target.value.length; i++){
+                  if (/^[A-Za-z0-9]*$/.test(e.target.value[i]) === true)
+                   help_value += e.target.value[i];
+                }
+                this.setState({wallet: help_value}); 
+        }    
         else
         this.setState({ [name] : value, updateMeta : true });
     }
@@ -223,6 +232,48 @@ class EditCampaign extends React.Component {
                 });
             return false;
         }
+        if (!this.state.blockchain){
+            this.setState(
+                {showModal:true, modalTitle: 'requiredFieldsTitle',
+                    modalMessage: 'selectBlockchain', modalIcon: 'ExclamationTriangle',
+                    waitToClose: false,
+                    modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
+                });
+            return false;
+        }
+        if (!this.state.wallet){
+            this.setState(
+                {showModal:true, modalTitle: 'requiredFieldsTitle',
+                    modalMessage: 'enterWallet', modalIcon: 'ExclamationTriangle',
+                    waitToClose: false,
+                    modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
+                });
+            return false;
+        }
+        if (this.state.blockchain === "Ethereum"){
+            if((this.state.wallet.substring(0,2) !== "0x")||(this.state.wallet.length !== 42))
+             {
+                this.setState(
+                    {showModal:true, modalTitle: 'requiredFieldsTitle',
+                        modalMessage: 'notValidAddr', modalIcon: 'ExclamationTriangle',
+                        waitToClose: false,
+                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
+                    });
+                return false;
+             }
+        }
+        if (this.state.blockchain === "Tron"){
+            if((this.state.wallet.substring(0,1) !== "T")||(this.state.wallet.length !== 34))
+             {
+                this.setState(
+                    {showModal:true, modalTitle: 'requiredFieldsTitle',
+                        modalMessage: 'notValidAddr', modalIcon: 'ExclamationTriangle',
+                        waitToClose: false,
+                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
+                    });
+                return false;
+             }
+        }
         let n = 0;
         let EditorStateEn = await getEditorStateEn();
         if (EditorStateEn){
@@ -295,222 +346,7 @@ class EditCampaign extends React.Component {
         });
     }
 
-    async savetoTron(new_record){
-      try{
-        this.setState({showModal:false});
-        if (new_record) {
-            if(!window.tronWeb) {
-                await initTron(this.state.tronChainId , this);
-            }
-            await window.tronAdapter.connect();
-            try {
-                this.setState({showModal:true,modalTitle: 'processingWait',
-                modalMessage: 'updatingCampaignOnBlockchain', modalIcon:'HourglassSplit',
-                modalButtonVariant: "gold", waitToClose: true});
-                let abi = (await import("../remote/" + this.state.tronChainId + "/HEOCampaignFactory")).abi;
-                let address = (await import("../remote/" + this.state.tronChainId + "/HEOCampaignFactory")).address;
-                address = window.tronWeb.address.toHex(address);
-                var HEOCampaignFactory = await window.tronWeb.contract(abi, address);
-                try {
-                    let result = await HEOCampaignFactory.methods.createCampaign(window.tronAdapter._wallet.tronWeb.defaultAddress.hex)
-                    .send({from:window.tronAdapter._wallet.tronWeb.defaultAddress.hex, callValue:0, feeLimit:4000000000, shouldPollResponse:false});
-                    this.setState({showModal:true, modalTitle: 'processingWait',
-                        modalMessage: 'waitingForNetwork', modalIcon:'HourglassSplit',
-                        modalButtonVariant: "gold", waitToClose: true});
-                    let txnObject;
-                    let m = 1;
-                    do {
-                        console.log("Waiting for transaction record");
-                        await new Promise(resolve => setTimeout(resolve, 5000))
-                        txnObject = await window.tronWeb.trx.getTransactionInfo(result);
-                        if(txnObject && txnObject.receipt) {
-                            break;
-                        }
-                    } while(m !== 2);
-
-                    if (txnObject.receipt.result === "SUCCESS") {
-                      m = 1;
-                      let transEvent;
-                      do {
-                         console.log("Waiting for event to be recorded per transaction");
-                         await new Promise(resolve => setTimeout(resolve, 5000))
-                         transEvent = await window.tronWeb.getEventByTransactionID(result);
-                         if (transEvent && transEvent.length > 0) {
-                             break;
-                         }
-                      } while(m !== 2);
-
-                      console.log(`createCampaign transaction successful ${transEvent}`);
-                      this.state.addresses[this.state.tronChainId] = transEvent[0].result.campaignAddress;
-                      this.state.line_accounts[this.state.tronChainId]  = window.tronAdapter._wallet.tronWeb.defaultAddress.hex;
-                      this.state.maxAmount_old = this.state.maxAmount;
-
-                      let res =await this.updateCampaign();
-                      if (res === false)
-                        this.setState({showModal : true,
-                          modalTitle: 'failed',
-                          modalMessage: 'errorWritingCampaignToDB',
-                          modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
-                          modalButtonVariant: "#E63C36", waitToClose: false
-                        });
-                      else this.setState({
-                        showModal: true, modalTitle: 'complete', goHome: true,
-                        modalMessage: 'updateSuccessfull',
-                        modalIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
-                        modalButtonVariant: '#588157', waitToClose: false
-                      });
-                      return (true);
-                    } else {
-                        this.setState({showModal : true,
-                            modalTitle: 'failed',
-                            modalMessage: 'blockChainTransactionFailed',
-                            modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
-                            modalButtonVariant: "#E63C36", waitToClose: false
-                        });
-                      return false;
-                    }
-                } catch (err) {
-                    console.log(err);
-                    this.setState({showModal : true,
-                        modalTitle: 'failed',
-                        modalMessage: 'blockChainTransactionFailed',
-                        modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
-                        modalButtonVariant: "#E63C36", waitToClose: false
-                    });
-                    return false;
-                }
-            } catch (error) {
-              console.log(error);
-              this.setState({showModal : true,
-                modalTitle: 'failed',
-                modalMessage: 'blockChainTransactionFailed',
-                modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
-                modalButtonVariant: "#E63C36", waitToClose: false
-            });
-              return false;
-            }
-        }
-      } catch (err) {
-            console.log(err);
-            this.setState({showModal : true,
-                modalTitle: 'failed',
-                modalMessage: 'blockChainTransactionFailed',
-                modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
-                modalButtonVariant: "#E63C36", waitToClose: false
-            });
-            return (false)
-      }
-    }
-
-    async saveToEtherium(new_record){
-        try{
-            this.setState({showModal:false});
-            if(!this.state.accounts || !this.state.web3) {
-             await initWeb3(this.state.chainId, this);
-            }
-            if (!new_record){
-                this.setState({showModal:true, modalTitle: 'processingWait',
-                modalMessage: 'waitingForNetwork', modalIcon: 'HourglassSplit',
-                modalButtonVariant: "gold", waitToClose: true});
-                console.log(`Campaign already deployed on ${this.state.chainId} - updating`);
-                let HEOCampaign = (await import("../remote/"+ this.state.chainId + "/HEOCampaign")).default;
-                CAMPAIGNINSTANCE = new this.state.web3.eth.Contract(HEOCampaign, this.state.addresses[this.state.chainId]);
-                await CAMPAIGNINSTANCE.methods.update(
-                    this.state.web3.utils.toWei(`${this.state.maxAmount}`)).send({from:this.state.accounts[0]});
-                this.state.line_accounts[this.state.chainId]  = this.state.accounts[0];
-                this.setState(
-                    {showModal:true, modalTitle: 'processingWait',
-                    modalMessage: 'waitingForOperation', modalIcon: 'HourglassSplit',
-                    modalButtonVariant: "gold", waitToClose: true
-                    });
-                return (true);
-            }
-            else{
-                this.setState({showModal:true, modalTitle: 'processingWait',
-                modalMessage: 'waitingForNetwork', modalIcon: 'HourglassSplit',
-                modalButtonVariant: "gold", waitToClose: true});
-                let abi = (await import("../remote/" + this.state.chainId + "/HEOCampaignFactory")).abi;
-                let address = (await import("../remote/" + this.state.chainId + "/HEOCampaignFactory")).address;
-                var HEOCampaignFactory = new this.state.web3.eth.Contract(abi, address);
-                var that = this;
-                var web3 = this.state.web3;
-                var result;
-                if(window.web3Modal.cachedProvider === "binancechainwallet") {
-                    HEOCampaignFactory.methods.createCampaign(
-                        this.state.web3.utils.toWei(`${this.state.maxAmount}`), this.state.accounts[0])
-                        .send({from:this.state.accounts[0]})
-                        .once('transactionHash', function(transactionHash) {
-                            that.setState({showModal:true, modalTitle: 'processingWait',
-                                modalMessage: 'waitingForNetwork', modalIcon: 'HourglassSplit',
-                                modalButtonVariant: "gold", waitToClose: true}
-                            );
-                            web3.eth.getTransaction(transactionHash).then(
-                             function(txnObject) {
-                                  result =  checkTransaction(txnObject, that);
-                                  that.setState(
-                                    {showModal:true, modalTitle: 'processingWait',
-                                    modalMessage: 'waitingForOperation', modalIcon: 'HourglassSplit',
-                                    modalButtonVariant: "gold", waitToClose: true
-                                    });
-                                  return (result);
-                                }
-                            );
-                        });
-                } else {
-                    result = await HEOCampaignFactory.methods.createCampaign(
-                            this.state.web3.utils.toWei(`${this.state.maxAmount}`), this.state.accounts[0])
-                            .send({from:this.state.accounts[0]})
-                            .on('transactionHash',
-                                function(transactionHash) {
-                                    that.setState({showModal:true, modalTitle: 'processingWait',
-                                        modalMessage: 'waitingForNetwork', modalIcon: 'HourglassSplit',
-                                        modalButtonVariant: "gold", waitToClose: true});
-                                });
-                    if(result && result.events && result.events.CampaignDeployed && result.events.CampaignDeployed.address) {
-                        console.log(`Deployed campaign to ${this.state.chainId} at ${result.events.CampaignDeployed.returnValues.campaignAddress}`)
-                        this.state.addresses[this.state.chainId] = result.events.CampaignDeployed.returnValues.campaignAddress;
-                        this.state.line_accounts[this.state.chainId]  = this.state.accounts[0];
-                        this.state.maxAmount_old = this.state.maxAmount;
-                        let res =await this.updateCampaign();
-                        if (res === false)
-                          this.setState({showModal : true,
-                            modalTitle: 'failed',
-                            modalMessage: 'errorWritingCampaignToDB',
-                            modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
-                            modalButtonVariant: "#E63C36", waitToClose: false
-                        });
-                        else this.setState({
-                          showModal: true, modalTitle: 'complete', goHome: true,
-                          modalMessage: 'updateSuccessfull',
-                          modalIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
-                          modalButtonVariant: '#588157', waitToClose: false
-                        });
-                      return (true);
-                    } else {
-                        this.setState({showModal : true,
-                            modalTitle: 'failed',
-                            modalMessage: 'blockChainTransactionFailed',
-                            modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
-                            modalButtonVariant: "#E63C36", waitToClose: false
-                        });
-                        return false;
-                    }
-                }
-            }
-        } catch (err) {
-            console.log(err);
-            this.setState({showModal : true,
-                modalTitle: 'failed',
-                modalMessage: 'blockChainTransactionFailed',
-                modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
-                modalButtonVariant: "#E63C36", waitToClose: false
-            });
-            return (false)
-        }
-    }
-
     async updateCampaign() {
-
         try {
             let data = {
                 mainImageURL: this.state.mainImageURL,
@@ -552,12 +388,12 @@ class EditCampaign extends React.Component {
             data.org["ru"] = this.state.orgRu;
             data.addresses = this.state.addresses;
             data.accounts = this.state.line_accounts;
+            data.payout_chain = this.state.blockchain;
+            data.payout_address = this.state.wallet;
             console.log(`Updating title to`);
             console.log(data.title);
             console.log(`Updating org to`);
             console.log(data.org);
-            let result;
-
             let dataForDB = {address: this.state.campaignId, dataToUpdate: data};
             try {
                let res = await axios.post('/api/campaign/update', {mydata : dataForDB},
@@ -574,24 +410,7 @@ class EditCampaign extends React.Component {
                }
                return false;
             }
-            if(this.state.maxAmount_old !== this.state.maxAmount){
-              if(this.state.addresses[this.state.chainId]){
-                result = await this.saveToEtherium(false);
-                if (result !== true) this.setState({resultEtherium : false});
-                this.setState({showModal:true,modalTitle: 'processingWait',
-                  modalMessage: 'waitingForOperation', modalIcon:'HourglassSplit',
-                  modalButtonVariant: "gold", waitToClose: true});
-              }
-              if(this.state.addresses[this.state.tronChainId]){
-                result = await this.savetoTron(false);
-                if (result !== true) this.setState({resultTron : false});
-                this.setState({showModal:true,modalTitle: 'processingWait',
-                  modalMessage: 'waitingForOperation', modalIcon:'HourglassSplit',
-                  modalButtonVariant: "gold", waitToClose: true});
-              }
-            }
             return true;
-
         }catch(err){
             console.log(err);
             return (false);
@@ -850,6 +669,31 @@ class EditCampaign extends React.Component {
                           <Form.Control required type="text" className="createFormPlaceHolder"
                            placeholder={i18n.t('contactPlaceHolder')} name='telegram' value={this.state.telegram} onChange={this.handleChange}/>
                          </Form.Group>
+                         <Form.Group>  
+                          <Form.Label><Trans i18nKey='payout'/></Form.Label>
+                          <Row>
+                            <Col xs = {2}>  
+                            <Form.Label><Trans i18nKey='blockchain'/><span className='redAsterisk'>*</span></Form.Label>
+                            </Col>
+                            <Col xs={10}> 
+                            <Form.Label><Trans i18nKey='wallet'/><span className='redAsterisk'>*</span></Form.Label> 
+                            </Col>
+                          </Row>
+                          <Row>
+                           <Col xs = {2}>
+                           <Form.Control required as="select" name='blockchain' value={this.state.blockchain} onChange={this.handleChange}>
+                                <option> </option>
+                                {blockchains.map((data) =>
+                                        <option value={data.value}>{data.value}</option>
+                                    )}
+                                </Form.Control>
+                           </Col> 
+                           <Col xs={10}>
+                            <Form.Control required type="text" className="createFormPlaceHolder"
+                             placeholder={i18n.t('contactPlaceHolder')} name='wallet' value={this.state.wallet} onChange={this.handleChange}/>
+                           </Col>  
+                          </Row> 
+                         </Form.Group>  
                         </Form.Group>
                             <Row>
                              <Col>
@@ -993,6 +837,8 @@ class EditCampaign extends React.Component {
             defDonationAmount: dbCampaignObj.defaultDonationAmount,
             fiatPayments: dbCampaignObj.fiatPayments
         });
+        if (dbCampaignObj.payout_chain) this.setState({blockchain:dbCampaignObj.payout_chain});  
+        if (dbCampaignObj.payout_address) this.setState({wallet:dbCampaignObj.payout_address});   
         if (this.state.addresses[this.state.chainId]) this.setState({isInEtherium:true});
         else this.setState({isInEtherium:false});
         if (this.state.addresses[this.state.tronChainId]) this.setState({isInTron:true});
@@ -1029,31 +875,6 @@ class EditCampaign extends React.Component {
         console.log(this.state.ogTitle);
         console.log(`Set org to`);
         console.log(this.state.ogOrg);
-    }
-}
-
-function checkTransaction(txnObject, that) {
-    if(txnObject.blockNumber) {
-        that.state.web3.eth.getTransactionReceipt(txnObject.hash).then(function(txnObject) {
-            if(txnObject.logs && txnObject.logs.length >2 && txnObject.logs[2] && txnObject.logs[2].topics && txnObject.logs[2].topics.length > 3) {
-                that.state.addresses[this.state.chainId] = txnObject.logs[2].topics[1];
-                that.state.line_accounts[this.state.chainId]  = txnObject.logs[2].topics[3];
-                return(true);
-            } else {
-                this.setState({showModal: true, goHome: true,
-                    modalTitle: 'addToDbFailedTitle',
-                    modalMessage: 'addToDbFailedMessage',
-                    modalIcon: 'CheckCircle',
-                    modalButtonMessage: 'returnHome',
-                    modalButtonVariant: "#588157", waitToClose: false
-                });
-                return (false);
-            }
-        });
-    } else {
-        that.state.web3.eth.getTransaction(txnObject.hash).then(function(txnObject) {
-            checkTransaction(txnObject, that);
-        });
     }
 }
 
