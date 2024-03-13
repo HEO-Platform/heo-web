@@ -61,7 +61,7 @@ class CampaignList extends Component {
             if ((window.curPg > 5)&&(this.state.pagescount > (window.curPg + 4))) pages[i] = window.curPg - 4 + i;
             else if((window.curPg > 5)&&(this.state.pagescount <= (window.curPg + 4))) pages[i] = this.state.pagescount - 8 + i;
             else if (window.curPg <= 5) pages[i] = i+1;
-        } 
+        }
         this.setState({
             campaigns : campaigns,
             pages:pages
@@ -96,7 +96,7 @@ class CampaignList extends Component {
             if ((window.curPg > 5)&&(this.state.pagescount > (window.curPg + 4))) pages[i] = window.curPg - 4 + i;
             else if((window.curPg > 5)&&(this.state.pagescount <= (window.curPg + 4))) pages[i] = this.state.pagescount - 8 + i;
             else if (window.curPg <= 5) pages[i] = i+1;
-        } 
+        }
         this.setState({
             campaigns : campaigns,
             pages:pages
@@ -110,7 +110,7 @@ class CampaignList extends Component {
         var that = this;
         var errorMessage = 'Failed to load campaigns';
         let data = {startRec : (startRec - 1)*window.pgCount, compaignsCount:window.pgCount};
-       
+
         await axios.post('/api/campaign/loadAll', data, {headers: {"Content-Type": "application/json"}})
         .then(res => {
           campaigns = res.data.curArr;
@@ -211,7 +211,7 @@ class CampaignList extends Component {
                                                 <Col className='buttonCol'>
                                                     <div id='acceptingBtn' className='cardButtons'><p><Trans i18nKey='accepting'/></p>
                                                         <p id='currencyName'>
-                                                            {this.state.fiatPaymentEnabled && item.stripeURL && <span className='coinRewardInfo'><img src={visaMcLogo} width={21} height={20} alt="for sell" style={{marginRight:5, marginLeft:5}} /> </span>}
+                                                            {this.state.fiatPaymentEnabled && item.fiatPayments && <span className='coinRewardInfo'><img src={visaMcLogo} width={21} height={20} alt="for sell" style={{marginRight:5, marginLeft:5}} /> </span>}
                                                             {item.dedupedCoinNames.map((coin, j) =>
                                                                 <span key={item._id + "-" + coin}><img src={IMG_MAP[coin]} width={20} height={20} alt="for sell" style={{marginLeft:5, marginRight:5}} /> </span>
                                                             )}
@@ -236,19 +236,19 @@ class CampaignList extends Component {
                     </Container>
                 </div>
                 <Row>
-                {(this.state.pagescount > 1)&&<Col md={{ span: 9, offset: 3 }}>    
+                {(this.state.pagescount > 1)&&<Col md={{ span: 9, offset: 3 }}>
                 <div class="btn-toolbar" role="toolbar" >
-                 <Button disabled={window.curPg === this.state.pages[0]} 
+                 <Button disabled={window.curPg === this.state.pages[0]}
                   onClick={async() =>{window.curPg=window.curPg-1; await this.changePage(window.curPg);}}><span><ChevronLeft/></span></Button>
                  <Button style={{backgroundColor : "white", borderColor : "white"}}></Button>
                 {((this.state.pages[0] > 1)&&(this.state.pagescount > 9))&&<div class = "btn-group">
-                 <Button style={{cursor:"pointer"}} onClick={async()=>{window.curPg=1; await this.changePage(window.curPg - 1);}}>{1}</Button>   
+                 <Button style={{cursor:"pointer"}} onClick={async()=>{window.curPg=1; await this.changePage(window.curPg - 1);}}>{1}</Button>
                  <Button style={{backgroundColor : "white", borderColor : "white", color: "#0E161C"}}><span>...</span></Button>}
-                 <Button style={{backgroundColor : "white", borderColor : "white"}}></Button>  
-                </div>} 
+                 <Button style={{backgroundColor : "white", borderColor : "white"}}></Button>
+                </div>}
                 {this.state.pages.map((item, i) =><div>
-                 <Button style={{cursor:"pointer"}} disabled={window.curPg === item} 
-                  onClick={async()=>{window.curPg=item; await this.changePage(item,this.state.pages[0]);}}>{item}</Button>   
+                 <Button style={{cursor:"pointer"}} disabled={window.curPg === item}
+                  onClick={async()=>{window.curPg=item; await this.changePage(item,this.state.pages[0]);}}>{item}</Button>
                  <Button style={{backgroundColor : "white", borderColor : "white"}}></Button>
                 </div>)}
                 {((this.state.pages[this.state.pages.length - 1] < this.state.pagescount)&&(this.state.pagescount > 9))&&<div class = "btn-group">
@@ -257,7 +257,7 @@ class CampaignList extends Component {
                     {this.state.pagescount}</Button>
                  <Button style={{backgroundColor : "white", borderColor : "white"}}></Button>
                 </div>}
-                 <Button disabled={window.curPg===this.state.pagescount} style={{cursor:"pointer"}} 
+                 <Button disabled={window.curPg===this.state.pagescount} style={{cursor:"pointer"}}
                    onClick={async()=>{window.curPg=window.curPg+1; await this.changePage(window.curPg);}}><span><ChevronRight/></span></Button>
                 </div>
                 </Col>}

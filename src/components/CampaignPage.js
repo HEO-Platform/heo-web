@@ -1129,7 +1129,7 @@ class CampaignPage extends Component {
                             <Row id='acceptingRow'>
                                 <div id='acceptingDiv'>
                                     <p><Trans i18nKey='accepting'/>:
-                                        {this.state.fiatPaymentEnabled && this.state.campaign.stripeURL && <span className='coinRewardInfo'><img src={visaMcLogo} witdth={21} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        {this.state.fiatPaymentEnabled && this.state.campaign.fiatPayments && <span className='coinRewardInfo'><img src={visaMcLogo} witdth={21} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
                                         {this.state.chains_coins.map((item, i) =>
                                             <span className='coinRewardInfo'><img src={IMG_MAP[item.coin.name]} width={20} height={20}alt='some value'style={{marginRight:5, marginLeft:5}} /> </span>
                                             )}
@@ -1152,7 +1152,7 @@ class CampaignPage extends Component {
                                     />
                                     <InputGroup.Append>
                                         <DropdownButton id='donateButton' title={i18n.t('donate')}>
-                                            {this.state.fiatPaymentEnabled && this.state.campaign.stripeURL && <Dropdown.Item key="_fiat" as="button" onClick={
+                                            {this.state.fiatPaymentEnabled && this.state.campaign.fiatPayments && <Dropdown.Item key="_fiat" as="button" onClick={
                                             () => {
                                                 if(this.state.fiatPaymentProvider ==='stripe') {
                                                     //skip the card info form for PayAdmin and use hosted payment dialog
