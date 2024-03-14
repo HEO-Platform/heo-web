@@ -4,7 +4,6 @@ const AWS = require('aws-sdk');
 const FILE_UPLOAD = require('express-fileupload');
 const CORS = require('cors');
 const { MongoClient } = require('mongodb');
-const { default: axios } = require('axios');
 const jwt = require('express-jwt');
 const jsonwebtoken = require('jsonwebtoken');
 const cookieParser = require('cookie-parser')
@@ -393,33 +392,6 @@ APP.get('/api/auth/status', (req, res) => {
 APP.post('/api/auth/logout', (req, res) => {
     res.clearCookie('authToken').send({});
 });
-
-APP.get('/api/circle/publickey', async (req, res) => {
-    try {
-        let apiRes = await axios(
-            {
-                method: 'get',
-                baseURL: CIRCLE_API_URL,
-                url: '/v1/encryption/public',
-                headers: {
-                    'Accept': 'application/json',
-                    'Authorization': `Bearer ${CIRCLE_API_KEY}`
-                }
-            });
-        if(apiRes && apiRes.status == 200) {
-            res.send(apiRes.data);
-        } else {
-            console.log(apiRes);
-            console.log("Empty respone from Circle API");
-            res.sendStatus(500);
-        }
-    } catch (err) {
-        console.log("Error respone from Circle API");
-        console.log(err);
-        res.sendStatus(500);
-    }
-});
-
 
 /**
  * webhook for Coinbase Commerce notifications
