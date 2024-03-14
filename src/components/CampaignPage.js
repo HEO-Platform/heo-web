@@ -1273,10 +1273,9 @@ class CampaignPage extends Component {
             }
             contentState[i18n.language] = convertFromRaw(campaign.descriptionEditor["default"]);
         } else {
-
-           // contentState[i18n.language] = convertFromRaw(campaign.descriptionEditor);
+            contentState[i18n.language] = convertFromRaw(campaign.descriptionEditor);
         }
-
+        this.state.editorState = EditorState.createWithContent(contentState[i18n.language], createDecorator());
         var that = this;
         i18n.on('languageChanged', function(lng) {
             if(contentState[lng]) {
