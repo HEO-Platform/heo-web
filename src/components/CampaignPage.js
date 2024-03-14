@@ -168,7 +168,7 @@ class CampaignPage extends Component {
         var donateAmount;
         await axios.post('/api/campaign/getalldonations', {mydata: data}, {headers: {"Content-Type": "application/json"}})
             .then(res => {
-                donateAmount = (res.data === 0) ? 0 : parseFloat(res.data[0].totalQuantity);
+                donateAmount = (res.data === 0 || res.data.length === 0) ? 0 : parseFloat(res.data[0].totalQuantity);
             }).catch(err => {
                 if (err.response) {
                     modalMessage = 'technicalDifficulties'}
