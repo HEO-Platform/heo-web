@@ -464,6 +464,22 @@ APP.post('/api/donatefiat', async (req, res) => {
     }
 });
 
+APP.post('/api/donaterecurring', async (req, res) => {
+    const DB = CLIENT.db(DBNAME);
+    let fiatPayment;
+    try {
+        fiatPayment = await serverLib.handleGetFiatPaymentSettings(DB, Sentry);
+    } catch (err) {
+        Sentry.captureException(new Error(err));
+    }
+
+    if (fiatPayment && fiatPayment === 'stripeLib') {
+        stripeLib.handleDonateRecurring(req, res, STRIPE_API_KEY, CLIENT, DBNAME, Sentry);
+    } else {
+        res.status(503).send('serviceNotAvailable');
+    }
+});
+        
 // Handles crypto payment initiation via coinbase commerce
 APP.post('/api/donatecoinbasecommerce', async (req, res) => {
     try {
