@@ -110,6 +110,7 @@ class CampaignPage extends Component {
             tryAgainCC: false,
             fiatPaymentEnabled: false,
             fiatPaymentProvider: '',
+            recurringFiatPayments: false,
             cur_chain: -1
         };
         this.handleGetCCInfo = this.handleGetCCInfo.bind(this);
@@ -127,6 +128,10 @@ class CampaignPage extends Component {
 
     handleDonationAmount = (e) => {
         this.setState({donationAmount: e.target.value});
+    };
+
+    handleRecurringAmount = (e) => {
+        this.setState({recurringAmount: e.target.value});
     };
 
     getCurChaincCoins= (value) =>{
@@ -232,8 +237,6 @@ class CampaignPage extends Component {
     }
 
     handleDonateFiat = async () => {
-        //TODO: check that this.state.donationAmount is larger than 0
-        let cardKeyData, encryptedCardData, encryptedSecurityData;
         var data;
         if(this.state.fiatPaymentProvider === 'stripe') {
             data = {
@@ -241,39 +244,6 @@ class CampaignPage extends Component {
                 currency: "USD",
                 campaignId: this.state.campaignId,
                 campaignName: i18nString(this.state.campaign.title, i18n.language)
-            };
-        } else if(this.state.fiatPaymentProvider === 'circle') {
-            cardKeyData = await getPCIPublicKey();
-            encryptedCardData = await encryptCardData(cardKeyData, {number:this.state.ccinfo.number, cvv:this.state.ccinfo.cvc});
-            encryptedSecurityData = await encryptCardData(cardKeyData, {cvv:this.state.ccinfo.cvc});
-            data = {
-                billingDetails: {
-                    city: this.state.ccinfo.city,
-                    country: this.state.ccinfo.country,
-                    district: this.state.ccinfo.district,
-                    line1: this.state.ccinfo.line1,
-                    line2: this.state.ccinfo.line2,
-                    name: this.state.ccinfo.name,
-                    postalCode: this.state.ccinfo.postalCode
-                },
-                keyId: cardKeyData.keyId,
-                encryptedCardData: encryptedCardData,
-                encryptedSecurityData: encryptedSecurityData,
-                expMonth: this.state.ccinfo.expMonth,
-                expYear: this.state.ccinfo.expYear,
-                email: this.state.ccinfo.email,
-                phoneNumber: this.state.ccinfo.phoneNumber,
-                amount: this.state.donationAmount,
-                currency: this.state.ccinfo.currency,
-                verification: this.state.ccinfo.verification,
-                campaignId: this.state.campaignId,
-                walletId: this.state.campaign.walletId
-            };
-        } else if (this.state.fiatPaymentProvider ==='payadmit') {
-            data = {
-                amount: this.state.donationAmount,
-                currency: "USD",
-                campaignId: this.state.campaignId
             };
         }
         try {
@@ -319,41 +289,71 @@ class CampaignPage extends Component {
             }
             let errorFound = false;
             console.log(err.response)
-            if(err.response.data.paymentStatus) {
-                if (this.state.fiatPaymentProvider === 'circle') {
-                    Object.keys(CC_INFO_FIELDS_ERRORS).every((key) => {
-                        if (err.response.data.paymentStatus.message.includes(key)) {
-                            this.setState({modalMessage: CC_INFO_FIELDS_ERRORS[key]});
-                            this.setState(prevState => ({
-                                ccinfo: {
-                                    ...prevState.ccinfo,
-                                    ccError: CC_INFO_FIELDS_ERRORS[key],
-                                    ccErrorType: `${key}Input`
-                                }
-                            }));
-                            errorFound = true;
-                            return false;
-                        }
-                        return true;
-                    })
-                }
-            }
             this.setState({
                 showModal: true, modalTitle: 'failed',
                 errorIcon: 'XCircle', modalButtonMessage: 'tryAgain',
                 modalButtonVariant: '#E63C36', waitToClose: false, tryAgainCC: (this.state.fiatPaymentProvider !== 'stripe')
             });
-            if(!errorFound) {
-                if (this.state.fiatPaymentProvider === 'circle') {
-                    this.setState(prevState => ({
-                        ccinfo: {
-                            ...prevState.ccinfo,
-                            ccError: CC_INFO_FIELDS_ERRORS['default'],
-                            ccErrorType: 'default'
-                        }
-                    }));
-                }
+        }
+    }
+
+    handleDonateRecurring = async () => {
+        var data;
+        if(this.state.fiatPaymentProvider === 'stripe') {
+            data = {
+                amount: this.state.recurringAmount,
+                currency: "USD",
+                campaignId: this.state.campaignId,
+                campaignName: i18nString(this.state.campaign.title, i18n.language)
+            };
+        }
+        try {
+            this.setState({
+                showCCWarningModal:false,
+                showModal: true, modalTitle: 'processingWait',
+                modalMessage: "plzWait",
+                errorIcon: 'HourglassSplit', modalButtonVariant: "gold", waitToClose: true
+            });
+            let resp = await axios.post('/api/donaterecurring', data, {headers: {"Content-Type": "application/json"}});
+            if(resp.data.paymentStatus === 'action_required') {
+                this.setState({showModal: false});
+                window.open(resp.data.redirectUrl, '_self');
+            } else if(resp.data.paymentStatus === "success") {
+                this.setState({
+                    showModal: true, modalTitle: 'complete',
+                    modalMessage: 'thankYouFiatDonation',
+                    errorIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
+                    modalButtonVariant: '#588157', waitToClose: false, tryAgainCC: false, ccinfo: {}
+                });
+            } else {
+                this.setState({
+                    showModal: true, modalTitle: 'failed', modalMessage: PAYMENT_ERROR_MESSAGES[resp.data.paymentStatus],
+                    errorIcon: 'XCircle', modalButtonMessage: 'tryAgain',
+                    modalButtonVariant: '#E63C36', waitToClose: false, tryAgainCC: false
+                });
+                this.setState(prevState => ({
+                    ccinfo: {
+                        ...prevState.ccinfo,
+                        ccError : PAYMENT_ERROR_MESSAGES[resp.data.paymentStatus]
+                    }
+                }));
             }
+        } catch (err) {
+            if (err.response.status === 503) {
+                this.setState({
+                    showModal: true, modalTitle: 'failed',
+                    errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
+                    modalMessage: err.response.data,
+                    modalButtonVariant: '#E63C36', waitToClose: false, tryAgainCC: false
+                });
+                return;
+            }
+            let errorFound = false;
+            console.log(err.response)
+            this.setState({
+                showModal: true, modalTitle: 'failed',
+                errorIcon: 'XCircle', modalButtonMessage: 'tryAgain',
+            })
         }
     }
 
@@ -1151,7 +1151,7 @@ class CampaignPage extends Component {
                                         type="number"
                                     />
                                     <InputGroup.Append>
-                                        <DropdownButton id='donateButton' title={i18n.t('donate')}>
+                                        <DropdownButton id='donateButton' title={i18n.t('donate_once')}>
                                             {this.state.fiatPaymentEnabled && this.state.campaign.fiatPayments && <Dropdown.Item key="_fiat" as="button" onClick={
                                             () => {
                                                 if(this.state.fiatPaymentProvider ==='stripe') {
@@ -1205,10 +1205,24 @@ class CampaignPage extends Component {
                                                 }
                                             } ><img src={ltcLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} />LTC</Dropdown.Item>
                                         </DropdownButton>
-
                                     </InputGroup.Append>
                                 </InputGroup>
                             </Row>
+                            {this.state.fiatPaymentEnabled && this.state.campaign.fiatPayments && this.state.campaign.recurringFiatPayments &&
+                            <Row id='recurringRow'>
+                                    <InputGroup className="mb-3">
+                                        <FormControl id='recurringAmount'
+                                        value={this.state.recurringAmount} onChange={this.handleRecurringAmount} type="number"/>
+                                        <InputGroup.Append>
+                                            <Button id='recurringButton' onClick={
+                                                () => {
+                                                    this.handleDonateRecurring();
+                                                }
+                                            }><Trans i18nKey='donate_monthly'/></Button>
+                                        </InputGroup.Append>
+                                    </InputGroup>
+                                    </Row>
+                            }
                         </Col>
                     </Row>
                     <Row id='videoRow'>
@@ -1259,7 +1273,7 @@ class CampaignPage extends Component {
             this.props.history.push("/404");
             return;
         }
-        this.state.donationAmount = campaign.defaultDonationAmount ? campaign.defaultDonationAmount : "10";
+        this.state.recurringAmount = this.state.donationAmount = campaign.defaultDonationAmount ? campaign.defaultDonationAmount : "10";
         campaign.percentRaised = 100 * (this.state.raisedAmount)/campaign.maxAmount;
         var contentState = {};
         var lng
@@ -1297,6 +1311,11 @@ class CampaignPage extends Component {
             if(element._id === 'FIATPAYMENT') {
                 if(campaign.fiatPayments) {
                     this.setState({fiatPaymentEnabled: element.enabled});
+                    if(campaign.recurringFiatPayments) {
+                        this.setState({recurringFiatPaymentEnabled: element.enabled});
+                    } else {
+                        this.setState({recurringFiatPaymentEnabled: false})
+                    }
                 } else {
                     this.setState({fiatPaymentEnabled: false});
                 }

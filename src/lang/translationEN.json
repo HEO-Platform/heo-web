@@ -14,6 +14,8 @@
     "accepting": "ACCEPTING",
     "reward" : "REWARDS",
     "donate" : "DONATE",
+    "donate_once" : "DONATE ONCE",
+    "donate_monthly": "DONATE MONTHLY",
     "raised" : " raised of ",
     "goal" : "goal",
     "campaignCreateSuccess": "Congratulations! Your fundraiser is live on the blockchain",
