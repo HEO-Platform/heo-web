@@ -56,9 +56,11 @@ class StripeLib {
                                 paymentStatus: "paid",
                                 lastUpdated: new Date(),
                                 currency: paymentIntent.currency,
-                                paymentAmount: paymentIntent.amount/100,
+                                totalAmount: paymentIntent.amount/100,
                                 referenceId: paymentIntent.id,
                                 campaignId: paymentIntent.metadata.campaign_id,
+                                tipAmount: paymentIntent.metadata.tip_amount,
+                                paymentAmount: paymentIntent.metadata.donation_amount,
                                 provider: 'stripe'
                             }
                             try {
@@ -142,7 +144,9 @@ class StripeLib {
                                 paymentStatus: "paid",
                                 lastUpdated: new Date(),
                                 currency: invoice.currency,
-                                paymentAmount: invoice.amount_paid/100,
+                                totalAmount: invoice.amount_paid/100,
+                                tipAmount: invoice.subscription_details.metadata.tip_amount,
+                                paymentAmount: invoice.subscription_details.metadata.donation_amount,
                                 referenceId: invoice.id,
                                 campaignId: invoice.metadata.campaign_id,
                                 provider: 'stripe'
@@ -243,27 +247,41 @@ class StripeLib {
                 return res.status(400).send('Missing parameters');
             }
             console.log("Creating Stripe checkout session")
+            const DB = CLIENT.db(DBNAME);
+            const campaignsCollection = await DB.collection('campaigns');
+            let campaignRecord = await campaignsCollection.findOne({"_id" : req.body.campaignId});
+            if(!campaignRecord) {
+                Sentry.captureException(new Error(`Campaign not found in DB`));
+                return res.status(400).send('Campaign not found');
+            }
+            let productID = campaignRecord.stripeProductId;
+            if(!productID) {
+                Sentry.captureException(new Error(`Stripe product ID not found in DB`));
+                return res.status(400).send('Stripe product ID not found');
+            }
             const session = await stripe.checkout.sessions.create({
                 line_items: [
                     {
                         price_data: {
                             currency: req.body.currency,
-                            product_data: {
-                                name: req.body.campaignName
-                            },
+                            product: productID,
                             unit_amount: req.body.amount*100,
                         },
                         quantity: 1,
                     },
                 ],
                 metadata: {
-                    campaign_id: req.body.campaignId
+                    campaign_id: req.body.campaignId,
+                    tip_amount: req.body.tipAmount,
+                    donation_amount: req.body.donationAmount
                 },
                 payment_intent_data: {
                     description: req.body.campaignName,
                     statement_descriptor: "blago.click donation",
                     metadata: {
-                        campaign_id: req.body.campaignId
+                        campaign_id: req.body.campaignId,
+                        tip_amount: req.body.tipAmount,
+                        donation_amount: req.body.donationAmount
                     }
                 },
                 submit_type: "donate",
@@ -283,7 +301,6 @@ class StripeLib {
                     paymentCreationDate: new Date().toISOString(),
                     provider: 'stripe'
                 }
-                const DB = CLIENT.db(DBNAME);
                 const paymentRecordsCollection = await DB.collection('fiat_payment_records');
                 let paymentRecord = await paymentRecordsCollection.findOne({"referenceId" : session.payment_intent});
                 if(!paymentRecord) {
@@ -400,7 +417,9 @@ class StripeLib {
                 },
                 subscription_data: {
                     metadata: {
-                        campaign_id: req.body.campaignId
+                        campaign_id: req.body.campaignId,
+                        tip_amount: req.body.tipAmount,
+                        donation_amount: req.body.donationAmount
                     }
                 },
                 client_reference_id: reffId,

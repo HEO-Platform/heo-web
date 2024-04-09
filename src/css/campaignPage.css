@@ -184,7 +184,9 @@ body {
 #donateRow{
     margin-top: 20px;
 }
-
+#donateButtonsRow{
+    margin-top: 20px;
+}
 #donateAmount{
     display: inline-block;
     height: 44px;
@@ -194,7 +196,24 @@ body {
     border-radius: 4px;
     border-radius: 4px 0 0 4px;
 }
-
+#tipAmount{
+    display: inline-block;
+    height: 44px;
+    width: 100%;
+    border: 1.5px solid #E5E5E5;
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.25);
+    border-radius: 4px;
+    border-radius: 4px 0 0 4px;
+}
+#totalAmount{
+    display: inline-block;
+    height: 44px;
+    width: 100%;
+    border: 1.5px solid #E5E5E5;
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.25);
+    border-radius: 4px;
+    border-radius: 4px 0 0 4px;
+}
 #recurringAmount{
     display: inline-block;
     height: 44px;
@@ -297,6 +316,9 @@ body {
     #donateRow{
         width: 95%;
     }
+    #donateButtonsRow{
+        width: 95%;
+    }
     #videoPlayer{
         height: 300px;
     }
@@ -307,7 +329,13 @@ body {
 
 @media (max-width: 470px){
     #donateAmount{
-        min-width: 70px;
+        min-width: 20px;
+    }
+    #tipAmount{
+        min-width: 20px;
+    }
+    #totalAmount{
+        min-width: 20px;
     }
     #videoRowContainer{
         padding-left: 0;
@@ -320,6 +348,10 @@ body {
         width:100%;        
     }
     #donateRow{
+        min-width:200px;
+        width:100%;
+    }
+    #donateButtonsRow{
         min-width:200px;
         width:100%;
     }
@@ -340,7 +372,13 @@ body {
     #donateAmount{
         text-align: center;
     }
+    #tipAmount{
+        text-align: center;
+    }
     #recurringAmount{
+        text-align: center;
+    }
+    #totalAmount{
         text-align: center;
     }
 }
