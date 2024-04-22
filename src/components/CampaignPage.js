@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import config from "react-global-configuration";
 import axios from 'axios';
-import { Container, Row, Col, ProgressBar, Button, DropdownButton, Dropdown, Modal, Image, InputGroup, FormControl } from 'react-bootstrap';
+import { Container, Row, Col, ProgressBar, Button, DropdownButton, Dropdown, Modal, Image, InputGroup, FormControl, FormLabel } from 'react-bootstrap';
 import { ChevronLeft, CheckCircle, ExclamationTriangle, HourglassSplit, XCircle} from 'react-bootstrap-icons';
 import ReactTextCollapse from 'react-text-collapse';
 import ReactPlayer from 'react-player';
@@ -127,9 +127,11 @@ class CampaignPage extends Component {
     }
 
     handleDonationAmount = (e) => {
-        this.setState({donationAmount: e.target.value});
+        this.setState({donationAmount: e.target.value, totalAmount: (parseInt(e.target.value)+parseInt(this.state.tipAmount))});
     };
-
+    handleTipAmount = (e) => {
+        this.setState({tipAmount: e.target.value, totalAmount: (parseInt(e.target.value)+parseInt(this.state.donationAmount))});
+    };
     handleRecurringAmount = (e) => {
         this.setState({recurringAmount: e.target.value});
     };
@@ -200,7 +202,9 @@ class CampaignPage extends Component {
 
     handleDonateCoinbaseCommerce = async () => {
         let data = {
-            amount: this.state.donationAmount,
+            amount: this.state.totalAmount,
+            tip: this.state.tipAmount,
+            donation: this.state.donationAmount,        
             currency: "USD",
             campaignId: this.state.campaignId,
             campaignName: i18nString(this.state.campaign.title, i18n.language)
@@ -240,7 +244,9 @@ class CampaignPage extends Component {
         var data;
         if(this.state.fiatPaymentProvider === 'stripe') {
             data = {
-                amount: this.state.donationAmount,
+                amount: this.state.totalAmount,
+                tip: this.state.tipAmount,
+                donation: this.state.donationAmount,
                 currency: "USD",
                 campaignId: this.state.campaignId,
                 campaignName: i18nString(this.state.campaign.title, i18n.language)
@@ -301,7 +307,9 @@ class CampaignPage extends Component {
         var data;
         if(this.state.fiatPaymentProvider === 'stripe') {
             data = {
-                amount: this.state.recurringAmount,
+                amount: this.state.totalAmount,
+                tip: this.state.tipAmount,
+                donation: this.state.donationAmount,                
                 currency: "USD",
                 campaignId: this.state.campaignId,
                 campaignName: i18nString(this.state.campaign.title, i18n.language)
@@ -1144,13 +1152,28 @@ class CampaignPage extends Component {
                             </Row>
                             <Row id='donateRow'>
                                 <InputGroup className="mb-3">
-                                    <FormControl
+                                    <FormLabel htmlFor="donateAmount"><Trans i18nKey='donation_label' /></FormLabel><FormControl
                                         id='donateAmount'
                                         value={this.state.donationAmount}
                                         onChange={this.handleDonationAmount}
                                         type="number"
                                     />
-                                    <InputGroup.Append>
+                                    <FormLabel htmlFor="tipAmount"><Trans i18nKey='tip_label' /></FormLabel><FormControl
+                                        id='tipAmount'
+                                        value={this.state.tipAmount}
+                                        onChange={this.handleTipAmount}
+                                        type="number"
+                                    />
+                                    <FormLabel htmlFor="totalAmount"><Trans i18nKey='total_amount_label' /></FormLabel><FormControl
+                                        id='totalAmount'
+                                        value={this.state.totalAmount}
+                                        readOnly="true"
+                                        type="number"
+                                    />
+                                 </InputGroup>
+                            </Row>
+                            <Row id='donateButtonsRow'>
+                                    <InputGroup className="mb-3">
                                         <DropdownButton id='donateButton' title={i18n.t('donate_once')}>
                                             {this.state.fiatPaymentEnabled && this.state.campaign.fiatPayments && <Dropdown.Item key="_fiat" as="button" onClick={
                                             () => {
@@ -1205,24 +1228,15 @@ class CampaignPage extends Component {
                                                 }
                                             } ><img src={ltcLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} />LTC</Dropdown.Item>
                                         </DropdownButton>
-                                    </InputGroup.Append>
-                                </InputGroup>
-                            </Row>
-                            {this.state.fiatPaymentEnabled && this.state.campaign.fiatPayments && this.state.campaign.recurringFiatPayments &&
-                            <Row id='recurringRow'>
-                                    <InputGroup className="mb-3">
-                                        <FormControl id='recurringAmount'
-                                        value={this.state.recurringAmount} onChange={this.handleRecurringAmount} type="number"/>
-                                        <InputGroup.Append>
-                                            <Button id='recurringButton' onClick={
+                                        {this.state.fiatPaymentEnabled && this.state.campaign.fiatPayments && this.state.campaign.recurringFiatPayments &&
+                                        <Button id='recurringButton' onClick={
                                                 () => {
                                                     this.handleDonateRecurring();
                                                 }
                                             }><Trans i18nKey='donate_monthly'/></Button>
-                                        </InputGroup.Append>
-                                    </InputGroup>
-                                    </Row>
-                            }
+                                        }
+                                </InputGroup>
+                            </Row>
                         </Col>
                     </Row>
                     <Row id='videoRow'>
@@ -1273,7 +1287,9 @@ class CampaignPage extends Component {
             this.props.history.push("/404");
             return;
         }
-        this.state.recurringAmount = this.state.donationAmount = campaign.defaultDonationAmount ? campaign.defaultDonationAmount : "10";
+        this.state.donationAmount = campaign.defaultDonationAmount ? campaign.defaultDonationAmount : "10";
+        this.state.tipAmount = 2;
+        this.state.totalAmount = 12;
         campaign.percentRaised = 100 * (this.state.raisedAmount)/campaign.maxAmount;
         var contentState = {};
         var lng

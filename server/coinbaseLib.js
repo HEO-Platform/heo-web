@@ -11,6 +11,8 @@ class CoinbaseLib {
         let campaignName = req.body.campaignName;
         let amount = req.body.amount;
         let url = req.headers.referer;
+        let tipAmount = req.body.tipAmount;
+        let donationAmount = req.body.donationAmount;
         if (url.includes('?')) url = url.split('?')[0];
         try {
             // Log attempt to create a charge
@@ -34,7 +36,9 @@ class CoinbaseLib {
                 },
                 metadata: {
                     customer_id: campaignId,
-                    customer_name: campaignName
+                    customer_name: campaignName,
+                    tip_amount: tipAmount,
+                    donation_amount: donationAmount,
                 },
                 pricing_type: 'fixed_price',
                 redirect_url: `${url}?fp=s&am=${req.body.amount}`,
@@ -57,6 +61,8 @@ class CoinbaseLib {
             const data = {
                 status: "created",
                 amount: amount,
+                tip_amount: tipAmount,
+                donation_amount: donationAmount,
                 charge_id: chargeId,
                 campaign_id: campaignId,
                 checkout_url: checkoutUrl,
