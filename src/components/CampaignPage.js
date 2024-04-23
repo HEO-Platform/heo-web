@@ -247,7 +247,7 @@ class CampaignPage extends Component {
                 amount: this.state.totalAmount,
                 tip: this.state.tipAmount,
                 donation: this.state.donationAmount,
-                currency: "USD",
+                currency: "EUR",
                 campaignId: this.state.campaignId,
                 campaignName: i18nString(this.state.campaign.title, i18n.language)
             };
