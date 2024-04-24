@@ -49,6 +49,7 @@ class App extends Component {
         window.finishCompCount = 0;
         window.finishCompPerPg = 0;
         window.firstFinishComp = 0;
+        window.tipForHeo = 10;
     }
 
     async componentDidMount() {
@@ -61,6 +62,8 @@ class App extends Component {
             window.connect = false;
         result = await axios.post('/api/campaign/getCountInPage', {headers: {"Content-Type": "application/json"}});
         window.pgCount = result.data;
+        result = await axios.post('/api/gettipforheo', {headers: {"Content-Type": "application/json"}});
+        if(result) window.tipForHeo = Number(result.data);
         await this.checkAutorisation();
         this.props.history.listen((location, action) => {
             this.checkAutorisation();
