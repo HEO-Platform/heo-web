@@ -127,10 +127,13 @@ class CampaignPage extends Component {
     }
 
     handleDonationAmount = (e) => {
-        this.setState({donationAmount: e.target.value, totalAmount: (parseInt(e.target.value)+parseInt(this.state.tipAmount))});
+        let donationAmount = parseInt(e.target.value);
+        let tipAmount = Math.max(1, donationAmount/10);
+        this.setState({tipAmount: tipAmount, donationAmount: donationAmount, totalAmount: (donationAmount + tipAmount)});
     };
     handleTipAmount = (e) => {
-        this.setState({tipAmount: e.target.value, totalAmount: (parseInt(e.target.value)+parseInt(this.state.donationAmount))});
+        let tipAmount = parseInt(e.target.value);
+        this.setState({tipAmount: tipAmount, totalAmount: (tipAmount + parseInt(this.state.donationAmount))});
     };
     handleRecurringAmount = (e) => {
         this.setState({recurringAmount: e.target.value});
@@ -310,7 +313,7 @@ class CampaignPage extends Component {
                 amount: this.state.totalAmount,
                 tip: this.state.tipAmount,
                 donation: this.state.donationAmount,                
-                currency: "USD",
+                currency: "EUR",
                 campaignId: this.state.campaignId,
                 campaignName: i18nString(this.state.campaign.title, i18n.language)
             };
@@ -1288,7 +1291,7 @@ class CampaignPage extends Component {
             return;
         }
         this.state.donationAmount = campaign.defaultDonationAmount ? campaign.defaultDonationAmount : 20;
-        this.state.tipAmount = 5;
+        this.state.tipAmount = Math.max(1, parseInt(parseInt(this.state.donationAmount)/10));
         this.state.totalAmount = parseInt(campaign.defaultDonationAmount) + 5;
         campaign.percentRaised = 100 * (this.state.raisedAmount)/campaign.maxAmount;
         var contentState = {};
