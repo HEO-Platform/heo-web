@@ -1292,7 +1292,7 @@ class CampaignPage extends Component {
         }
         this.state.donationAmount = campaign.defaultDonationAmount ? campaign.defaultDonationAmount : 20;
         this.state.tipAmount = Math.max(1, parseInt(parseInt(this.state.donationAmount)/10));
-        this.state.totalAmount = parseInt(campaign.defaultDonationAmount) + 5;
+        this.state.totalAmount = parseInt(campaign.defaultDonationAmount) + this.state.tipAmount;
         campaign.percentRaised = 100 * (this.state.raisedAmount)/campaign.maxAmount;
         var contentState = {};
         var lng
