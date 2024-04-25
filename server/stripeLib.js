@@ -376,7 +376,7 @@ class StripeLib {
             let priceID = null;
             let prices = await stripe.prices.list({product: productID});
             for(let i=0; i<prices.data.length; i++) {
-                if(prices.data[i].unit_amount == req.body.amount*100) {
+                if(prices.data[i].unit_amount == req.body.amount*100 && prices.data[i].currency.toLowerCase() == req.body.currency.toLowerCase()) {
                     priceID = prices.data[i].id;
                     Sentry.addBreadcrumb({
                         category: "stripe",
