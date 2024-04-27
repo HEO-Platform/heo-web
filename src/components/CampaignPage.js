@@ -1036,7 +1036,7 @@ class CampaignPage extends Component {
     render() {
         return (
             <div>
-                <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' centered>
+                <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' size="md" centered>
                     <Modal.Body><p className='errorIcon'>
                         {this.state.errorIcon === 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
                         {this.state.errorIcon === 'ExclamationTriangle' && <ExclamationTriangle style={{color: '#E63C36'}}/>}
