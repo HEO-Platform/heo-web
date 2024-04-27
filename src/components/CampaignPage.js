@@ -1270,7 +1270,7 @@ class CampaignPage extends Component {
             return;
         }
         let tipForHeo = 10;
-        result = await axios.post('/api/gettipforheo', {headers: {"Content-Type": "application/json"}});
+        let result = await axios.post('/api/gettipforheo', {headers: {"Content-Type": "application/json"}});
         if(result) {
             tipForHeo = Number(result.data);
         }
