@@ -12,8 +12,6 @@ import {
     initWeb3,
     initWeb3Modal,
     clearWeb3Provider,
-    encryptCardData,
-    getPCIPublicKey,
     clearTronProvider,
     initTronadapter,
     initTron
@@ -56,23 +54,6 @@ const PAYMENT_ERROR_MESSAGES = {
     card_not_honored: "cardPaymentFailed_card_not_honored",
     thankyou: "thankYouDonation"
 };
-
-const CC_INFO_FIELDS_ERRORS = {
-    name: 'checkCCName',
-    number: 'checkCCNumber',
-    expMonth: 'checkCCExpMonth',
-    expYear: 'checkCCExpYear',
-    cvv: 'checkCCcvv',
-    email: 'checkCCemail',
-    line1: 'checkCCstreet',
-    line2: 'checkCCstreet2',
-    city: 'checkCCcity',
-    country: 'checkCCcountry',
-    district: 'checkCCdistrict',
-    postalCode: 'checkCCpostalCode',
-    phoneNumber: 'checkCCphoneNumber',
-    default: 'checkCCdefault'
-}
 
 const TEXT_COLLAPSE_OPTIONS = {
     collapse: true, // default state when component rendered
@@ -128,7 +109,7 @@ class CampaignPage extends Component {
 
     handleDonationAmount = (e) => {
         let donationAmount = parseInt(e.target.value);
-        let tipAmount = Math.max(1, donationAmount/10);
+        let tipAmount = parseInt(this.state.tipAmount);
         this.setState({tipAmount: tipAmount, donationAmount: donationAmount, totalAmount: (donationAmount + tipAmount)});
     };
     handleTipAmount = (e) => {
@@ -296,7 +277,6 @@ class CampaignPage extends Component {
                 });
                 return;
             }
-            let errorFound = false;
             console.log(err.response)
             this.setState({
                 showModal: true, modalTitle: 'failed',
@@ -359,7 +339,6 @@ class CampaignPage extends Component {
                 });
                 return;
             }
-            let errorFound = false;
             console.log(err.response)
             this.setState({
                 showModal: true, modalTitle: 'failed',
@@ -1057,7 +1036,7 @@ class CampaignPage extends Component {
     render() {
         return (
             <div>
-                <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' centered>
+                <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' size="md" centered>
                     <Modal.Body><p className='errorIcon'>
                         {this.state.errorIcon === 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
                         {this.state.errorIcon === 'ExclamationTriangle' && <ExclamationTriangle style={{color: '#E63C36'}}/>}
@@ -1290,8 +1269,13 @@ class CampaignPage extends Component {
             this.props.history.push("/404");
             return;
         }
+        let tipForHeo = 10;
+        result = await axios.post('/api/gettipforheo', {headers: {"Content-Type": "application/json"}});
+        if(result) {
+            tipForHeo = Number(result.data);
+        }
         this.state.donationAmount = campaign.defaultDonationAmount ? campaign.defaultDonationAmount : 20;
-        this.state.tipAmount = Math.max(1, parseInt(parseInt(this.state.donationAmount)/10));
+        this.state.tipAmount = Math.max(1, parseInt(parseInt(this.state.donationAmount)/100 * tipForHeo));
         this.state.totalAmount = parseInt(campaign.defaultDonationAmount) + this.state.tipAmount;
         campaign.percentRaised = 100 * (this.state.raisedAmount)/campaign.maxAmount;
         var contentState = {};
