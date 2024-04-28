@@ -56,7 +56,7 @@ class CoinbaseLib {
                 message: `Created Coinbase charge ID ${chargeId} for ${campaignId}. Amount: ${amount}`,
                 level: "info",
             });
-
+            let date_val = new Date();
             // Insert charge into DB
             const data = {
                 status: "created",
@@ -66,8 +66,8 @@ class CoinbaseLib {
                 charge_id: chargeId,
                 campaign_id: campaignId,
                 checkout_url: checkoutUrl,
-                last_updated: new Date(),
-                created_on: new Date(),
+                updated_at: date_val,
+                created_on: date_val,
                 currency: "USD"
             }
             const DB = CLIENT.db(DBNAME);
@@ -102,13 +102,44 @@ class CoinbaseLib {
         const chargesCollection = await DB.collection('coinbase_commerce_charges');
         let chargeRecord = await chargesCollection.findOne({"charge_id" : chargeId});
         if(chargeRecord) {
+            let donation_time = new Date();
             chargeRecord.code = payload.event.data.code;
             chargeRecord.status = payload.event.type;
             chargeRecord.payments = payload.event.data.payments;
             chargeRecord.fee = payload.event.data.fee_rate;
             chargeRecord.local_exchange_rates = payload.event.data.local_exchange_rates;
-            chargeRecord.updated_at = new Date();
+            chargeRecord.updated_at = donation_time;
             await chargesCollection.updateOne({'_id': chargeRecord._id}, {$set: chargeRecord});
+
+            if(chargeRecord.status === 'charge:confirmed') {
+                Sentry.addBreadcrumb({
+                    category: "CoinbaseCommerce",
+                    message: `Charge ID ${chargeId} confirmed`,
+                    level: "info",
+                });
+                // Update raisedOnCoinbase field of campaign and lastDonationTime
+                const campaignId = chargeRecord.campaign_id;
+                const campaignCollection = await DB.collection('campaigns');
+                const campaign = await campaignCollection.findOne({"_id" : campaignId});
+                if(campaign) {
+                    campaign.raisedOnCoinbase += chargeRecord.amount;
+                    campaign.lastDonationTime = donation_time;
+                    await campaignCollection.updateOne({'_id': campaignId}, {$set: campaign});
+                } else {
+                    Sentry.addBreadcrumb({
+                        category: "CoinbaseCommerce",
+                        message: `Campaign ID ${campaignId} not found`,
+                        level: "info",
+                    });
+                    Sentry.captureException(new Error('Campaign not found'));
+                }   
+            } else if(chargeRecord.status === 'charge:failed') {
+                Sentry.addBreadcrumb({
+                    category: "CoinbaseCommerce",
+                    message: `Charge ID ${chargeId} failed`,
+                    level: "info",
+                });
+            }
         } else {
             Sentry.addBreadcrumb({
                 category: "CoinbaseCommerce",
