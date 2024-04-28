@@ -356,6 +356,18 @@ class ServerLib {
         } catch (err) {Sentry.captureException(new Error(err));}
     }
 
+    async handleGetTipForHeo(req, res, Sentry, DB) {
+        try {
+            const myCollection = await DB.collection('global_configs');
+            let result = await myCollection.findOne({"_id" : "tip_for_heo"});
+            if (result) res.send(result.percent);
+            else res.send('0');
+        } catch (err) {
+            console.log(err);
+            Sentry.captureException(new Error(err));
+        }
+    }
+
     async handleGetChainsLis(req, res, Sentry, DB) {
         try {
             const myCollection = await DB.collection('coins_for_chains');

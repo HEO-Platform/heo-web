@@ -61,6 +61,7 @@ class App extends Component {
             window.connect = false;
         result = await axios.post('/api/campaign/getCountInPage', {headers: {"Content-Type": "application/json"}});
         window.pgCount = result.data;
+
         await this.checkAutorisation();
         this.props.history.listen((location, action) => {
             this.checkAutorisation();

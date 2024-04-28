@@ -242,6 +242,11 @@ APP.post('/api/getcoinslist', (req, res) => {
     serverLib.handleGetCoinsList(req, res, Sentry, DB);
 });
 
+APP.post('/api/gettipforheo', (req, res) => {
+    const DB = CLIENT.db(DBNAME);
+    serverLib.handleGetTipForHeo(req, res, Sentry, DB);
+});
+
 APP.post('/api/getchainslist', (req, res) => {
     const DB = CLIENT.db(DBNAME);
     serverLib.handleGetChainsList(req, res, Sentry, DB);
