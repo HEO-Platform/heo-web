@@ -195,6 +195,10 @@ APP.post('/api/donate/adddanate', async (req, res) => {
     }
 });
 
+APP.post('/api/campaign/updateWallet', async (req, res) => {
+    const DB = CLIENT.db(DBNAME);
+    serverLib.handleUpdateCampaignWallet(req, res, Sentry, DB);
+});
 
 APP.post('/api/campaign/update', (req, res) => {
     if(serverLib.authenticated(req, res, Sentry)) {

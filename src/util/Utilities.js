@@ -163,7 +163,7 @@ const getTronWeb = async () => {
     return tronWeb;
 }
 
-const initTron = async (chainId, that) => {
+const initTron = async (chainId) => {
     if(!window.tronWeb)
     {
         window.tronWeb = await getTronWeb();
@@ -415,11 +415,21 @@ const encryptCardData = async(keyData, cardData) => {
     return btoa(encrypted);
 }
 
+function countWordsString(string){
+    var counter = 0;
+    string=string.replace(/[\s]+/gim, ' ');
+    string.replace(/(\s+)/g, function (a) {
+       counter++;
+    });
+    return counter;
+}
+
 const blockchains = [
     {value:"Ethereum"},
     {value:"Tron"}
 ];
 
 export {DescriptionPreview, i18nString, GetLanguage, LogIn, initWeb3, checkAuth, initWeb3Modal, clearWeb3Provider,clearTronProvider,
-    getPCIPublicKey, encryptCardData, LogInTron, initTronadapter, checkAuthTron, initTron, getTronWeb, checkEmail, isValidUrl,blockchains};
+    getPCIPublicKey, encryptCardData, LogInTron, initTronadapter, checkAuthTron, initTron, getTronWeb, checkEmail, isValidUrl,blockchains,
+    countWordsString};
 export default Utilities;

@@ -203,8 +203,8 @@ class CampaignList extends Component {
                                                         {`${DescriptionPreview(item.description, i18n.language)}...`}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id='readMore'><Trans i18nKey='readMore'/></span>
                                                     </Card.Text>
                                                     <p id='progressBarLabel'><span id='progressBarLabelStart'>
-                                                        &#36;{item.raisedAmount}</span>{i18n.t('raised')}&#36;{item.maxAmount} {i18n.t('goal')}</p>
-                                                    <ProgressBar now={100 * item.raisedAmount/item.maxAmount} />
+                                                        &#36;{item.donate_count}</span>{i18n.t('raised')}&#36;{item.maxAmount} {i18n.t('goal')}</p>
+                                                    <ProgressBar now={100 * item.donate_count/item.maxAmount} />
                                                 </Card.Body>
                                             </Row>
                                             <Row >

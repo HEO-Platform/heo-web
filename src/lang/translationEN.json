@@ -62,7 +62,7 @@
     "campaignDescription": "Campaign description",
     "createCampaignBtn": "CREATE CAMPAIGN",
     "noUserCampaigns": "You did not create any campaigns yet. Click <1>here</1> to create your first campaign",
-    "saveCampaignBtn" : "SAVE CAMPAIGN",
+    "saveCampaignBtn" : "Save campaign",
     "complete" : "Complete!",
     "updateSuccessfull" : "Updated Campaign information successfully",
     "closeBtn" : "Close",
@@ -241,6 +241,13 @@
     "campaignURL":"Campaign URL",
     "campaignURLPlaceHolder":"Symbols which will appear in campaign’s address after https://app.heo.finance/campaign/",
     "campaignURLBad":"This campaign URL already exists in the database, enter another",
-    "countryCodeRequired": "Please select the country code for the tefon number"
+    "countryCodeRequired": "Please select the country code for the tefon number",
+    "notValidAddr":"Not valid wallet address",
+    "blockchain":"Blockchain",
+    "wallet": "Wallet address",
+    "payout":"Payout address",
+    "enterWallet":"Please enter wallet address",
+    "campaignSaved":"Campaign saved to database",
+    "campaignSavedWithErrors":"Campaign saved in database with errors"
 }
 

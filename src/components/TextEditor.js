@@ -423,6 +423,7 @@ class TextEditorEn extends TextEditor{
     componentDidMount() {
       if(STOREDSTATEEN.length) {
         this.setState({editorState : EditorState.createWithContent(STOREDSTATEEN, this.createDecorator())});
+        
       } else {
         this.setState({editorState : EditorState.createEmpty(this.createDecorator())});
       }
@@ -504,6 +505,8 @@ class TextEditorRu extends TextEditor{
     componentDidMount() {
       if(STOREDSTATERU.length) {
         this.setState({editorState : EditorState.createWithContent(STOREDSTATERU, this.createDecorator())});
+        DESCRIPTIONRAWRU  = convertToRaw(this.state.editorState.getCurrentContent());
+        STATEHASCHANGEDRU = true;
       } else {
         this.setState({editorState : EditorState.createEmpty(this.createDecorator())});
       }
@@ -568,6 +571,7 @@ class TextEditorRu extends TextEditor{
 
   function setEditorState(storedState, hasContent) {
     if(hasContent) {
+      
       const contentState = convertFromRaw(storedState);
       STOREDSTATE = contentState;
     } else {
@@ -577,6 +581,7 @@ class TextEditorRu extends TextEditor{
 
   function setEditorStateEn(storedState, hasContent) {
     if(hasContent) {
+      DESCRIPTIONRAWEN = storedState;
       const contentState = convertFromRaw(storedState);
       STOREDSTATEEN = contentState;
     } else {

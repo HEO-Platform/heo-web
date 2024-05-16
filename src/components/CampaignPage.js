@@ -7,6 +7,7 @@ import ReactTextCollapse from 'react-text-collapse';
 import ReactPlayer from 'react-player';
 import { Link } from "react-router-dom";
 import { Trans } from 'react-i18next';
+import tron_abi from './TRC20';
 import {
     i18nString,
     initWeb3,
@@ -21,7 +22,6 @@ import { Editor, EditorState, convertFromRaw, CompositeDecorator } from "draft-j
 import '../css/campaignPage.css';
 import '../css/modal.css';
 import ReactGA from "react-ga4";
-import web3 from 'web3';
 import bnbIcon from '../images/binance-coin-bnb-logo.png';
 import busdIcon from '../images/binance-usd-busd-logo.png';
 import usdcIcon from '../images/usd-coin-usdc-logo.png';
@@ -40,7 +40,8 @@ const IMG_MAP = {"BUSD": busdIcon,
     "USDC": usdcIcon,
     "USDT": usdtLogo,
     "ETH": ethIcon,
-    "cUSD": cusdIcon};
+    "cUSD": cusdIcon,
+};
 
 const PAYMENT_ERROR_MESSAGES = {
     declined: "cardPaymentDeclined",
@@ -83,6 +84,9 @@ class CampaignPage extends Component {
             modalButtonMessage: "",
             modalButtonVariant: "",
             chainId:"",
+            campaign_wallets:[],           
+            chain_addres:"",
+            token_addres:"",
             chains:[],
             chains_coins:[],
             coins:[],
@@ -92,30 +96,34 @@ class CampaignPage extends Component {
             fiatPaymentEnabled: false,
             fiatPaymentProvider: '',
             recurringFiatPayments: false,
-            cur_chain: -1
+            cur_chain: -1,
+            tipForHeo: 0
         };
         this.handleGetCCInfo = this.handleGetCCInfo.bind(this);
         this.handleCCInfoCancel = this.handleCCInfoCancel.bind(this);
-
+        this.blockChainOrt = "";
     }
+
     async handleGetCCInfo(info) {
-        await this.setState({ccinfo : info});
+        this.setState({ccinfo : info});
         this.handleDonateFiat();
-
     }
+
     handleCCInfoCancel() {
         this.setState({showCCinfoModal : false});
     }
 
     handleDonationAmount = (e) => {
         let donationAmount = parseInt(e.target.value);
-        let tipAmount = parseInt(this.state.tipAmount);
+        let tipAmount = Math.max(1, parseInt(parseInt(donationAmount)/100 * this.state.tipForHeo));;
         this.setState({tipAmount: tipAmount, donationAmount: donationAmount, totalAmount: (donationAmount + tipAmount)});
     };
+
     handleTipAmount = (e) => {
         let tipAmount = parseInt(e.target.value);
         this.setState({tipAmount: tipAmount, totalAmount: (tipAmount + parseInt(this.state.donationAmount))});
     };
+
     handleRecurringAmount = (e) => {
         this.setState({recurringAmount: e.target.value});
     };
@@ -129,7 +137,7 @@ class CampaignPage extends Component {
      }
      this.setState({cur_chain: -1});
      return(-1);
-    }
+    };
 
     async getCampaign(address) {
         var campaign = {};
@@ -151,37 +159,6 @@ class CampaignPage extends Component {
             })
         })
         return campaign;
-    }
-
-    updateRaisedAmount = async () => {
-        var modalMessage;
-        let data = {campaignID: this.state.campaignId};
-        var donateAmount;
-        await axios.post('/api/campaign/getalldonations', {mydata: data}, {headers: {"Content-Type": "application/json"}})
-            .then(res => {
-                donateAmount = (res.data === 0 || res.data.length === 0) ? 0 : parseFloat(res.data[0].totalQuantity);
-            }).catch(err => {
-                if (err.response) {
-                    modalMessage = 'technicalDifficulties'}
-                else if(err.request) {
-                    modalMessage = 'checkYourConnection'
-                }
-                console.log(err);
-                this.setState({
-                    showError: true,
-                    modalMessage: modalMessage,
-                })
-            })
-            if(!donateAmount) {
-                donateAmount = 0;
-            }
-            let baseAmount = this.state.campaign.raisedAmount ? parseFloat(this.state.campaign.raisedAmount) : 0;
-            let fiatDonations = this.state.campaign.fiatDonations ? parseFloat(this.state.campaign.fiatDonations) : 0;
-            let raisedOnCoinbase = this.state.campaign.raisedOnCoinbase ? parseFloat(this.state.campaign.raisedOnCoinbase) : 0;
-            if(baseAmount || fiatDonations || raisedOnCoinbase || donateAmount) {
-                let raisedAmount = Math.round((baseAmount + fiatDonations + raisedOnCoinbase + donateAmount) * 100)/100;
-                this.setState({raisedAmount : raisedAmount});
-            }
     }
 
     handleDonateCoinbaseCommerce = async () => {
@@ -351,35 +328,29 @@ class CampaignPage extends Component {
         this.setState({showCoinbaseModal: true});
     }
 
-    saveDonateToDb = async (value, decimals, transactionHash, chainId, coinAddress) => {
+    saveDonateToDb = async (transactionHash, chainId, coinAddress) => {
         let accounts = this.state.accounts;
-        if (window.blockChainOrt === "ethereum"){
-            if(decimals === 18) {
-                value = parseFloat(web3.utils.fromWei(value));
-            } else {
-                value = parseFloat(value/Math.pow(10, decimals));
-            }
-        }
-        else if (window.blockChainOrt === "tron"){
-            value = parseFloat(window.tronWeb.fromSun(value));
-        }
         let donateData
-        if (window.blockChainOrt === "ethereum"){
+        if (this.blockChainOrt === "ethereum"){
             donateData = {
                 campaignID : this.state.campaignId,
                 donatorID: accounts[0],
-                raisedAmount: value,
+                raisedAmount: this.state.donationAmount,
+                tipAmount: this.state.tipAmount,
                 transactionHash: transactionHash,
                 chainId: chainId,
+                blockChainOrt: "Ethereum",
                 coinAddress: coinAddress
               };
-        } else if (window.blockChainOrt === "tron"){
+        } else if (this.blockChainOrt === "tron"){
             donateData = {
                 campaignID : this.state.campaignId,
                 donatorID: window.tronAdapter.address,
-                raisedAmount: value,
+                raisedAmount: this.state.donationAmount,
+                tipAmount: this.state.tipAmount,
                 transactionHash: transactionHash,
                 chainId: chainId,
+                blockChainOrt: "Tron",
                 coinAddress: coinAddress
               };
         }
@@ -391,42 +362,36 @@ class CampaignPage extends Component {
             modalButtonMessage: 'returnHome',
             modalButtonVariant: "#588157", waitToClose: false
         });
-        await this.updateRaisedAmount();
+        this.setState({raisedAmount: this.state.raisedAmount + this.state.donationAmount});
+    }
+    
+    handleDonateClick = async(wallet_ort, addres_base58, addres_hex, coin_addres, chain_name) =>{
+      if(wallet_ort === "Ethereum"){
+        this.blockChainOrt = "ethereum";
+        //if (this.state.campaign.new === false) await this.handleDonateOld(chain_name, addres_hex);
+       await this.handleDonateNew(chain_name, addres_hex);
+      }
+      else if(wallet_ort === "Tron"){
+        this.blockChainOrt = "tron";
+        await this.handleDonateTron(chain_name, addres_base58, coin_addres);
+      }
     }
 
-    handleDonateClick = async(chain_name, coin_address, blockChainOrt) =>{
-      if(blockChainOrt === "ethereum"){
-        window.blockChainOrt = "ethereum";
-        if (this.state.campaign.new === false) await this.handleDonateOld(chain_name, coin_address);
-       else await this.handleDonateNew(chain_name, coin_address);
-      }
-      else if(blockChainOrt === "tron"){
-        window.blockChainOrt = "tron";
-        await this.handleDonateTron(chain_name, coin_address);
-      }
-    }
-
-    handleDonateTron = async (chainId, coinAddress) =>{
+    handleDonateTron = async (chainId, addres_base58, coinAddress) =>{
         try{
             await clearTronProvider();
             await initTronadapter();
-            await initTron(chainId, this);
-            let TRC20Coin = (await import("../remote/"+ chainId + "/TRC20")).default;
-            let HEOCampaign = (await import("../remote/"+ chainId + "/HEOCampaign")).default;
-            let campaignAddress = this.state.campaign.addresses[chainId];
-            let campaignInstance = await window.tronWeb.contract(HEOCampaign, window.tronWeb.address.fromHex(campaignAddress));
-            var toDonate = window.tronWeb.toSun(this.state.donationAmount);
-            var coinInstance = await window.tronWeb.contract(TRC20Coin, window.tronWeb.address.fromHex(coinAddress));
-            var decimals = coinInstance.methods.decimals().call();
+            await initTron(chainId);
+            var toDonate = window.tronWeb.toSun(this.state.totalAmount);
+            var coinInstance = await window.tronWeb.contract(tron_abi, coinAddress);
             ReactGA.event({
                 category: "donation",
                 action: "donate_button_click",
-                value: parseInt(this.state.donationAmount), // optional, must be a number
+                value: parseInt(this.state.totalAmount), // optional, must be a number
                 nonInteraction: false
             });
             //check if donating to oneself
-            let beneficiaryAdres = await campaignInstance.methods.beneficiary().call();
-            if(window.tronWeb.address.toHex(window.tronAdapter.address).toLowerCase() === beneficiaryAdres.toLowerCase()) {
+            if(window.tronAdapter.address.toLowerCase() === addres_base58.toLowerCase()) {
                 this.setState({
                     showModal: true, modalTitle: 'notAllowed',
                     modalMessage: 'donateToYourSelf',
@@ -439,11 +404,11 @@ class CampaignPage extends Component {
                     nonInteraction: false
                 });
                 console.log("Tronadapter address" + window.tronAdapter.address);
-                console.log("Beneficiary" + beneficiaryAdres);
                 return;
             }
-            let result = await coinInstance.methods.transfer(campaignAddress, toDonate)
+            let result = await coinInstance.methods.transfer(addres_base58, toDonate)
             .send({from:window.tronAdapter.address,callValue:0,feeLimit:15000000000,shouldPollResponse:false});
+            
             this.setState({showModal:true,
                 modalTitle: 'processingWait',
                 modalMessage: 'waitingForNetwork', errorIcon:'HourglassSplit',
@@ -464,7 +429,7 @@ class CampaignPage extends Component {
                    errorIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
                    modalButtonVariant: '#588157', waitToClose: false
                 });
-                this.saveDonateToDb(toDonate,decimals, txnObject.txID, chainId, coinAddress);
+                this.saveDonateToDb(txnObject.id, chainId, coinAddress);
             }else {
                 this.setState({
                     showModal: true, modalTitle: 'failed',
@@ -580,7 +545,6 @@ class CampaignPage extends Component {
                         ).once('transactionHash', function(transactionHash) {
                             that.setState({modalMessage: "waitingForNetwork"})
                         });
-                        await this.updateRaisedAmount(accounts, campaignInstance, web3, 18);
                         this.setState({
                             showModal: true, modalTitle: 'complete',
                             modalMessage: 'thankYouDonation',
@@ -716,7 +680,6 @@ class CampaignPage extends Component {
                             clearWeb3Provider(this);
                             return;
                         }
-                        await this.updateRaisedAmount(accounts, campaignInstance, web3, decimals);
                         this.setState({
                             showModal: true, modalTitle: 'complete',
                             modalMessage: 'thankYouDonation',
@@ -822,7 +785,7 @@ class CampaignPage extends Component {
                             {from:accounts[0], value:(""+toDonate)}
                         ).once('transactionHash', function(transactionHash) {
                             that.setState({modalMessage: "waitingForNetwork"});
-                            that.saveDonateToDb(toDonate, 0, transactionHash, chainId, coinAddress);
+                            that.saveDonateToDb(transactionHash, chainId, coinAddress);
                             web3.eth.getTransaction(transactionHash).then(
                                 function(txnObject) {
                                     if(txnObject) {
@@ -849,15 +812,7 @@ class CampaignPage extends Component {
                             {from:accounts[0], value:(""+toDonate)}
                         ).once('transactionHash', function(transactionHash) {
                             that.setState({modalMessage: "waitingForNetwork"});
-                            let decimals = 0;
-                            coinInstance.methods.decimals().call({from:accounts[0]}, function(err, result) {
-                                if(err) {
-                                    console.log(`Failed to fetch decimals from ${coinAddress} `);
-                                    console.log(err);
-                                }
-                                else decimals = result;
-                            });
-                            that.saveDonateToDb(toDonate, decimals, transactionHash, chainId, coinAddress);
+                            that.saveDonateToDb(transactionHash, chainId, coinAddress);
                         });
                         this.setState({
                             showModal: true, modalTitle: 'complete',
@@ -914,7 +869,7 @@ class CampaignPage extends Component {
                                 {from:accounts[0]}
                             ).once('transactionHash', function(transactionHash) {
                                 console.log(`Got donation trnasaction hash ${transactionHash}`);
-                                that.saveDonateToDb(toDonate,decimals, transactionHash, chainId, coinAddress);
+                                that.saveDonateToDb(transactionHash, chainId, coinAddress);
                                 ReactGA.event({
                                     category: "donation",
                                     action: "donation_hash",
@@ -966,7 +921,7 @@ class CampaignPage extends Component {
                         ).once('transactionHash', function(transactionHash) {
                             console.log(`transaction hash for donateERC20 ${transactionHash}`);
                             that.setState({modalMessage: "waitingForNetwork"});
-                            that.saveDonateToDb(toDonate,decimals, transactionHash, chainId, coinAddress);
+                            that.saveDonateToDb(transactionHash, chainId, coinAddress);
                         });
                         if(result.code) {
                             this.setState({
@@ -1173,10 +1128,14 @@ class CampaignPage extends Component {
                                                 }
                                             }
                                             }><img src={visaMcLogo} width={17} height={16} alt='some value' style={{marginRight:5}} />USD</Dropdown.Item> }
-
-                                            {this.state.chains_coins.map((item, i) =>
-                                                    <Dropdown.Item key={item.chain.address} as="button" onClick={() => this.handleDonateClick(item.chain, item.coin.address, item.blockChainOrt)}><img src={IMG_MAP[item.coin.name]} width={16} height={16} alt='some value' style={{marginRight:5}} />{item.coin.name} ({item.chain_name })</Dropdown.Item>
+                                             {this.state.campaign_wallets.map((item, i) =>
+                                                    <Dropdown.Item key={item.wallet_ort} as="button" onClick={() => 
+                                                      this.handleDonateClick(item.wallet_ort, item.addres_base58, item.addres_hex,item.coin_addres,item.chainId)}>
+                                                      <img src={IMG_MAP[item.coin_name]} width={16} height={16} alt='some value' style={{marginRight:5}} />{item.coin_name} 
+                                                    </Dropdown.Item>
                                                 )}
+                                            <Dropdown.Divider />
+                                            <Dropdown.Header id='descriptionRow'>Coinbase commerce</Dropdown.Header>
                                             <Dropdown.Item className='coinRewardInfo' onClick={
                                                 () => {
                                                     this.handleDonateCoinbaseCommerce();
@@ -1263,19 +1222,22 @@ class CampaignPage extends Component {
                     modalMessage: modalMessage
                 })
             })
-
         let campaign = await this.getCampaign(campaignId);
         if(!campaign) {
             this.props.history.push("/404");
             return;
         }
-        let tipForHeo = 10;
+        console.log("this.state.raisedAmount - ", this.state.raisedAmount);
+        for(let i = 0; i < campaign.campaign_wallets.length; i++) 
+            this.state.raisedAmount = this.state.raisedAmount + campaign.campaign_wallets[i].donate_count;
+        console.log("this.state.raisedAmount - ", this.state.raisedAmount);
+        this.state.campaign_wallets = campaign.campaign_wallets;
         let result = await axios.post('/api/gettipforheo', {headers: {"Content-Type": "application/json"}});
         if(result) {
-            tipForHeo = Number(result.data);
+            this.state.tipForHeo = Number(result.data);
         }
         this.state.donationAmount = campaign.defaultDonationAmount ? campaign.defaultDonationAmount : 20;
-        this.state.tipAmount = Math.max(1, parseInt(parseInt(this.state.donationAmount)/100 * tipForHeo));
+        this.state.tipAmount = Math.max(1, parseInt(parseInt(this.state.donationAmount)/100 * this.state.tipForHeo));
         this.state.totalAmount = parseInt(campaign.defaultDonationAmount) + this.state.tipAmount;
         campaign.percentRaised = 100 * (this.state.raisedAmount)/campaign.maxAmount;
         var contentState = {};
@@ -1308,7 +1270,6 @@ class CampaignPage extends Component {
                 chains.push(configChains[ch]);
             }
         }
-
         let globals = config.get("GLOBALS");
         globals.forEach(element => {
             if(element._id === 'FIATPAYMENT') {
@@ -1349,6 +1310,7 @@ class CampaignPage extends Component {
                 dedupedCoinNames.push(coinName);
             }
         }
+        
         await axios.post('/api/getcoinslist')
         .then(res => {
             let chains_coins = [];
@@ -1384,7 +1346,6 @@ class CampaignPage extends Component {
             campaign : campaign,
             coins: dedupedCoinNames
         });
-        await this.updateRaisedAmount();
         ReactGA.send({ hitType: "pageview", page: this.props.location.pathname });
         const params = new Proxy(new URLSearchParams(window.location.search), {
             get: (searchParams, prop) => searchParams.get(prop),
@@ -1462,10 +1423,6 @@ function findLinkEntities(contentBlock, callback, contentState) {
 function checkDonationTransaction(txnObject, decimals, chainId, that) {
     if(txnObject.blockNumber) {
         console.log(`Donation transaction successful in block ${txnObject.blockNumber}`);
-
-        if(decimals > 0) {
-            that.updateRaisedAmount();
-        }
         that.setState({
             showModal: true, modalTitle: 'complete',
             modalMessage: 'thankYouDonation',

@@ -349,9 +349,6 @@ class UserCampaigns extends Component {
                                             </Link>
                                             <Row id='buttonsRow'>
                                                 <Col className='buttonCol'><Button variant="danger" id='donateBtn' block onClick={() => this.closeCampaignPrep(item._id, item.mainImageURL)}><Trans i18nKey='closeCmpnBtn'/></Button></Col>
-                                                {item.new &&
-                                                 <Col className='buttonCol'><Link to={'/withdrawDonations/' + item.key} id='cardLink'><Button id='editBtn' block><Trans i18nKey='withdrawDonations'/></Button></Link></Col>
-                                                }
                                                 <Col className='buttonCol'><Link to={'/editCampaign/' + item.key} id='cardLink'><Button id='editBtn' block><Trans i18nKey='editCmpnBtn'/></Button></Link></Col>
                                             </Row>
                                         </Col>

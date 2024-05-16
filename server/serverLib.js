@@ -152,17 +152,19 @@ class ServerLib {
             campaignID: req.body.mydata.campaignID.toLowerCase(),
             donatorID: req.body.mydata.donatorID.toLowerCase(),
             raisedAmount: req.body.mydata.raisedAmount,
+            tipAmount: req.body.mydata.tipAmount,
             transactionHash: req.body.mydata.transactionHash,
             chainId: req.body.mydata.chainId,
             coinAddress: req.body.mydata.coinAddress,
+            blockChainOrt: req.body.mydata.blockChainOrt,
             donateDate: Date.now(),
             deleted: false,
             checked: false
         }
-
         try {
             const myCollection = await DB.collection('donations');
             await myCollection.insertOne(ITEM);
+            await this.handleUpdateCampaignWallet(req, res, Sentry, DB);
             res.send('success');
         } catch (err) {
             Sentry.captureException(new Error(err));
@@ -204,6 +206,9 @@ class ServerLib {
             number: req.body.mydata.number,
             telegram: req.body.mydata.telegram,
             website: req.body.mydata.website,
+            payout_address: req.body.mydata.payout_address,
+            payout_chain: req.body.mydata.payout_chain,
+            complete:req.body.mydata.complete,
             new: true
         }
         try {
@@ -260,16 +265,23 @@ class ServerLib {
 
     async handleLoadFinishedCampaigns(req, res, Sentry, DB) {
         try{
-            
             let pipeline = [
-                { $match: {successful: true, deleted:{ $exists : false}}},
-                 {$sort: {raisedAmount: -1, raisedOnCoinbase: -1, _id: 1}},
-                 { $skip : req.body.startRec},
-                 { $limit:req.body.compaignsCount}
+                {$lookup: {from :"campaign_wallet", localField: "_id", foreignField: "campaign_id", as : "wallet"}},
+                {$match: {successful: true, 
+                 $or:[{deleted:{ $exists : false}}, {deleted:false}],"wallet":{ $ne : []},"active":true, complete:true}},
+                 {$set: {wallet: {$arrayElemAt: ["$wallet.addres_base58",0]},donate_count:{$arrayElemAt: ["$wallet.donate_count",0]}}},
+                {$sort: {donate_count: -1, raisedOnCoinbase: -1, _id: 1}},
+                {$skip : req.body.startRec},
+                { $limit:req.body.compaignsCount}
             ];
+            let pipeline1 = [
+                { $lookup: {from :"campaign_wallet", localField: "_id", foreignField: "campaign_id", as : "wallet"}},
+                 { $match: {successful:true, 
+                 $or:[{deleted:{ $exists : false}}, {deleted:false}],"wallet":{ $ne : []},"active":true, complete:true}}
+            ];   
             let curArr =  await DB.collection('campaigns').aggregate(pipeline).toArray();
-            let arCount = await DB.collection('campaigns').count({successful: true, deleted:{ $exists : false }});    
-            let result = {curArr:curArr, arCount:arCount};
+            let curArr1 =  await DB.collection('campaigns').aggregate(pipeline1).toArray();
+            let result = {curArr:curArr, arCount:curArr1.length};
             res.send(result);
         } catch (err) {
             console.log(err);
@@ -281,16 +293,25 @@ class ServerLib {
     async handleLoadAllCampaigns(req, res, Sentry, DB) {
         try{
             let pipeline = [
-                { $match: {active: true, deleted:{ $exists : false}}},
-                 {$sort: {lastDonationTime: -1, raisedAmount: -1, raisedOnCoinbase: -1, _id: 1}},
+                {$lookup: {from :"campaign_wallet", localField: "_id", foreignField: "campaign_id", as : "wallet"}},
+                {$match: {$or:[{successful:false },{successful:{$exists : false}}], 
+                 $or:[{deleted:{ $exists : false}}, {deleted:false}],"wallet":{ $ne : []},"active":true, complete:true}},
+                 {$set: {wallet: {$arrayElemAt: ["$wallet.addres_base58",0]},donate_count:{$sum:{$arrayElemAt: ["$wallet.donate_count",0]}}}},
+                 {$sort: {donate_count: -1, raisedOnCoinbase: -1, _id: 1}},
                  { $skip : req.body.startRec},
                  { $limit: req.body.compaignsCount}
                ];
+            let pipeline1 = [
+                { $lookup: {from :"campaign_wallet", localField: "_id", foreignField: "campaign_id", as : "wallet"}},
+                 { $match: {$or:[{successful:false },{successful:{$exists : false}}], 
+                 $or:[{deleted:{ $exists : false}}, {deleted:false}],"wallet":{ $ne : []},"active":true, complete:true}}
+               ];   
             let curArr =  await DB.collection('campaigns').aggregate(pipeline).toArray();
-            let arCount = await DB.collection('campaigns').count({active: true, deleted:{ $exists : false }});    
-            let result = {curArr:curArr, arCount:arCount};
+            let curArr1 =  await DB.collection('campaigns').aggregate(pipeline1).toArray();   
+            let result = {curArr:curArr, arCount:curArr1.length};
             res.send(result);
         } catch (err) {
+            console.log(err);
             Sentry.captureException(new Error(err));
             res.sendStatus(500);
         }
@@ -377,12 +398,42 @@ class ServerLib {
         } catch (err) {Sentry.captureException(new Error(err));}
     }
 
+    async handleUpdateCampaignWallet(req, res, Sentry, DB) {
+        try {
+            const myCollection = await DB.collection('campaign_wallet');
+            await myCollection.updateOne({'campaign_id': req.body.mydata.campaignID, 'wallet_ort': req.body.mydata.blockChainOrt}, 
+            {$inc: {"donate_count":req.body.mydata.raisedAmount, "heo_donate":req.body.mydata.tipAmount}});
+            return true;
+        } catch (err) {
+            Sentry.captureException(new Error(err));
+            res.sendStatus(500);
+        }
+    }
+
     async handleLoadOneCampaign(req, res, Sentry, DB) {
         try {
             const myCollection = await DB.collection('campaigns');
+            const walletColection = await DB.collection('campaign_wallet');
             let result = await myCollection.findOne({"_id" : req.body.ID, "deleted":{ $exists : false }});
+            let campaign_wallets = await walletColection.find({"campaign_id" : req.body.ID}).
+                project({_id:0,wallet_ort:1,addres_base58:1,addres_hex:1,coin_name:1,donate_count:1}).toArray();
+            for(let i=0; i<campaign_wallets.length; i++) {
+                if(campaign_wallets[i].wallet_ort === 'Tron') {
+                    campaign_wallets[i].chainId = process.env.TRON_CHAIN.toString();
+                    campaign_wallets[i].coin_addres = process.env.TRON_TOKEN_ADRES.toString();
+                }
+                else if(campaign_wallets[i].wallet_ort === 'Etherium') {
+                    campaign_wallets[i].chainId = process.env.CHAIN.toString();
+                    campaign_wallets[i].coin_addres = process.env.TOKEN_ADRES.toString();
+                }
+                else campaign_wallets[i].chainId = "";
+            }   
+            result.campaign_wallets = campaign_wallets;
             res.send(result);
-        } catch (err) {Sentry.captureException(new Error(err));}
+        } catch (err) {
+            Sentry.captureException(new Error(err));
+            res.sendStatus(500);
+        }
     }
 
     async handleLoadUserCampaigns(req, res, Sentry, DB) {

@@ -1,17 +1,18 @@
 import React from 'react';
 import countries from '../countries';
-import {Container, Form, Col, Button, DropdownButton, Dropdown, Image, Modal, Row} from 'react-bootstrap';
+import {Container, Form, Col, Button, Image, Modal, Row} from 'react-bootstrap';
 import ReactPlayer from 'react-player';
 import {getCountryCodeForRegionCode} from 'awesome-phonenumber';
 import config from "react-global-configuration";
 import axios from 'axios';
 import { Trans } from 'react-i18next';
+import uuid from 'react-uuid';
 import i18n from '../util/i18n';
 import { ChevronLeft, CheckCircle, ExclamationTriangle, HourglassSplit, XCircle } from 'react-bootstrap-icons';
 import { Link } from 'react-router-dom';
 import { getEditorStateEn, getEditorStateRu, TextEditorEn, TextEditorRu, setEditorStateEn, setEditorStateRu, editorStateHasChangedRu,
         editorStateHasChangedEn } from '../components/TextEditor';
-import { initWeb3, checkAuth, initWeb3Modal, initTronadapter, checkAuthTron, initTron, checkEmail, isValidUrl,blockchains} from '../util/Utilities';
+import { initWeb3Modal, initTronadapter, checkEmail, isValidUrl, countWordsString} from '../util/Utilities';
 import '../css/createCampaign.css';
 import '../css/modal.css';
 import ReactGA from "react-ga4";
@@ -65,11 +66,14 @@ class EditCampaign extends React.Component {
             key: "",
             chainId:"",
             tronChainId:"",
-            isInTron:false,
-            isInEtherium:false,
-            resultEtherium : true,
-            resultTron: true,
-            active:false,
+            badWebsite:false,
+            badKey:false,
+            badEmail:false,
+            noCountryCode:false,
+            notValidAddr:false,
+            noCoverImage:false,
+            longDescRequired:false,
+            longDescEnIncludRu:false,
             email:"",
             countryCode:"",
             number:"",
@@ -131,219 +135,107 @@ class EditCampaign extends React.Component {
     }
 
     handleClick = async () => {
+        let imgID;
+        if(this.state.imgID === "") imgID = this.state.imgID
+        else imgID = uuid();
         let result;
-        if (this.state.maxAmount_old !== this.state.maxAmount){
-          if ((window.ethereum)&&(this.state.isInEtherium)){
-            await initWeb3Modal(this.state.chainId, this);
-            await initWeb3(this.state.chainId, this);
-            // is the user logged in?
-            if(!this.state.isLoggedIn) {
-                await checkAuth(this.state.chainId, this);
+        this.mistake = false;
+        try{
+            if(this.state.orgEn.trim() === "") this.mistake = true;
+            if(this.state.cn.trim() === "") this.mistake = true;
+            if(this.state.website.trim() !== ""){
+               result =  await isValidUrl(this.state.website);
+               if(!result){
+                this.setState({badWebsite:true});
+                this.mistake = true; 
+               }
+            } 
+            if(this.state.titleEn.trim() === "") this.mistake = true;
+            if(this.state.descriptionEn.trim() === "") this.mistake = true;
+            if(this.state.email.trim() === "")this.mistake = true;
+            if(this.state.email.trim() !== "" ){
+                result = await checkEmail(this.state.email);
+                if(!result){
+                    this.setState({badEmail:true});
+                    this.mistake = true;
+                }
             }
-          }
-          if ((window.tron)&&(this.state.isInTron)){
-            await initTronadapter();
-            await initTron(this.state.tronChainId, this);
-            // is the user logged in?
-            if(!this.state.isLoggedInTron) {
-                await checkAuthTron(this.state.tronChainId, this);
+            if ((this.state.number.trim() !== "")&&(this.state.countryCode.trim()==="")){
+                this.setState({noCountryCode:true});
+                this.mistake = true;
             }
-          }
-        }
-
-        this.setState({resultEtherium : true, resultTron: true});
-        //check if this campaign belongs to this user
-        if(editorStateHasChangedEn()|| editorStateHasChangedRu()) {
-            this.state.updateMeta = true;
-        }
-        if(!this.state.orgEn) {
-            this.setState(
-                {showModal:true, modalTitle: 'requiredFieldsTitle',
-                    modalMessage: 'orgRequiredEn', modalIcon: 'ExclamationTriangle',
-                    waitToClose: false,
-                    modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                });
-            return false;
-        }
-        if(!this.state.cn) {
-            this.setState(
-                {showModal:true, modalTitle: 'requiredFieldsTitle',
-                    modalMessage: 'cnRequired', modalIcon: 'ExclamationTriangle',
-                    waitToClose: false,
-                    modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                });
-            return false;
-        }
-        if(this.state.website){
-            result =  await isValidUrl(this.state.website);
-            if(!result){
-             this.setState(
-                 {showModal:true, modalTitle: 'requiredFieldsTitle',
-                     modalMessage: 'badWebsite', modalIcon: 'ExclamationTriangle',
-                     waitToClose: false,
-                     modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                 });
-                 return false;
+            if (this.state.wallet.trim() === "") this.mistake = true;
+            if ((this.state.blockchain === "Ethereum")&&(this.state.wallet.trim() !== "")){
+                if((this.state.wallet.substring(0,2) !== "0x")||(this.state.wallet.length !== 42))
+                 {
+                    this.setState({notValidAddr:true});
+                    this.mistake = true;
+                 }
             }
-         }
-        if(!this.state.titleEn) {
-            this.setState(
-                {showModal:true, modalTitle: 'requiredFieldsTitle',
-                    modalMessage: 'titleRequired', modalIcon: 'ExclamationTriangle',
-                    waitToClose: false,
-                    modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                });
-            return false;
-        }
-        if(!this.state.email) {
-            this.setState(
-                {showModal:true, modalTitle: 'requiredFieldsTitle',
-                    modalMessage: 'emailRequired', modalIcon: 'ExclamationTriangle',
-                    waitToClose: false,
-                    modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                });
-            return false;
-        }
-        result = await checkEmail(this.state.email);
-        if(!result) {
-            this.setState(
-                {showModal:true, modalTitle: 'requiredFieldsTitle',
-                    modalMessage: 'emailFaulty', modalIcon: 'ExclamationTriangle',
-                    waitToClose: false,
-                    modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                });
-            return false;
-        }
-        if ((this.state.number)&&(this.state.countryCode.trim()==="")){
-            this.setState(
-                {showModal:true, modalTitle: 'requiredFieldsTitle',
-                    modalMessage: 'countryCodeRequired', modalIcon: 'ExclamationTriangle',
-                    waitToClose: false,
-                    modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                });
-            return false;
-        }
-        if(!this.state.descriptionEn) {
-            this.setState(
-                {showModal:true, modalTitle: 'requiredFieldsTitle',
-                    modalMessage: 'shortDescRequired', modalIcon: 'ExclamationTriangle',
-                    waitToClose: false,
-                    modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                });
-            return false;
-        }
-        if (!this.state.blockchain){
-            this.setState(
-                {showModal:true, modalTitle: 'requiredFieldsTitle',
-                    modalMessage: 'selectBlockchain', modalIcon: 'ExclamationTriangle',
-                    waitToClose: false,
-                    modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                });
-            return false;
-        }
-        if (!this.state.wallet){
-            this.setState(
-                {showModal:true, modalTitle: 'requiredFieldsTitle',
-                    modalMessage: 'enterWallet', modalIcon: 'ExclamationTriangle',
-                    waitToClose: false,
-                    modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                });
-            return false;
-        }
-        if (this.state.blockchain === "Ethereum"){
-            if((this.state.wallet.substring(0,2) !== "0x")||(this.state.wallet.length !== 42))
-             {
-                this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle',
-                        modalMessage: 'notValidAddr', modalIcon: 'ExclamationTriangle',
-                        waitToClose: false,
-                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                    });
-                return false;
-             }
-        }
-        if (this.state.blockchain === "Tron"){
-            if((this.state.wallet.substring(0,1) !== "T")||(this.state.wallet.length !== 34))
-             {
-                this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle',
-                        modalMessage: 'notValidAddr', modalIcon: 'ExclamationTriangle',
-                        waitToClose: false,
-                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                    });
-                return false;
-             }
-        }
-        let n = 0;
-        let EditorStateEn = await getEditorStateEn();
-        if (EditorStateEn){
-            for (let i = 0; i < EditorStateEn.blocks.length; i++){
-                n = n + EditorStateEn.blocks[i].text.length;
-              }
-              if (n < 3) {
-                  this.setState(
-                      {showModal:true, modalTitle: 'requiredFieldsTitle',
-                          modalMessage: 'longDescRequired', modalIcon: 'ExclamationTriangle',
-                          waitToClose: false,
-                          modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                      });
-                  return false;
-              }
-              for (let i = 0; i < EditorStateEn.blocks.length; i++){
-                  for(let j = 0; j < EditorStateEn.blocks[i].text.length; j++){
-                    if (/^[А-Яа-я]*$/.test(EditorStateEn.blocks[i].text[j]) === true){
-                        this.setState(
-                          {showModal:true, modalTitle: 'requiredFieldsTitle',
-                           modalMessage: 'longDescEnIncludRu', modalIcon: 'ExclamationTriangle',
-                           waitToClose: false,
-                           modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                        });
-                        return false;
-                    }
-                  }
-              }
-        }
-
-        this.setState({showModal:true, modalTitle: 'processingWait',
-                modalMessage: 'waitingForNetwork',
-                modalIcon:'HourglassSplit',
-                modalButtonVariant: "gold", waitToClose: true});
-        var newImgUrl = this.state.mainImageURL;
-        if(this.state.updateImage) {
-            newImgUrl = await this.uploadImageS3('main');
-            if(!newImgUrl) {
-                this.setState({showModal:true,
-                    modalTitle: 'imageUploadFailed',
-                    modalMessage: 'technicalDifficulties',
-                    modalIcon:'XCircle', modalButtonMessage: 'returnHome',
-                    modalButtonVariant: "#E63C36", waitToClose: false});
-                return;
+            if ((this.state.blockchain === "Tron")&&(this.state.wallet.trim() !== "")){
+                if((this.state.wallet.substring(0,1) !== "T")||(this.state.wallet.length !== 34))
+                 {
+                    this.setState({notValidAddr:true});
+                    this.mistake = true;
+                 }
             }
-        }
-        //updating existing HEOCampaign
-        if(this.state.updateMeta){
-            if(!(await this.updateCampaign())) {
-                this.setState({showModal : true,
-                    modalTitle: 'updatingAmountFailed',
-                    modalMessage: this.state.currentError,
-                    modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
-                    modalButtonVariant: "#E63C36", waitToClose: false});
-                return;
+            let n = 0; 
+            let EditorStateEn = await getEditorStateEn();
+            if(!EditorStateEn){
+                this.setState({longDescRequired:true});
+                this.mistake = true;
             }
+            if (EditorStateEn){
+               for (let i = 0; i < EditorStateEn.blocks.length; i++){
+                n = n + countWordsString(EditorStateEn.blocks[i].text); 
+               }
+               if (n < 3) {
+                  this.setState({longDescRequired:true});
+                  this.mistake = true;
+               }
+               for (let i = 0; i < EditorStateEn.blocks.length; i++){
+                  for(let j = 0; j < getEditorStateEn().blocks[i].text.length; j++){
+                    if (/^[А-Яа-я]*$/.test(getEditorStateEn().blocks[i].text[j]) === true){
+                        this.setState({longDescEnIncludRu:true});
+                        this.mistake = true;
+                     }
+                   } 
+                }
+            }
+            var newImgUrl = this.state.mainImageURL;
+            if(this.state.updateImage) {
+                newImgUrl = await this.uploadImageS3('main', imgID);
+                if(!newImgUrl) {
+                    this.setState({noCoverImage:true});
+                    this.mistake = true;
+                }
+                else this.setState({mainImageURL: newImgUrl});
+            }
+            else if(this.state.mainImageURL === "") {
+                this.setState({noCoverImage:true});
+                this.mistake = true;
+               
+            }
+            
+            if(this.mistake === true) this.setState({showModalМistakes:true})
+            else{
+                result = await this.updateCampaign();
+                if (result === false)
+                    this.setState({showModal : true,
+                            modalTitle: 'failed',
+                            modalMessage: 'errorWritingCampaignToDB',
+                            modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
+                            modalButtonVariant: "#E63C36", waitToClose: false});
+                else this.setState({
+                        showModal: true, modalTitle: 'complete', goHome: true,
+                        modalMessage: 'updateSuccessfull',
+                        modalIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
+                        modalButtonVariant: '#588157', waitToClose: false
+                });
+            } 
+        } catch(error)  {
+            console.log(error);
         }
-        result = await this.updateCampaign();
-        if (result === false)
-        this.setState({showModal : true,
-                modalTitle: 'failed',
-                modalMessage: 'errorWritingCampaignToDB',
-                modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
-                modalButtonVariant: "#E63C36", waitToClose: false});
-        else this.setState({
-            showModal: true, modalTitle: 'complete', goHome: true,
-            modalMessage: 'updateSuccessfull',
-            modalIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
-            modalButtonVariant: '#588157', waitToClose: false
-        });
     }
 
     async updateCampaign() {
@@ -390,11 +282,9 @@ class EditCampaign extends React.Component {
             data.accounts = this.state.line_accounts;
             data.payout_chain = this.state.blockchain;
             data.payout_address = this.state.wallet;
-            console.log(`Updating title to`);
-            console.log(data.title);
-            console.log(`Updating org to`);
-            console.log(data.org);
-            let dataForDB = {address: this.state.campaignId, dataToUpdate: data};
+            if(this.mistake === true) data.complete = false;
+            else data.complete = true;
+           let dataForDB = {address: this.state.campaignId, dataToUpdate: data};
             try {
                let res = await axios.post('/api/campaign/update', {mydata : dataForDB},
                  {headers: {"Content-Type": "application/json"}});
@@ -417,34 +307,63 @@ class EditCampaign extends React.Component {
         }
     }
 
-    async uploadImageS3(type) {
-        this.setState({showModal:true, modalTitle: 'processingWait',
-        modalMessage: 'uploadingImageWait', modalIcon:'HourglassSplit',
-        modalButtonVariant: "gold", waitToClose: true});
-        let imgID = this.state.imgID;
+    async uploadImageS3 (type, imgID) {
+        this.setState(
+            {showModal:true, modalTitle: 'processingWait',
+            modalMessage: 'uploadingImageWait', modalIcon: 'HourglassSplit',
+            modalButtonVariant: "gold", waitToClose: true
+            });
+        if(type === 'main' && (!this.state.mainImageFile || !this.state.mainImageFile.type)) {
+            this.setState({noCoverImage:true, showModal:false});
+            return false;
+        }
+        let fileType;
         const formData = new FormData();
         if(type === 'main') {
-            this.setState({ imageFileName : imgID,});
-            let fileType = this.state.mainImageFile.type.split("/")[1];
+            fileType = this.state.mainImageFile.type.split("/")[1];
             formData.append(
                 "myFile",
                 this.state.mainImageFile,
                 `${imgID}.${fileType}`,
             );
+        } else if(type === 'qrCode') {
+            fileType = this.state.qrCodeImageFile.type.split("/")[1];
+            formData.append(
+                "myFile",
+                this.state.qrCodeImageFile,
+                `${imgID}.${fileType}`,
+            );
         }
         try {
             let res = await axios.post('/api/uploadimage', formData);
-            if(type === 'main') {
-                this.setState({showModal: false, mainImageURL: res.data});
-            }
-            return res.data;
-        } catch (err) {
-            if(err.response) {
-                this.setState({currentError : 'technicalDifficulties'});
-            } else if (err.request) {
-                this.setState({currentError : 'checkYourConnection'});
+            if((res)&&(res.data)) {
+                this.setState({showModal:false});
+                return (res.data);
             } else {
-                this.setState({currentError : ''});
+                this.setState({noCoverImage:true, showModal:false});
+                return false;
+            }
+        }  catch(err) {
+            if (err.response) {
+                console.log('response error in uploading main image- ' + err.response.status);
+                this.setState({showModal: true, goHome: false,
+                    modalTitle: 'imageUploadFailed',
+                    modalMessage: 'technicalDifficulties',
+                    modalIcon: 'XCircle', modalButtonMessage: 'returnHome',
+                    modalButtonVariant: "#E63C36", waitToClose: false});
+            } else if (err.request) {
+                console.log('No response in uploading main image' + err.message);
+                this.setState({showModal: true, goHome: false,
+                    modalTitle: 'imageUploadFailed',
+                    modalMessage: 'checkYourConnection',
+                    modalIcon: 'XCircle', modalButtonMessage: 'returnHome',
+                    modalButtonVariant: "#E63C36", waitToClose: false});
+            } else {
+                console.log('error uploading image ' + err.message);
+                this.setState({showModal: true, goHome: false,
+                    modalTitle: 'imageUploadFailed',
+                    modalIcon: 'XCircle', modalButtonMessage: 'returnHome',
+                    modalButtonVariant: "#E63C36", waitToClose: false});
             }
             return false;
         }
@@ -453,6 +372,66 @@ class EditCampaign extends React.Component {
     render() {
         return (
             <div>
+                <Modal size='xl' show={this.state.showModalМistakes} onHide={()=>{}} className='myModal' centered>
+               <Modal.Body className='createFormPlaceHolder'> 
+                <p className='modalIcon'><ExclamationTriangle/></p>
+                <Row class="justify-content-center">
+                <Col class="my-auto">
+                <p className='modalTitle'><Trans i18nKey={'requiredFieldsTitle'}/></p>  
+                </Col>
+                </Row> 
+                <Row><Col><Button style={{backgroundColor : "white", borderColor : "white"}}></Button></Col></Row>
+                <Container fluid>
+                {(this.state.orgEn === "")&&<Row><p><Trans i18nKey={'orgRequiredEn'}/></p></Row>}   
+                {(this.state.cn === "")&&<Row><p><Trans i18nKey={'cnRequired'}/></p></Row>} 
+                {(this.state.badWebsite === true)&&<Row><p><Trans i18nKey={'badWebsite'}/></p></Row>}
+                {(this.state.titleEn === "")&&<Row><p><Trans i18nKey={'titleRequired'}/></p></Row>} 
+                {(this.state.descriptionEn === "")&&<Row><p><Trans i18nKey={'shortDescRequired'}/></p></Row>}
+                {(this.state.email === "")&&<Row><p><Trans i18nKey={'emailRequired'}/></p></Row>}
+                {(this.state.badEmail === true)&&<Row><p><Trans i18nKey={'emailFaulty'}/></p></Row>}
+                {(this.state.noCountryCode === true)&&<Row><p><Trans i18nKey={'countryCodeRequired'}/></p></Row>}
+                {(this.state.wallet === "")&&<Row><p><Trans i18nKey={'enterWallet'}/></p></Row>}
+                {(this.state.notValidAddr === true)&&<Row><p><Trans i18nKey={'notValidAddr'}/></p></Row>}
+                {(this.state.longDescRequired === true)&&<Row><p><Trans i18nKey={'longDescRequired'}/></p></Row>}
+                {(this.state.longDescEnIncludRu === true)&&<Row><p><Trans i18nKey={'longDescEnIncludRu'}/></p></Row>}
+                {(this.state.noCoverImage=== true)&&<Row><p><Trans i18nKey={'coverImageRequired'}/></p></Row>}
+                </Container>
+                <Row><Col><Button style={{backgroundColor : "white", borderColor : "white"}}></Button></Col></Row>
+                <Row>
+                <Col>    
+                <Button className='myModalButton' 
+                  style={{backgroundColor : "#E63C36", borderColor : "#E63C36"}}
+                  onClick={ async () => { this.setState({showModalМistakes:false,badWebsite:false,badKey:false,badEmail:false,
+                    noCountryCode:false,notValidAddr:false,noCoverImage:false,longDescRequired:false,longDescEnIncludRu:false});
+                    var result = await this.updateCampaign();
+                    if (result === false)
+                        this.setState({showModal : true,
+                                modalTitle: 'failed',
+                                modalMessage: 'errorWritingCampaignToDB',
+                                modalIcon:'XCircle', modalButtonMessage: 'closeBtn',
+                                modalButtonVariant: "#E63C36", waitToClose: false});
+                    else this.setState({
+                            showModal: true, modalTitle: 'complete', goHome: true,
+                            modalMessage: 'updateSuccessfull',
+                            modalIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
+                            modalButtonVariant: '#588157', waitToClose: false
+                    });
+                  }} >
+                  <Trans i18nKey={'saveCampaignBtn'} />  
+                 </Button>  
+                 </Col>
+                 <Col>
+                 <Button className='myModalButton' 
+                  style={{backgroundColor : "#E63C36", borderColor : "#E63C36"}}
+                  onClick={ async () => { this.setState({showModalМistakes:false,badWebsite:false,badKey:false,badEmail:false,
+                    noCountryCode:false,notValidAddr:false,noCoverImage:false,longDescRequired:false,longDescEnIncludRu:false});
+                  }} >
+                  <Trans i18nKey={'abortBtn'} />  
+                 </Button>  
+                 </Col>
+                 </Row>
+                 </Modal.Body>
+               </Modal>  
                 <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' centered>
                     <Modal.Body><p className='modalIcon'>
                         {this.state.modalIcon === 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
@@ -681,12 +660,8 @@ class EditCampaign extends React.Component {
                           </Row>
                           <Row>
                            <Col xs = {2}>
-                           <Form.Control required as="select" name='blockchain' value={this.state.blockchain} onChange={this.handleChange}>
-                                <option> </option>
-                                {blockchains.map((data) =>
-                                        <option value={data.value}>{data.value}</option>
-                                    )}
-                                </Form.Control>
+                           <Form.Control required type="text" className="createFormPlaceHolder"
+                             placeholder="" name='blockchain' value={this.state.blockchain} readOnly = {true}/>
                            </Col> 
                            <Col xs={10}>
                             <Form.Control required type="text" className="createFormPlaceHolder"
@@ -695,35 +670,8 @@ class EditCampaign extends React.Component {
                           </Row> 
                          </Form.Group>  
                         </Form.Group>
-                            <Row>
-                             <Col>
-                              {this.state.addresses[this.state.chainId] &&
-                                <Form.Label><span><CheckCircle style={{color:'#E63C36'}} /> </span>
-                                <Trans i18nKey='campaignInEtereum'/><span className='redAsterisk'></span></Form.Label>}
-                             </Col>
-                             <Col>
-                              {this.state.addresses[this.state.tronChainId] &&
-                                <Form.Label><span><CheckCircle style={{color:'#E63C36'}} /> </span>
-                                <Trans i18nKey='campaignInTron'/><span className='redAsterisk'></span></Form.Label>}
-                             </Col>
-                            </Row>
                         <Row>
-                         <Col>
-                          <Button onClick={() => this.handleClick()} id='createCampaignBtn' name='ff3'>
-                            {i18n.t('saveCampaignBtn')}
-                          </Button>
-                         </Col>
-                         <Col>
-                          {(((!this.state.addresses[this.state.tronChainId])||(!this.state.addresses[this.state.chainId]))&&(window.ethereum||window.tron)&&(this.state.active)) &&
-                            <DropdownButton size='lg' id="createCampaignBtn" title={i18n.t('deployBtn')} className='backToCampaigns'>
-                             {(!this.state.addresses[this.state.chainId] && window.ethereum)&& <Dropdown.Item onClick={async() => {
-                              await this.saveToEtherium(true);
-                              }} >Etherium</Dropdown.Item>}
-                             {(!this.state.addresses[this.state.tronChainId] && window.tron)&& <Dropdown.Item onClick={async() => {
-                              await this.savetoTron(true);
-                              }}>Tron</Dropdown.Item>}
-                            </DropdownButton>}
-                         </Col>
+                         <Button onClick={() => this.handleClick()} id='createCampaignBtn' name='ff3'>{i18n.t('saveCampaignBtn')}</Button>
                         </Row>
                     </Form>
                 </Container>
@@ -871,10 +819,6 @@ class EditCampaign extends React.Component {
           this.setState({website : dbCampaignObj.website});
         if (dbCampaignObj.telegram)
           this.setState({telegram : dbCampaignObj.telegram});
-        console.log(`Set title to`);
-        console.log(this.state.ogTitle);
-        console.log(`Set org to`);
-        console.log(this.state.ogOrg);
     }
 }
 
