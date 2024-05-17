@@ -183,7 +183,7 @@ class CampaignPage extends Component {
                 window.open(resp.data.redirectUrl, '_self');
             } else {
                 this.setState({
-                    showModal: true, modalTitle: 'failed',
+                    showModal: true, modalTitle: 'failed', goHome: false,
                     errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
                     modalMessage: "failedConnectCoinbaseCommerce",
                     modalButtonVariant: '#E63C36', waitToClose: false, tryAgainCC: false
@@ -192,7 +192,7 @@ class CampaignPage extends Component {
         } catch (err) {
             console.log(err);
             this.setState({
-                showModal: true, modalTitle: 'failed',
+                showModal: true, modalTitle: 'failed', goHome: false,
                 errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
                 modalMessage: err.response.data,
                 modalButtonVariant: '#E63C36', waitToClose: false, tryAgainCC: false
@@ -216,7 +216,7 @@ class CampaignPage extends Component {
         try {
             this.setState({
                 showCCWarningModal:false,
-                showModal: true, modalTitle: 'processingWait',
+                showModal: true, modalTitle: 'processingWait', goHome: false,
                 modalMessage: "plzWait",
                 errorIcon: 'HourglassSplit', modalButtonVariant: "gold", waitToClose: true
             });
@@ -226,7 +226,7 @@ class CampaignPage extends Component {
                 window.open(resp.data.redirectUrl, '_self');
             } else if(resp.data.paymentStatus === "success") {
                 this.setState({
-                    showModal: true, modalTitle: 'complete',
+                    showModal: true, modalTitle: 'complete', goHome: true,
                     modalMessage: 'thankYouFiatDonation',
                     errorIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
                     modalButtonVariant: '#588157', waitToClose: false, tryAgainCC: false, ccinfo: {}
@@ -234,7 +234,7 @@ class CampaignPage extends Component {
             } else {
                 this.setState({
                     showModal: true, modalTitle: 'failed', modalMessage: PAYMENT_ERROR_MESSAGES[resp.data.paymentStatus],
-                    errorIcon: 'XCircle', modalButtonMessage: 'tryAgain',
+                    errorIcon: 'XCircle', modalButtonMessage: 'tryAgain', goHome: false,
                     modalButtonVariant: '#E63C36', waitToClose: false, tryAgainCC: false
                 });
                 this.setState(prevState => ({
@@ -247,7 +247,7 @@ class CampaignPage extends Component {
         } catch (err) {
             if (err.response.status === 503) {
                 this.setState({
-                    showModal: true, modalTitle: 'failed',
+                    showModal: true, modalTitle: 'failed', goHome: false,
                     errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
                     modalMessage: err.response.data,
                     modalButtonVariant: '#E63C36', waitToClose: false, tryAgainCC: false
@@ -256,7 +256,7 @@ class CampaignPage extends Component {
             }
             console.log(err.response)
             this.setState({
-                showModal: true, modalTitle: 'failed',
+                showModal: true, modalTitle: 'failed', goHome: false,
                 errorIcon: 'XCircle', modalButtonMessage: 'tryAgain',
                 modalButtonVariant: '#E63C36', waitToClose: false, tryAgainCC: (this.state.fiatPaymentProvider !== 'stripe')
             });
@@ -277,7 +277,7 @@ class CampaignPage extends Component {
         }
         try {
             this.setState({
-                showCCWarningModal:false,
+                showCCWarningModal:false, goHome: false,
                 showModal: true, modalTitle: 'processingWait',
                 modalMessage: "plzWait",
                 errorIcon: 'HourglassSplit', modalButtonVariant: "gold", waitToClose: true
@@ -288,7 +288,7 @@ class CampaignPage extends Component {
                 window.open(resp.data.redirectUrl, '_self');
             } else if(resp.data.paymentStatus === "success") {
                 this.setState({
-                    showModal: true, modalTitle: 'complete',
+                    showModal: true, modalTitle: 'complete', goHome: true,
                     modalMessage: 'thankYouFiatDonation',
                     errorIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
                     modalButtonVariant: '#588157', waitToClose: false, tryAgainCC: false, ccinfo: {}
@@ -296,7 +296,7 @@ class CampaignPage extends Component {
             } else {
                 this.setState({
                     showModal: true, modalTitle: 'failed', modalMessage: PAYMENT_ERROR_MESSAGES[resp.data.paymentStatus],
-                    errorIcon: 'XCircle', modalButtonMessage: 'tryAgain',
+                    errorIcon: 'XCircle', modalButtonMessage: 'tryAgain', goHome: false,
                     modalButtonVariant: '#E63C36', waitToClose: false, tryAgainCC: false
                 });
                 this.setState(prevState => ({
@@ -309,7 +309,7 @@ class CampaignPage extends Component {
         } catch (err) {
             if (err.response.status === 503) {
                 this.setState({
-                    showModal: true, modalTitle: 'failed',
+                    showModal: true, modalTitle: 'failed', goHome: false,
                     errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
                     modalMessage: err.response.data,
                     modalButtonVariant: '#E63C36', waitToClose: false, tryAgainCC: false
@@ -318,7 +318,7 @@ class CampaignPage extends Component {
             }
             console.log(err.response)
             this.setState({
-                showModal: true, modalTitle: 'failed',
+                showModal: true, modalTitle: 'failed', goHome: false,
                 errorIcon: 'XCircle', modalButtonMessage: 'tryAgain',
             })
         }
@@ -393,7 +393,7 @@ class CampaignPage extends Component {
             //check if donating to oneself
             if(window.tronAdapter.address.toLowerCase() === addres_base58.toLowerCase()) {
                 this.setState({
-                    showModal: true, modalTitle: 'notAllowed',
+                    showModal: true, modalTitle: 'notAllowed', goHome: false,
                     modalMessage: 'donateToYourSelf',
                     errorIcon: 'ExclamationTriangle', modalButtonMessage: 'closeBtn',
                     modalButtonVariant: '#E63C36', waitToClose: false
@@ -410,7 +410,7 @@ class CampaignPage extends Component {
             .send({from:window.tronAdapter.address,callValue:0,feeLimit:15000000000,shouldPollResponse:false});
             
             this.setState({showModal:true,
-                modalTitle: 'processingWait',
+                modalTitle: 'processingWait', goHome: false,
                 modalMessage: 'waitingForNetwork', errorIcon:'HourglassSplit',
                 modalButtonVariant: "gold", waitToClose: true});
             let txnObject;
@@ -424,15 +424,16 @@ class CampaignPage extends Component {
             }while(m !== 2);
             if (txnObject.receipt.result === "SUCCESS"){
                this.setState({
-                   showModal: true, modalTitle: 'complete',
+                   showModal: true, modalTitle: 'complete', goHome: true,
                    modalMessage: 'thankYouDonation',
                    errorIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
                    modalButtonVariant: '#588157', waitToClose: false
                 });
                 this.saveDonateToDb(txnObject.id, chainId, coinAddress);
+
             }else {
                 this.setState({
-                    showModal: true, modalTitle: 'failed',
+                    showModal: true, modalTitle: 'failed', goHome: false,
                     errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
                     modalButtonVariant: '#E63C36', waitToClose: false,
                     modalMessage: 'blockChainTransactionFailed'
@@ -446,7 +447,7 @@ class CampaignPage extends Component {
             }
         } catch (err) {
             this.setState({
-              showModal: true, modalTitle: 'failed',
+              showModal: true, modalTitle: 'failed', goHome: false,
               errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
               modalButtonVariant: '#E63C36', waitToClose: false,
               modalMessage: 'blockChainTransactionFailed'
@@ -490,7 +491,7 @@ class CampaignPage extends Component {
             //check if donating to oneself
             if(accounts[0].toLowerCase() === this.state.campaign.beneficiaryId.toLowerCase()) {
                 this.setState({
-                    showModal: true, modalTitle: 'notAllowed',
+                    showModal: true, modalTitle: 'notAllowed', goHome: false,
                     modalMessage: 'donateToYourSelf',
                     errorIcon: 'ExclamationTriangle', modalButtonMessage: 'closeBtn',
                     modalButtonVariant: '#E63C36', waitToClose: false
@@ -533,7 +534,7 @@ class CampaignPage extends Component {
                     } catch (err) {
                         this.setState({
                             showModal: true, modalTitle: 'failed', modalMessage: 'blockChainTransactionFailed',
-                            errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
+                            errorIcon: 'XCircle', modalButtonMessage: 'closeBtn', goHome: false,
                             modalButtonVariant: '#E63C36', waitToClose: false
                         });
                         console.log(err);
@@ -546,7 +547,7 @@ class CampaignPage extends Component {
                             that.setState({modalMessage: "waitingForNetwork"})
                         });
                         this.setState({
-                            showModal: true, modalTitle: 'complete',
+                            showModal: true, modalTitle: 'complete', goHome: true,
                             modalMessage: 'thankYouDonation',
                             errorIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
                             modalButtonVariant: '#588157', waitToClose: false
@@ -554,7 +555,7 @@ class CampaignPage extends Component {
                     } catch (err) {
                         this.setState({
                             showModal: true, modalTitle: 'failed', modalMessage: 'blockChainTransactionFailed',
-                            errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
+                            errorIcon: 'XCircle', modalButtonMessage: 'closeBtn', goHome: false,
                             modalButtonVariant: '#E63C36', waitToClose: false
                         });
                         console.log("donateNative transaction failed");
@@ -566,7 +567,7 @@ class CampaignPage extends Component {
                 ERC20Coin = (await import("../remote/"+ chainId + "/ERC20")).default;
                 var coinInstance = new web3.eth.Contract(ERC20Coin, coinAddress);
                 this.setState({
-                    showModal: true, modalTitle: 'processingWait',
+                    showModal: true, modalTitle: 'processingWait', goHome: false,
                     modalMessage: "approveSpend",
                     errorIcon: 'HourglassSplit', modalButtonVariant: "#E63C36", waitToClose: false,
                     modalButtonMessage: 'abortBtn',
@@ -612,7 +613,7 @@ class CampaignPage extends Component {
                                 );
                             }).on('error', function(error) {
                                 that.setState({
-                                    showModal: true, modalTitle: 'failed',
+                                    showModal: true, modalTitle: 'failed', goHome: false,
                                     errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
                                     modalButtonVariant: '#E63C36', waitToClose: false,
                                     modalMessage: 'blockChainTransactionFailed'
@@ -666,7 +667,7 @@ class CampaignPage extends Component {
 
                         if(result.code) {
                             this.setState({
-                                showModal: true, modalTitle: 'failed',
+                                showModal: true, modalTitle: 'failed', goHome: false,
                                 errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
                                 modalButtonVariant: '#E63C36', waitToClose: false,
                                 modalMessage: 'blockChainTransactionFailed'
@@ -681,7 +682,7 @@ class CampaignPage extends Component {
                             return;
                         }
                         this.setState({
-                            showModal: true, modalTitle: 'complete',
+                            showModal: true, modalTitle: 'complete',  goHome: true,
                             modalMessage: 'thankYouDonation',
                             errorIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
                             modalButtonVariant: '#588157', waitToClose: false
@@ -806,7 +807,7 @@ class CampaignPage extends Component {
                         });
                         console.log(err);
                     }
-                } else {
+                  } else {
                     try {
                         await campaignInstance.methods.donateNative().send(
                             {from:accounts[0], value:(""+toDonate)}
@@ -815,7 +816,7 @@ class CampaignPage extends Component {
                             that.saveDonateToDb(transactionHash, chainId, coinAddress);
                         });
                         this.setState({
-                            showModal: true, modalTitle: 'complete',
+                            showModal: true, modalTitle: 'complete', goHome: true,
                             modalMessage: 'thankYouDonation',
                             errorIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
                             modalButtonVariant: '#588157', waitToClose: false
@@ -823,7 +824,7 @@ class CampaignPage extends Component {
                     } catch (err) {
                         this.setState({
                             showModal: true, modalTitle: 'failed', modalMessage: 'blockChainTransactionFailed',
-                            errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
+                            errorIcon: 'XCircle', modalButtonMessage: 'closeBtn', goHome: false,
                             modalButtonVariant: '#E63C36', waitToClose: false
                         });
                         console.log("donateNative transaction failed");
@@ -835,7 +836,7 @@ class CampaignPage extends Component {
                 ERC20Coin = (await import("../remote/"+ chainId + "/ERC20")).default;
 
                 this.setState({
-                    showModal: true, modalTitle: 'processingWait',
+                    showModal: true, modalTitle: 'processingWait', goHome: false,
                     modalMessage: "approveSpend",
                     errorIcon: 'HourglassSplit', modalButtonVariant: "#E63C36", waitToClose: false,
                     modalButtonMessage: 'abortBtn',
@@ -894,7 +895,7 @@ class CampaignPage extends Component {
                                     nonInteraction: false
                                 });
                                 that.setState({
-                                    showModal: true, modalTitle: 'failed',
+                                    showModal: true, modalTitle: 'failed', goHome: false,
                                     errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
                                     modalButtonVariant: '#E63C36', waitToClose: false,
                                     modalMessage: 'blockChainTransactionFailed'
@@ -925,7 +926,7 @@ class CampaignPage extends Component {
                         });
                         if(result.code) {
                             this.setState({
-                                showModal: true, modalTitle: 'failed',
+                                showModal: true, modalTitle: 'failed',  goHome: false,
                                 errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
                                 modalButtonVariant: '#E63C36', waitToClose: false,
                                 modalMessage: 'blockChainTransactionFailed'
@@ -940,7 +941,7 @@ class CampaignPage extends Component {
                             return;
                         }
                         this.setState({
-                            showModal: true, modalTitle: 'complete',
+                            showModal: true, modalTitle: 'complete', goHome: true, 
                             modalMessage: 'thankYouDonation',
                             errorIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
                             modalButtonVariant: '#588157', waitToClose: false
@@ -950,7 +951,7 @@ class CampaignPage extends Component {
                     }
                 } catch (err) {
                     this.setState({
-                        showModal: true, modalTitle: 'failed',
+                        showModal: true, modalTitle: 'failed',  goHome: false,
                         errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
                         modalButtonVariant: '#E63C36', waitToClose: false,
                         modalMessage: 'blockChainTransactionFailed'
@@ -968,7 +969,7 @@ class CampaignPage extends Component {
         } catch (err) {
             console.log(err);
             this.setState({
-                showModal: true, modalTitle: 'failed',
+                showModal: true, modalTitle: 'failed', goHome: false,
                 errorIcon: 'XCircle', modalButtonMessage: 'closeBtn',
                 modalButtonVariant: '#E63C36', waitToClose: false,
                 modalMessage: 'blockChainConnectFailed'
@@ -1016,6 +1017,7 @@ class CampaignPage extends Component {
                                         label: this.state.modalTitle, // optional, must be a number
                                         nonInteraction: false
                                     });
+                                    if(this.state.goHome) this.props.history.push('/');
                                 }
                             }>
                             <Trans i18nKey={this.state.modalButtonMessage} />
@@ -1354,7 +1356,7 @@ class CampaignPage extends Component {
         if(params.fp) {
             if(params.fp === 's') {
                 this.setState({
-                    showModal: true, modalTitle: 'complete',
+                    showModal: true, modalTitle: 'complete',  goHome: true,
                     modalMessage: 'thankYouFiatDonation',
                     errorIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
                     modalButtonVariant: '#588157', waitToClose: false, tryAgainCC: false, ccinfo: {}
@@ -1362,7 +1364,7 @@ class CampaignPage extends Component {
             } else if(params.fp === 'f') {
                 this.setState({
                     showModal: true, modalTitle: 'failed', modalMessage: 'failed3ds',
-                    errorIcon: 'XCircle', modalButtonMessage: 'tryAgain',
+                    errorIcon: 'XCircle', modalButtonMessage: 'tryAgain', goHome: false,
                     modalButtonVariant: '#E63C36', waitToClose: false, tryAgainCC: true,
                     donationAmount: params.am
                 });
@@ -1370,13 +1372,13 @@ class CampaignPage extends Component {
                 if(params.state ==='declined' || params.state==='cancelled') {
                     this.setState({
                         showModal: true, modalTitle: 'failed', modalMessage: 'cardPaymentDeclined',
-                        errorIcon: 'XCircle', modalButtonMessage: 'tryAgain',
+                        errorIcon: 'XCircle', modalButtonMessage: 'tryAgain', goHome: false,
                         modalButtonVariant: '#E63C36', waitToClose: false, tryAgainCC: false,
                         donationAmount: params.am,  ccinfo: {}
                     });
                 } else {
                     this.setState({
-                        showModal: true, modalTitle: 'complete',
+                        showModal: true, modalTitle: 'complete', goHome: true,
                         modalMessage: 'thankYouFiatDonation',
                         errorIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
                         modalButtonVariant: '#588157', waitToClose: false, tryAgainCC: false, ccinfo: {}
