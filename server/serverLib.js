@@ -197,9 +197,6 @@ class ServerLib {
             raisedAmount: 0,
             creationDate: Date.now(),
             lastDonationTime: 0,
-            coins: req.body.mydata.coins,
-            addresses: req.body.mydata.addresses,
-            accounts: req.body.mydata.accounts,
             active: false,
             email: req.body.mydata.email,
             countryCode: req.body.mydata.countryCode,
@@ -414,7 +411,7 @@ class ServerLib {
         try {
             const myCollection = await DB.collection('campaigns');
             const walletColection = await DB.collection('campaign_wallet');
-            let result = await myCollection.findOne({"_id" : req.body.ID, "deleted":{ $exists : false }});
+            let result = await myCollection.findOne({"_id" : req.body.ID });
             let campaign_wallets = await walletColection.find({"campaign_id" : req.body.ID}).
                 project({_id:0,wallet_ort:1,addres_base58:1,addres_hex:1,coin_name:1,donate_count:1}).toArray();
             for(let i=0; i<campaign_wallets.length; i++) {
