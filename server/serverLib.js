@@ -29,6 +29,7 @@ class ServerLib {
             this.emailCode.set(req.body.mydata.to_email, randCode);
             return(text);
         } catch (err) {
+          console.log(err);  
           Sentry.captureException(new Error(err));
           res.sendStatus(500);
         }
@@ -62,6 +63,7 @@ class ServerLib {
             await myCollection.insertOne(ITEM);
             res.send('success');
         } catch (err) {
+            console.log(err);
             Sentry.captureException(new Error(err));
             res.sendStatus(500);
         }
@@ -74,6 +76,7 @@ class ServerLib {
             await myCollection.updateOne({'_id': req.body.mydata.to_email}, {$set: {password:password}});
             res.send('success');
         } catch (err) {
+            console.log(err);
             Sentry.captureException(new Error(err));
             res.sendStatus(500);
         }
@@ -142,6 +145,7 @@ class ServerLib {
             res.send('success');
           }).catch(console.error);
        } catch (err) {
+        console.log(err);
         Sentry.captureException(new Error(err));
         res.sendStatus(500);
        }
@@ -167,6 +171,7 @@ class ServerLib {
             await this.handleUpdateCampaignWallet(req, res, Sentry, DB);
             res.send('success');
         } catch (err) {
+            console.log(err);
             Sentry.captureException(new Error(err));
             res.sendStatus(500);
         }
@@ -213,6 +218,7 @@ class ServerLib {
             await myCollection.insertOne(ITEM);
             return true
         } catch (err) {
+            console.log(err);
             Sentry.captureException(new Error(err));
             return false;
         }
@@ -236,6 +242,7 @@ class ServerLib {
                 await myCollection.updateOne({'_id': req.body.mydata.address}, {$set: req.body.mydata.dataToUpdate});
                 res.send('success');
             } catch (err) {
+                console.log(err);
                 Sentry.captureException(new Error(err));
                 res.sendStatus(500);
             }
@@ -254,6 +261,7 @@ class ServerLib {
                 await myCollection.updateOne({'_id': req.body.id}, {$set: {deleted:true}});
                 res.send('success');
             } catch (err) {
+                console.log(err);
                 Sentry.captureException(new Error(err));
                 res.sendStatus(500);
             }
@@ -328,6 +336,7 @@ class ServerLib {
          res.send(result);
         }
        } catch (err) {
+        console.log(err);
         Sentry.captureException(new Error(err));
         res.send("error");
        }
@@ -342,6 +351,7 @@ class ServerLib {
             let result = await DB.collection('donations').aggregate(pipeline).toArray();
             res.send(result);
        } catch (err) {
+        console.log(err);
         Sentry.captureException(new Error(err));
         res.sendn("error");
        }
@@ -353,7 +363,11 @@ class ServerLib {
             let result = await myCollection.findOne({"key" : req.body.KEY, "deleted":{ $exists : false }});
             if (result) res.send(result._id)
             else res.send(req.body.KEY);
-        } catch (err) {Sentry.captureException(new Error(err));}
+        } catch (err) {
+            console.log(err);
+            Sentry.captureException(new Error(err));
+            res.sendStatus(500);
+        }
     }
 
     async handlecheckKey(req, res, Sentry, DB) {
@@ -362,7 +376,11 @@ class ServerLib {
             let result = await myCollection.findOne({"key" : req.body.KEY, "deleted":{ $exists : false }});
             if (result) res.send(true)
             else res.send(false);
-        } catch (err) {Sentry.captureException(new Error(err));}
+        } catch (err) {
+            console.log(err);
+            Sentry.captureException(new Error(err));
+            res.sendStatus(500);
+        }
     }
 
     async handleGetCoinsList(req, res, Sentry, DB) {
@@ -371,7 +389,11 @@ class ServerLib {
             let coins = await myCollection.find();//aggregate([{$group:{ _id : "$chain", coins:{$push: "$coin"}}}]);
             const result = await coins.toArray();
             res.send(result);
-        } catch (err) {Sentry.captureException(new Error(err));}
+        } catch (err) {
+            console.log(err);
+            Sentry.captureException(new Error(err));
+            res.sendStatus(500);
+        }
     }
 
     async handleGetTipForHeo(req, res, Sentry, DB) {
@@ -383,6 +405,7 @@ class ServerLib {
         } catch (err) {
             console.log(err);
             Sentry.captureException(new Error(err));
+            res.sendStatus(500);
         }
     }
 
@@ -392,7 +415,11 @@ class ServerLib {
             let chains = await myCollection.distinct("chain");
             const result = await chains.toArray();
             res.send(result._id);
-        } catch (err) {Sentry.captureException(new Error(err));}
+        } catch (err) {
+            console.log(err);
+            Sentry.captureException(new Error(err));
+            res.sendStatus(500);
+        }
     }
 
     async handleUpdateCampaignWallet(req, res, Sentry, DB) {
@@ -402,6 +429,7 @@ class ServerLib {
             {$inc: {"donate_count":req.body.mydata.raisedAmount, "heo_donate":req.body.mydata.tipAmount}});
             return true;
         } catch (err) {
+            console.log(err);
             Sentry.captureException(new Error(err));
             res.sendStatus(500);
         }
@@ -412,8 +440,9 @@ class ServerLib {
             const myCollection = await DB.collection('campaigns');
             const walletColection = await DB.collection('campaign_wallet');
             let result = await myCollection.findOne({"_id" : req.body.ID });
+            let donate = await DB.collection('donations').find({campaignID: req.body.ID}).toArray();
             let campaign_wallets = await walletColection.find({"campaign_id" : req.body.ID}).
-                project({_id:0,wallet_ort:1,addres_base58:1,addres_hex:1,coin_name:1,donate_count:1}).toArray();
+                project({_id:0,wallet_ort:1,addres_base58:1,addres_hex:1,coin_name:1}).toArray();
             for(let i=0; i<campaign_wallets.length; i++) {
                 if(campaign_wallets[i].wallet_ort === 'Tron') {
                     campaign_wallets[i].chainId = process.env.TRON_CHAIN.toString();
@@ -426,8 +455,11 @@ class ServerLib {
                 else campaign_wallets[i].chainId = "";
             }   
             result.campaign_wallets = campaign_wallets;
+            result.totalQuantity = 0;
+            for(let i=0; i<donate.length; i++) result.totalQuantity += donate[i].raisedAmount;
             res.send(result);
         } catch (err) {
+            console.log(err);
             Sentry.captureException(new Error(err));
             res.sendStatus(500);
         }
@@ -440,6 +472,7 @@ class ServerLib {
             const result = await campaigns.toArray();
             res.send(result);
         } catch (err) {
+            console.log(err);
             Sentry.captureException(new Error(err));
             res.sendStatus(500);
         }
@@ -466,7 +499,9 @@ class ServerLib {
                 });
 
         } catch (err) {
+            console.log(err);
             Sentry.captureException(new Error(err));
+            res.sendStatus(500);
         }
     }
 
@@ -477,7 +512,11 @@ class ServerLib {
         try {
             const myCollection = await DB.collection('fiat_payment_records');
             await myCollection.insertOne(data);
-        } catch (err) {Sentry.captureException(new Error(err))}
+        } catch (err) {
+            console.log(err);
+            Sentry.captureException(new Error(err));
+            res.sendStatus(500);
+        }
     }
 
     //update payment record in mongodb
@@ -486,8 +525,11 @@ class ServerLib {
         try{
             const myCollection = await DB.collection('fiat_payment_records');
             await myCollection.updateOne({'_id': recordId}, {$set: data});
+        } catch (err) {
+            console.log(err);
+            Sentry.captureException(new Error(err));
+            res.sendStatus(500);
         }
-        catch (err) {Sentry.captureException(new Error(err))}
     }
 
     async authenticated(req, res, Sentry) {
@@ -515,7 +557,10 @@ class ServerLib {
                 }
             }
             return;
-        } catch (err) {Sentry.captureException(new Error(err))};
+        } catch (err) {
+            console.log(err);
+            Sentry.captureException(new Error(err));
+        }
     }
 
     async handleGetCountInPage(res, Sentry, DB) {
@@ -525,6 +570,7 @@ class ServerLib {
             let fiatSettings = await fiatSettingsRAW.toArray();
             res.send(fiatSettings[0].count);
         } catch (err){
+            console.log(err);
             Sentry.captureException(new Error(err));
             res.sendStatus(500);
         } 
@@ -537,6 +583,7 @@ class ServerLib {
             let fiatSettings = await fiatSettingsRAW.toArray();
             res.send(fiatSettings[0].count);
         } catch (err){
+            console.log(err);
             Sentry.captureException(new Error(err));
             res.sendStatus(500);
         } 

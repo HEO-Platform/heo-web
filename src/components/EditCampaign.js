@@ -278,8 +278,6 @@ class EditCampaign extends React.Component {
             data.org["en"] = this.state.orgEn;
             data.org["default"] = this.state.orgEn;
             data.org["ru"] = this.state.orgRu;
-            data.addresses = this.state.addresses;
-            data.accounts = this.state.line_accounts;
             data.payout_chain = this.state.blockchain;
             data.payout_address = this.state.wallet;
             if(this.mistake === true) data.complete = false;
@@ -673,6 +671,7 @@ class EditCampaign extends React.Component {
                         <Row>
                          <Button onClick={() => this.handleClick()} id='createCampaignBtn' name='ff3'>{i18n.t('saveCampaignBtn')}</Button>
                         </Row>
+                        <Row><Col><Button style={{backgroundColor : "white", borderColor : "white"}}></Button></Col></Row>
                     </Form>
                 </Container>
             </div>

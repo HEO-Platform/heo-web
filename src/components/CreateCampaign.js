@@ -274,9 +274,6 @@ class CreateCampaign extends React.Component {
             campaignData.title["default"] = this.state.titleEn;
             campaignData.title["en"] = this.state.titleEn;
             campaignData.title["ru"] = this.state.titleRu;
-            campaignData.addresses = {};
-            campaignData.accounts = {};
-            campaignData.coins = {};
             campaignData.description = {};
             campaignData.description["default"] = this.state.descriptionEn;
             campaignData.description["en"] = this.state.descriptionEn;
@@ -750,6 +747,7 @@ class CreateCampaign extends React.Component {
                            </Button>
                           </Col>
                         </Row>
+                        <Row><Col><Button style={{backgroundColor : "white", borderColor : "white"}}></Button></Col></Row>
                     </Form>
                 </Container>
                 

@@ -1229,10 +1229,6 @@ class CampaignPage extends Component {
             this.props.history.push("/404");
             return;
         }
-        console.log("this.state.raisedAmount - ", this.state.raisedAmount);
-        for(let i = 0; i < campaign.campaign_wallets.length; i++) 
-            this.state.raisedAmount = this.state.raisedAmount + campaign.campaign_wallets[i].donate_count;
-        console.log("this.state.raisedAmount - ", this.state.raisedAmount);
         this.state.campaign_wallets = campaign.campaign_wallets;
         let result = await axios.post('/api/gettipforheo', {headers: {"Content-Type": "application/json"}});
         if(result) {
@@ -1241,6 +1237,12 @@ class CampaignPage extends Component {
         this.state.donationAmount = campaign.defaultDonationAmount ? campaign.defaultDonationAmount : 20;
         this.state.tipAmount = Math.max(1, parseInt(parseInt(this.state.donationAmount)/100 * this.state.tipForHeo));
         this.state.totalAmount = parseInt(campaign.defaultDonationAmount) + this.state.tipAmount;
+        let totalQuantity = campaign.totalQuantity? parseFloat(campaign.totalQuantity) : 0;
+        let raisedAmount = campaign.raisedAmount? parseFloat(campaign.raisedAmount) : 0;
+        let fiatDonations = campaign.fiatDonations ? parseFloat(campaign.fiatDonations) : 0;
+        let raisedOnCoinbase = campaign.raisedOnCoinbase ? parseFloat(campaign.raisedOnCoinbase) : 0;
+        raisedAmount = Math.round((raisedAmount + fiatDonations + raisedOnCoinbase + totalQuantity) * 100)/100;
+        this.state.raisedAmount = raisedAmount;
         campaign.percentRaised = 100 * (this.state.raisedAmount)/campaign.maxAmount;
         var contentState = {};
         var lng
