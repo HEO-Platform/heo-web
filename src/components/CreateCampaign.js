@@ -8,7 +8,7 @@ import uuid from 'react-uuid';
 import axios from 'axios';
 import { Trans } from 'react-i18next';
 import i18n from '../util/i18n';
-import {checkEmail,isValidUrl,blockchains} from '../util/Utilities';
+import {checkEmail,isValidUrl} from '../util/Utilities';
 import {getEditorStateEn, getEditorStateRu, TextEditorEn, TextEditorRu, setEditorStateEn, setEditorStateRu} from '../components/TextEditor';
 import { ChevronLeft, CheckCircle, ExclamationTriangle, HourglassSplit, XCircle } from 'react-bootstrap-icons';
 import '../css/createCampaign.css';
@@ -69,10 +69,19 @@ class CreateCampaign extends React.Component {
             countryCode:"",
             number:"",
             website:"",
+            badWebsite:false,
+            badKey:false,
+            badEmail:false,
+            noCountryCode:false,
+            notValidAddr:false,
+            noCoverImage:false,
+            longDescRequired:false,
+            longDescEnIncludRu:false,
             telegram:"",
-            blockchain:"",
+            blockchain:"Tron",
             wallet:""
         }
+        this.mistake = false;
     };
 
     onSubmit = (e) => {
@@ -102,15 +111,12 @@ class CreateCampaign extends React.Component {
                    help_value += e.target.value[i];
                 }
                 let key = help_value.toLowerCase().replaceAll(" ", "-"); 
-                this.setState({key: key}); 
+                if((key !== "")&&(this.state.key === "")) this.setState({key: key}); 
             }
-          }
-          else if(e.target.name === 'fiatPayments')
-           this.setState({fiatPayments: e.target.checked});
-          else if(e.target.name === 'countryCode'){
-            this.setState({ countryCode: e.target.value });
-          }
-          else if(e.target.name === 'campaignURL'){
+        }
+        else if(e.target.name === 'fiatPayments') this.setState({fiatPayments: e.target.checked});
+        else if(e.target.name === 'countryCode') this.setState({ countryCode: e.target.value });
+        else if(e.target.name === 'campaignURL'){
             help_value = '';  
             for(i = 0; i <  e.target.value.length; i++){
               if ((/^[-A-Za-z0-9]*$/.test(e.target.value[i]) === true)||(e.target.value[i] === ' '))
@@ -118,8 +124,8 @@ class CreateCampaign extends React.Component {
             }
             let key = help_value.toLowerCase().replaceAll(" ", "-"); 
             this.setState({key: key}); 
-          }
-          else if(e.target.name === 'number'){
+        }
+        else if(e.target.name === 'number'){
             help_value = '';  
             for(let i = 0; i < e.target.value.length; i++){
              if ((/^[-0-9]*$/.test(e.target.value[i]) === true)||(e.target.value[i] === ' '))
@@ -127,8 +133,8 @@ class CreateCampaign extends React.Component {
             }
             e.target.value = help_value;
             this.setState({ [e.target.name]: e.target.value });
-          }
-          else if(e.target.name === 'wallet'){
+        }
+        else if(e.target.name === 'wallet'){
             help_value = '';  
                 for(i = 0; i <  e.target.value.length; i++){
                   if (/^[A-Za-z0-9]*$/.test(e.target.value[i]) === true)
@@ -148,60 +154,24 @@ class CreateCampaign extends React.Component {
         this.setState({qrCodeImageFile:e.target.files[0], qrCodeImageURL: URL.createObjectURL(e.target.files[0])});
     };
 
-    async handleClick (event) {
+    async handleClick () {
         let imgID = uuid();
         let qrImgID = uuid();
         let result;
+        this.mistake = false;
         try {
-            if(!this.state.orgEn) {
-                this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle',
-                        modalMessage: 'orgRequiredEn', modalIcon: 'ExclamationTriangle',
-                        waitToClose: false,
-                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                    });
-                return false;
-            }
-            if(!this.state.cn) {
-                this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle',
-                        modalMessage: 'cnRequired', modalIcon: 'ExclamationTriangle',
-                        waitToClose: false,
-                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                });
-                return false;
-            }
-            if(this.state.website){
+            if(this.state.orgEn.trim() === "") this.mistake = true;
+            if(this.state.cn.trim() === "") this.mistake = true;
+            if(this.state.website.trim() !== ""){
                result =  await isValidUrl(this.state.website);
                if(!result){
-                this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle',
-                        modalMessage: 'badWebsite', modalIcon: 'ExclamationTriangle',
-                        waitToClose: false,
-                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                    });
-                    return false; 
+                this.setState({badWebsite:true});
+                this.mistake = true; 
                }
             } 
-            if(!this.state.titleEn) {
-                this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle',
-                        modalMessage: 'titleRequired', modalIcon: 'ExclamationTriangle',
-                        waitToClose: false,
-                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                    });
-                return false;
-            }
-            if(!this.state.descriptionEn) {
-                this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle',
-                        modalMessage: 'shortDescRequired', modalIcon: 'ExclamationTriangle',
-                        waitToClose: false,
-                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                });
-                return false;
-            }
-            if(!this.state.key) {
+            if(this.state.titleEn.trim() === "") this.mistake = true;
+            if(this.state.descriptionEn.trim() === "") this.mistake = true;
+            if(this.state.key.trim() === ""){
                 this.setState(
                     {showModal:true, modalTitle: 'requiredFieldsTitle',
                         modalMessage: 'campaignURLRequired', modalIcon: 'ExclamationTriangle',
@@ -210,7 +180,7 @@ class CreateCampaign extends React.Component {
                     });
                 return false;
             }
-            if(this.state.key){
+            if(this.state.key.trim() !== ""){
                 let data = {KEY : this.state.key};
                 let res = await axios.post('/api/campaign/checkKey', data,
                                    {headers: {"Content-Type": "application/json"}});
@@ -222,104 +192,55 @@ class CreateCampaign extends React.Component {
                             modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
                         });
 
-                    return false;  
+                    return false; 
                 }                        
             }
-            if(!this.state.email) {
-                this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle',
-                        modalMessage: 'emailRequired', modalIcon: 'ExclamationTriangle',
-                        waitToClose: false,
-                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                    });
-                return false;
+            if(this.state.email.trim() === "")this.mistake = true;
+            if(this.state.email.trim() !== "" ){
+                result = await checkEmail(this.state.email);
+                if(!result){
+                    this.setState({badEmail:true});
+                    this.mistake = true;
+                }
             }
-            result = await checkEmail(this.state.email);
-            if(!result) {
-                this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle',
-                        modalMessage: 'emailFaulty', modalIcon: 'ExclamationTriangle',
-                        waitToClose: false,
-                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                    });
-                return false;
+            if ((this.state.number.trim() !== "")&&(this.state.countryCode.trim()==="")){
+                this.setState({noCountryCode:true});
+                this.mistake = true;
             }
-            if ((this.state.number)&&(this.state.countryCode.trim()==="")){
-                this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle',
-                        modalMessage: 'countryCodeRequired', modalIcon: 'ExclamationTriangle',
-                        waitToClose: false,
-                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                    });
-                return false;
-            }
-            if (!this.state.blockchain){
-                this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle',
-                        modalMessage: 'selectBlockchain', modalIcon: 'ExclamationTriangle',
-                        waitToClose: false,
-                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                    });
-                return false;
-            }
-            if (!this.state.wallet){
-                this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle',
-                        modalMessage: 'enterWallet', modalIcon: 'ExclamationTriangle',
-                        waitToClose: false,
-                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                    });
-                return false;
-            }
-            if (this.state.blockchain === "Ethereum"){
+            if (this.state.wallet.trim() === "") this.mistake = true;
+            if ((this.state.blockchain === "Ethereum")&&(this.state.wallet.trim() !== "")){
                 if((this.state.wallet.substring(0,2) !== "0x")||(this.state.wallet.length !== 42))
                  {
-                    this.setState(
-                        {showModal:true, modalTitle: 'requiredFieldsTitle',
-                            modalMessage: 'notValidAddr', modalIcon: 'ExclamationTriangle',
-                            waitToClose: false,
-                            modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                        });
-                    return false;
+                    this.setState({notValidAddr:true});
+                    this.mistake = true;
                  }
             }
-            if (this.state.blockchain === "Tron"){
+            if ((this.state.blockchain === "Tron")&&(this.state.wallet.trim() !== "")){
                 if((this.state.wallet.substring(0,1) !== "T")||(this.state.wallet.length !== 34))
                  {
-                    this.setState(
-                        {showModal:true, modalTitle: 'requiredFieldsTitle',
-                            modalMessage: 'notValidAddr', modalIcon: 'ExclamationTriangle',
-                            waitToClose: false,
-                            modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                        });
-                    return false;
+                    this.setState({notValidAddr:true});
+                    this.mistake = true;
                  }
             }
             let n = 0; 
             let EditorStateEn = await getEditorStateEn();
+            if(!EditorStateEn){
+                this.setState({longDescRequired:true});
+                this.mistake = true;
+            }
             if (EditorStateEn){
                for (let i = 0; i < EditorStateEn.blocks.length; i++){
                 n = n + EditorStateEn.blocks[i].text.length; 
                }
                if (n < 3) {
-                  this.setState(
-                    {showModal:true, modalTitle: 'requiredFieldsTitle',
-                        modalMessage: 'longDescRequired', modalIcon: 'ExclamationTriangle',
-                        waitToClose: false,
-                        modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                    });
-                  return false;
+                  this.setState({longDescRequired:true});
+                  this.mistake = true;
                }
                for (let i = 0; i < EditorStateEn.blocks.length; i++){
                   for(let j = 0; j < getEditorStateEn().blocks[i].text.length; j++){
                     if (/^[А-Яа-я]*$/.test(getEditorStateEn().blocks[i].text[j]) === true){
-                        this.setState(
-                          {showModal:true, modalTitle: 'requiredFieldsTitle',
-                           modalMessage: 'longDescEnIncludRu', modalIcon: 'ExclamationTriangle',
-                           waitToClose: false,
-                           modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                          });
-                        return false;
+                        this.setState({longDescEnIncludRu:true});
+                        this.mistake = true;
                      }
                    } 
                 }
@@ -327,31 +248,32 @@ class CreateCampaign extends React.Component {
             let qrImgUrl = '';
             let imgUrl = await this.uploadImageS3('main', imgID);
             if (imgUrl) this.setState({imgUrl:imgUrl});
+            else{
+                this.setState({noCoverImage:true});
+                this.mistake = true; 
+            }
             if(this.state.qrCodeImageURL) {
               qrImgUrl = await this.uploadImageS3('qrCode', qrImgID);
-              if(qrImgUrl) this.setState({imgUrl:imgUrl});
+              if(qrImgUrl) this.setState({qrImgUrl:qrImgUrl});
             }
-            if(imgUrl) {
-              let campaignData = {mainImageURL:imgUrl, 
-               qrCodeImageURL:qrImgUrl} 
-               await this.addCampaignToDb(campaignData);
-            }
+            if(this.mistake === true) this.setState({showModalМistakes:true})
+            else await this.addCampaignToDb();
         } catch(error)  {
             console.log(error);
         }
     }
 
-    async addCampaignToDb(campaignData) {
+    async addCampaignToDb() {
         try {
+            let campaignData = {};
+            campaignData.qrCodeImageUR = this.state.qrImgUrl;
+            campaignData.mainImageURL = this.state.imgUrl;
             campaignData.key = this.state.key;
             campaignData.id = uuid();
             campaignData.title = {};
             campaignData.title["default"] = this.state.titleEn;
             campaignData.title["en"] = this.state.titleEn;
             campaignData.title["ru"] = this.state.titleRu;
-            campaignData.addresses = {};
-            campaignData.accounts = {};
-            campaignData.coins = {};
             campaignData.description = {};
             campaignData.description["default"] = this.state.descriptionEn;
             campaignData.description["en"] = this.state.descriptionEn;
@@ -384,11 +306,14 @@ class CreateCampaign extends React.Component {
             campaignData.website = this.state.website;
             campaignData.payout_chain = this.state.blockchain;
             campaignData.payout_address = this.state.wallet;
+           if(this.mistake === true) campaignData.complete = false;
+            else campaignData.complete = true;
             let res = await axios.post('/api/campaign/add', {mydata : campaignData},
                 {headers: {"Content-Type": "application/json"}});
             if (res.data === 'success'){
+              if(this.mistake === true) {
                 this.setState({showModal:true, goHome: true,
-                    modalMessage: 'campaignwWillBePublished',
+                    modalMessage: 'campaignSavedWithErrors',
                     modalTitle: 'success',
                     modalIcon: 'CheckCircle',
                     modalButtonMessage: 'ok',
@@ -396,6 +321,18 @@ class CreateCampaign extends React.Component {
                     campaignID: campaignData.id,
                     campaignData:campaignData 
                 });
+              } 
+              else { 
+                this.setState({showModal:true, goHome: true,
+                    modalMessage: 'campaignSaved',
+                    modalTitle: 'success',
+                    modalIcon: 'CheckCircle',
+                    modalButtonMessage: 'ok',
+                    modalButtonVariant: "#588157", waitToClose: false, isInDB: true,
+                    campaignID: campaignData.id,
+                    campaignData:campaignData 
+                });
+              }  
             }    
             else{
                 this.setState({showModal: true, goHome: false,
@@ -425,12 +362,7 @@ class CreateCampaign extends React.Component {
             modalButtonVariant: "gold", waitToClose: true
             });
         if(type === 'main' && (!this.state.mainImageFile || !this.state.mainImageFile.type)) {
-            this.setState(
-                {showModal:true, modalTitle: 'coverImageRequiredTitle',
-                    modalMessage: 'coverImageRequired', modalIcon: 'ExclamationTriangle',
-                    waitToClose: false,
-                    modalButtonMessage: 'closeBtn', modalButtonVariant: '#E63C36'
-                });
+            this.setState({noCoverImage:true, showModal:false});
             return false;
         }
         let fileType;
@@ -456,12 +388,7 @@ class CreateCampaign extends React.Component {
                 this.setState({showModal:false});
                 return (res.data);
             } else {
-                console.log('error uploading image: res.data is empty');
-                this.setState({showModal: true, goHome: false,
-                    modalTitle: 'imageUploadFailed',
-                    modalMessage: 'technicalDifficulties',
-                    modalIcon: 'XCircle', modalButtonMessage: 'closeBtn',
-                    modalButtonVariant: "#E63C36", waitToClose: false});
+                this.setState({noCoverImage:true, showModal:false});
                 return false;
             }
         }  catch(err) {
@@ -493,6 +420,55 @@ class CreateCampaign extends React.Component {
     render() {
         return (
             <div>
+               <Modal size='xl' show={this.state.showModalМistakes} onHide={()=>{}} className='myModal' centered>
+               <Modal.Body className='createFormPlaceHolder'> 
+                <p className='modalIcon'><ExclamationTriangle/></p>
+                <Row class="justify-content-center">
+                <Col class="my-auto">
+                <p className='modalTitle'><Trans i18nKey={'requiredFieldsTitle'}/></p>  
+                </Col>
+                </Row> 
+                <Row><Col><Button style={{backgroundColor : "white", borderColor : "white"}}></Button></Col></Row>
+                <Container fluid>
+                {(this.state.orgEn === "")&&<Row><p><Trans i18nKey={'orgRequiredEn'}/></p></Row>}   
+                {(this.state.cn === "")&&<Row><p><Trans i18nKey={'cnRequired'}/></p></Row>} 
+                {(this.state.badWebsite === true)&&<Row><p><Trans i18nKey={'badWebsite'}/></p></Row>}
+                {(this.state.titleEn === "")&&<Row><p><Trans i18nKey={'titleRequired'}/></p></Row>} 
+                {(this.state.descriptionEn === "")&&<Row><p><Trans i18nKey={'shortDescRequired'}/></p></Row>}
+                {(this.state.email === "")&&<Row><p><Trans i18nKey={'emailRequired'}/></p></Row>}
+                {(this.state.badEmail === true)&&<Row><p><Trans i18nKey={'emailFaulty'}/></p></Row>}
+                {(this.state.noCountryCode === true)&&<Row><p><Trans i18nKey={'countryCodeRequired'}/></p></Row>}
+                {(this.state.wallet === "")&&<Row><p><Trans i18nKey={'enterWallet'}/></p></Row>}
+                {(this.state.notValidAddr === true)&&<Row><p><Trans i18nKey={'notValidAddr'}/></p></Row>}
+                {(this.state.longDescRequired === true)&&<Row><p><Trans i18nKey={'longDescRequired'}/></p></Row>}
+                {(this.state.longDescEnIncludRu === true)&&<Row><p><Trans i18nKey={'longDescEnIncludRu'}/></p></Row>}
+                {(this.state.noCoverImage=== true)&&<Row><p><Trans i18nKey={'coverImageRequired'}/></p></Row>}
+                </Container>
+                <Row><Col><Button style={{backgroundColor : "white", borderColor : "white"}}></Button></Col></Row>
+                <Row>
+                <Col>    
+                <Button className='myModalButton' 
+                  style={{backgroundColor : "#E63C36", borderColor : "#E63C36"}}
+                  onClick={ async () => { this.setState({showModalМistakes:false,badWebsite:false,badKey:false,badEmail:false,
+                    noCountryCode:false,notValidAddr:false,noCoverImage:false,longDescRequired:false,longDescEnIncludRu:false});
+                   await this.addCampaignToDb();
+                   this.props.history.push("/myCampaigns");
+                  }} >
+                  <Trans i18nKey={'saveCampaignBtn'} />  
+                 </Button>  
+                 </Col>
+                 <Col>
+                 <Button className='myModalButton' 
+                  style={{backgroundColor : "#E63C36", borderColor : "#E63C36"}}
+                  onClick={ async () => { this.setState({showModalМistakes:false,badWebsite:false,badKey:false,badEmail:false,
+                    noCountryCode:false,notValidAddr:false,noCoverImage:false,longDescRequired:false,longDescEnIncludRu:false});
+                  }} >
+                  <Trans i18nKey={'abortBtn'} />  
+                 </Button>  
+                 </Col>
+                 </Row>
+                 </Modal.Body>
+               </Modal>  
                <Modal size='xl' show={this.state.showModalPrevent} onHide={()=>{}} className='myModal' centered>
                <Modal.Body className='createFormPlaceHolder'> 
                 <Row class="justify-content-center">
@@ -753,13 +729,9 @@ class CreateCampaign extends React.Component {
                             </Col>
                           </Row>
                           <Row>
-                           <Col xs = {2}>
-                           <Form.Control required as="select" name='blockchain' value={this.state.blockchain} onChange={this.handleChange}>
-                                <option> </option>
-                                {blockchains.map((data) =>
-                                        <option value={data.value}>{data.value}</option>
-                                    )}
-                                </Form.Control>
+                          <Col xs = {2}>
+                           <Form.Control required type="text" className="createFormPlaceHolder"
+                             placeholder="" name='blockchain' value={this.state.blockchain} readOnly = {true}/>
                            </Col> 
                            <Col xs={10}>
                             <Form.Control required type="text" className="createFormPlaceHolder"
@@ -775,6 +747,7 @@ class CreateCampaign extends React.Component {
                            </Button>
                           </Col>
                         </Row>
+                        <Row><Col><Button style={{backgroundColor : "white", borderColor : "white"}}></Button></Col></Row>
                     </Form>
                 </Container>
                 

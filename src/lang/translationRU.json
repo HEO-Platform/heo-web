@@ -58,7 +58,7 @@
     "campaignDescription": "Описание кампании",
     "createCampaignBtn": "СОЗДАТЬ КАМПАНИЮ",
     "noUserCampaigns": "Вы ещё не запустили кампании. Нажмите <1>сюда</1> чтобы создать первую кампанию",
-    "saveCampaignBtn" : "СОХРАНИТЬ",
+    "saveCampaignBtn" : "Сохранить кампанию",
     "complete" : "Успешно!",
     "updateSuccessfull" : "Информация о кампании успешно обновлена",
     "closeBtn" : "Закрыть",
@@ -237,5 +237,12 @@
     "campaignURL":"URL кампании",
     "campaignURLPlaceHolder":"Символы, которые появятся в адресе кампании после https://app.heo.finance/campaign/",
     "campaignURLBad":"Такой URL кампании уже есть в базе данных, введите другой",
-    "countryCodeRequired": "Пожалуйста, выберите код страны для телефонного номера"
+    "countryCodeRequired": "Пожалуйста, выберите код страны для телефонного номера",
+    "notValidAddr":"Недопустимый адрес кошелька",
+    "blockchain":"Блокчейн",
+    "wallet": "Адрес кошелька",
+    "payout":"Адрес для выплат",   
+    "enterWallet":"Пожалуйста, введите адрес кошелька",
+    "campaignSaved":"Кампания сохранена в базе данных",
+    "campaignSavedWithErrors":"Кампания сохранена в базе данных с ошибками"
 }
