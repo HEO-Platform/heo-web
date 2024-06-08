@@ -439,6 +439,9 @@ class ServerLib {
         try {
             const myCollection = await DB.collection('campaigns');
             const walletColection = await DB.collection('campaign_wallet');
+            const configCollection = await DB.collection('chain_configs');
+            let config_tron = await configCollection.findOne({"_id" : process.env.TRON_CHAIN.toString()});
+            let config_eth = await configCollection.findOne({"_id" : process.env.CHAIN.toString()});
             let result = await myCollection.findOne({"_id" : req.body.ID });
             let donate = await DB.collection('donations').find({campaignID: req.body.ID}).toArray();
             let campaign_wallets = await walletColection.find({"campaign_id" : req.body.ID}).
@@ -446,11 +449,11 @@ class ServerLib {
             for(let i=0; i<campaign_wallets.length; i++) {
                 if(campaign_wallets[i].wallet_ort === 'Tron') {
                     campaign_wallets[i].chainId = process.env.TRON_CHAIN.toString();
-                    campaign_wallets[i].coin_addres = process.env.TRON_TOKEN_ADRES.toString();
+                    campaign_wallets[i].coin_addres = config_tron.currencyOptions.value;
                 }
                 else if(campaign_wallets[i].wallet_ort === 'Etherium') {
                     campaign_wallets[i].chainId = process.env.CHAIN.toString();
-                    campaign_wallets[i].coin_addres = process.env.TOKEN_ADRES.toString();
+                    campaign_wallets[i].coin_addres = config_eth.currencyOptions.value;
                 }
                 else campaign_wallets[i].chainId = "";
             }   
