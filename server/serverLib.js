@@ -168,7 +168,6 @@ class ServerLib {
         try {
             const myCollection = await DB.collection('donations');
             await myCollection.insertOne(ITEM);
-            await this.handleUpdateCampaignWallet(req, res, Sentry, DB);
             res.send('success');
         } catch (err) {
             console.log(err);
@@ -299,9 +298,10 @@ class ServerLib {
         try{
             let pipeline = [
                 {$lookup: {from :"campaign_wallet", localField: "_id", foreignField: "campaign_id", as : "wallet"}},
+                {$lookup: {from :"donations", localField: "_id", foreignField: "campaignID", as : "donates"}},
                 {$match: {$or:[{successful:false },{successful:{$exists : false}}], 
                  $or:[{deleted:{ $exists : false}}, {deleted:false}],"wallet":{ $ne : []},"active":true, complete:true}},
-                 {$set: {wallet: {$arrayElemAt: ["$wallet.addres_base58",0]},donate_count:{$sum:{$arrayElemAt: ["$wallet.donate_count",0]}}}},
+                 {$set: {wallet: {$arrayElemAt: ["$wallet.addres_base58",0]},donate_count:{$sum:{$arrayElemAt: ["$donates.raisedAmount",0]}}}},
                  {$sort: {donate_count: -1, raisedOnCoinbase: -1, _id: 1}},
                  { $skip : req.body.startRec},
                  { $limit: req.body.compaignsCount}

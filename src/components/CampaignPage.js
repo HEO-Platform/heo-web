@@ -377,6 +377,10 @@ class CampaignPage extends Component {
       }
     }
 
+    Sleep = async(time) => {
+        return new Promise(resolve => setTimeout(resolve, time));
+    }
+
     handleDonateTron = async (chainId, addres_base58, coinAddress, coin_name) =>{
         try{
             await clearTronProvider();
@@ -417,7 +421,7 @@ class CampaignPage extends Component {
             let m = 1;
             do{
                 console.log("Waiting for transaction record");
-                txnObject = await window.tronWeb.trx.getTransactionInfo(result);
+                txnObject = await window.tronWeb.trx.getUnconfirmedTransactionInfo(result);
                 if(txnObject){
                   if (txnObject.receipt)  break;
                 }
