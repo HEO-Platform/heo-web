@@ -354,7 +354,8 @@ class CampaignPage extends Component {
                 coinAddress: coinAddress
               };
         }
-        await axios.post('/api/donate/adddanate', {mydata: donateData}, {headers: {"Content-Type": "application/json"}});
+        let res = await axios.post('/api/donate/adddanate', {mydata: donateData}, {headers: {"Content-Type": "application/json"}});
+        //if (res.data === "success")
         this.setState({showModal:true, goHome: true,
             modalMessage: 'thankYouDonation',
             modalTitle: 'complete',
@@ -363,6 +364,12 @@ class CampaignPage extends Component {
             modalButtonVariant: "#588157", waitToClose: false
         });
         this.setState({raisedAmount: this.state.raisedAmount + this.state.donationAmount});
+        if (res.data !== "success"){
+            let dataEmail ={key: 'Donations not preserved in the database', text:`Donation options: campaignID - ${this.state.campaignId};
+            blockChainOrt - ${this.blockChainOrt}; raisedAmount - ${this.state.donationAmount}; tipAmount - ${this.state.tipAmount};
+            transactionHash - ${transactionHash}; chainId - ${chainId}; coinAddress - ${coinAddress};donatorID - ${donateData.donatorID}`} 
+            axios.post('/api/sendemail', dataEmail, {headers: {"Content-Type": "application/json"}}); 
+        }
     }
     
     handleDonateClick = async(wallet_ort, addres_base58, addres_hex, coin_addres, chain_name, coin_name) =>{
@@ -425,6 +432,7 @@ class CampaignPage extends Component {
                 if(txnObject){
                   if (txnObject.receipt)  break;
                 }
+                await this.Sleep(1000);
             }while(m !== 2);
             if (txnObject.receipt.result === "SUCCESS"){
                this.setState({

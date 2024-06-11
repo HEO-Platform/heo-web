@@ -135,6 +135,8 @@ class ServerLib {
         if (key === "HEO-Platform Confirmation Code") to_email = req.body.mydata.to_email;
         else if (key === "New Campaign Alert") to_email = result.to;
         else if (key === "Failed to delete picture") to_email = result.to;
+        else if (key === "Donations not preserved in the database") to_email = result.to;
+        else to_email = result.to; 
         await transporter.sendMail({
             from: result.from, // sender address
             to: to_email, // list of receivers
@@ -170,7 +172,7 @@ class ServerLib {
             await myCollection.insertOne(ITEM);
             res.send('success');
         } catch (err) {
-            console.log(err);
+            console.log("err- ", err);
             Sentry.captureException(new Error(err));
             res.sendStatus(500);
         }
