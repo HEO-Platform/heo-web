@@ -354,7 +354,8 @@ class CampaignPage extends Component {
                 coinAddress: coinAddress
               };
         }
-        await axios.post('/api/donate/adddanate', {mydata: donateData}, {headers: {"Content-Type": "application/json"}});
+        let res = await axios.post('/api/donate/adddanate', {mydata: donateData}, {headers: {"Content-Type": "application/json"}});
+        //if (res.data === "success")
         this.setState({showModal:true, goHome: true,
             modalMessage: 'thankYouDonation',
             modalTitle: 'complete',
@@ -363,9 +364,15 @@ class CampaignPage extends Component {
             modalButtonVariant: "#588157", waitToClose: false
         });
         this.setState({raisedAmount: this.state.raisedAmount + this.state.donationAmount});
+        if (res.data !== "success"){
+            let dataEmail ={key: 'Donations not preserved in the database', text:`Donation options: campaignID - ${this.state.campaignId};
+            blockChainOrt - ${this.blockChainOrt}; raisedAmount - ${this.state.donationAmount}; tipAmount - ${this.state.tipAmount};
+            transactionHash - ${transactionHash}; chainId - ${chainId}; coinAddress - ${coinAddress};donatorID - ${donateData.donatorID}`} 
+            axios.post('/api/sendemail', dataEmail, {headers: {"Content-Type": "application/json"}}); 
+        }
     }
     
-    handleDonateClick = async(wallet_ort, addres_base58, addres_hex, coin_addres, chain_name) =>{
+    handleDonateClick = async(wallet_ort, addres_base58, addres_hex, coin_addres, chain_name, coin_name) =>{
       if(wallet_ort === "Ethereum"){
         this.blockChainOrt = "ethereum";
         //if (this.state.campaign.new === false) await this.handleDonateOld(chain_name, addres_hex);
@@ -373,15 +380,19 @@ class CampaignPage extends Component {
       }
       else if(wallet_ort === "Tron"){
         this.blockChainOrt = "tron";
-        await this.handleDonateTron(chain_name, addres_base58, coin_addres);
+        await this.handleDonateTron(chain_name, addres_base58, coin_addres, coin_name);
       }
     }
 
-    handleDonateTron = async (chainId, addres_base58, coinAddress) =>{
+    Sleep = async(time) => {
+        return new Promise(resolve => setTimeout(resolve, time));
+    }
+
+    handleDonateTron = async (chainId, addres_base58, coinAddress, coin_name) =>{
         try{
             await clearTronProvider();
             await initTronadapter();
-            await initTron(chainId);
+            await initTron(chainId, coin_name);
             var toDonate = window.tronWeb.toSun(this.state.totalAmount);
             var coinInstance = await window.tronWeb.contract(tron_abi, coinAddress);
             ReactGA.event({
@@ -417,10 +428,11 @@ class CampaignPage extends Component {
             let m = 1;
             do{
                 console.log("Waiting for transaction record");
-                txnObject = await window.tronWeb.trx.getTransactionInfo(result);
+                txnObject = await window.tronWeb.trx.getUnconfirmedTransactionInfo(result);
                 if(txnObject){
                   if (txnObject.receipt)  break;
                 }
+                await this.Sleep(1000);
             }while(m !== 2);
             if (txnObject.receipt.result === "SUCCESS"){
                this.setState({
@@ -1132,7 +1144,7 @@ class CampaignPage extends Component {
                                             }><img src={visaMcLogo} width={17} height={16} alt='some value' style={{marginRight:5}} />USD</Dropdown.Item> }
                                              {this.state.campaign_wallets.map((item, i) =>
                                                     <Dropdown.Item key={item.wallet_ort} as="button" onClick={() => 
-                                                      this.handleDonateClick(item.wallet_ort, item.addres_base58, item.addres_hex,item.coin_addres,item.chainId)}>
+                                                      this.handleDonateClick(item.wallet_ort, item.addres_base58, item.addres_hex,item.coin_addres,item.chainId,item.coin_name)}>
                                                       <img src={IMG_MAP[item.coin_name]} width={16} height={16} alt='some value' style={{marginRight:5}} />{item.coin_name} 
                                                     </Dropdown.Item>
                                                 )}

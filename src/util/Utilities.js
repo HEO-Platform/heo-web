@@ -163,7 +163,7 @@ const getTronWeb = async () => {
     return tronWeb;
 }
 
-const initTron = async (chainId) => {
+const initTron = async (chainId, coin_name) => {
     if(!window.tronWeb)
     {
         window.tronWeb = await getTronWeb();
@@ -172,15 +172,11 @@ const initTron = async (chainId) => {
         await initTronadapter();
     }
     await window.tronAdapter.connect();
-    let chainConfig = config.get("CHAINS")[chainId];
-    if(!chainConfig) {
-        throw new Error(`Unsupported blockchain: ${chainId}`);
-    }
     try {
         ReactGA.event({
             category: "provider",
             action: "switching_network",
-            label: chainConfig["CHAIN_NAME"],
+            label: coin_name,
             nonInteraction: false
         });
           
@@ -191,17 +187,17 @@ const initTron = async (chainId) => {
                 ReactGA.event({
                     category: "provider",
                     action: "adding_network",
-                    label: chainConfig["CHAIN_NAME"],
+                    label: coin_name,
                     nonInteraction: false
                 });
 
             } catch (addError) {
-                console.log(`Failed to add provider for ${chainId} and ${chainConfig["WEB3_RPC_NODE_URL"]}`)
+                console.log(`Failed to add provider for ${chainId} and ${coin_name}`)
                 console.log(addError);
                 ReactGA.event({
                     category: "provider",
                     action: "failed_to_add_provider",
-                    label: chainConfig["CHAIN_NAME"],
+                    label: coin_name,
                     nonInteraction: false
                 });
             }
