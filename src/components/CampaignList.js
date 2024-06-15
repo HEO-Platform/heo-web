@@ -148,11 +148,11 @@ class CampaignList extends Component {
         campaigns.forEach( campaign => {
             const found = donates.find(element => element._id === campaign._id);
             let totalQuantity = found ? found.totalQuantity : 0;
-            let raisedAmount = campaign.raisedAmount ? parseFloat(campaign.raisedAmount) : 0;
+            let raisedAmount = campaign.raisedAmount? parseFloat(campaign.raisedAmount) : 0;
             let fiatDonations = campaign.fiatDonations ? parseFloat(campaign.fiatDonations) : 0;
             let raisedOnCoinbase = campaign.raisedOnCoinbase ? parseFloat(campaign.raisedOnCoinbase) : 0;
             if(raisedAmount || fiatDonations || raisedOnCoinbase || totalQuantity) {
-                campaign["raisedAmount"] = Math.round((raisedAmount + fiatDonations + raisedOnCoinbase + totalQuantity) * 100)/100;
+                campaign.donate_count = Math.round((raisedAmount + fiatDonations + raisedOnCoinbase + totalQuantity) * 100)/100;
             }
             //dedupe coin names for "accepting" section
             let dedupedCoinNames = [];
@@ -203,8 +203,8 @@ class CampaignList extends Component {
                                                         {`${DescriptionPreview(item.description, i18n.language)}...`}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id='readMore'><Trans i18nKey='readMore'/></span>
                                                     </Card.Text>
                                                     <p id='progressBarLabel'><span id='progressBarLabelStart'>
-                                                        &#36;{item.raisedAmount}</span>{i18n.t('raised')}&#36;{item.maxAmount} {i18n.t('goal')}</p>
-                                                    <ProgressBar now={100 * item.raisedAmount/item.maxAmount} />
+                                                        &#36;{item.donate_count}</span>{i18n.t('raised')}&#36;{item.maxAmount} {i18n.t('goal')}</p>
+                                                    <ProgressBar now={100 * item.donate_count/item.maxAmount} />
                                                 </Card.Body>
                                             </Row>
                                             <Row >
@@ -262,6 +262,7 @@ class CampaignList extends Component {
                 </div>
                 </Col>}
                 </Row>
+                <Row><Col><Button style={{backgroundColor : "white", borderColor : "white"}}></Button></Col></Row>
             </div>
 
         );

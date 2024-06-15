@@ -7,12 +7,14 @@ branch-defaults:
     group_suffix: null
   master:
     application_name: heo-web
-    environment: heoweb-prod
+    default_platform: Node.js 18 running on 64bit Amazon Linux 2023
+    default_region: eu-west-2    
+    environment: heo-apr21
   stage:
     application_name: heo-web
     default_platform: Node.js 18 running on 64bit Amazon Linux 2023
     default_region: eu-west-2
-    environment: stage
+    environment: heo-june15
     group_suffix: null
 environment-defaults:
   stage:

@@ -6,7 +6,6 @@ import CreateCampaign from './CreateCampaign';
 import UserCampaigns from './UserCampaigns';
 import EditCampaign from './EditCampaign';
 import MyDonations from './MyDonations';
-import WithdrawDonations from './WithdrawDonations';
 import Registration from './Registration';
 import Page404 from "./Page404";
 import TokenSale from './TokenSale'
@@ -179,7 +178,6 @@ class App extends Component {
                             <Switch>
                                 <Route path="/campaign" component={CampaignPage} />
                                 <Route path="/myCampaigns" component={UserCampaigns} />
-                                <Route path="/withdrawDonations" component={WithdrawDonations} />
                                 <Route path="/new" component={CreateCampaign} />
                                 <Route path="/rewards" component={MyDonations} />
                                 <Route path="/editCampaign" component={EditCampaign} />

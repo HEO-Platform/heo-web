@@ -163,7 +163,7 @@ const getTronWeb = async () => {
     return tronWeb;
 }
 
-const initTron = async (chainId, that) => {
+const initTron = async (chainId, coin_name) => {
     if(!window.tronWeb)
     {
         window.tronWeb = await getTronWeb();
@@ -172,15 +172,11 @@ const initTron = async (chainId, that) => {
         await initTronadapter();
     }
     await window.tronAdapter.connect();
-    let chainConfig = config.get("CHAINS")[chainId];
-    if(!chainConfig) {
-        throw new Error(`Unsupported blockchain: ${chainId}`);
-    }
     try {
         ReactGA.event({
             category: "provider",
             action: "switching_network",
-            label: chainConfig["CHAIN_NAME"],
+            label: coin_name,
             nonInteraction: false
         });
           
@@ -191,17 +187,17 @@ const initTron = async (chainId, that) => {
                 ReactGA.event({
                     category: "provider",
                     action: "adding_network",
-                    label: chainConfig["CHAIN_NAME"],
+                    label: coin_name,
                     nonInteraction: false
                 });
 
             } catch (addError) {
-                console.log(`Failed to add provider for ${chainId} and ${chainConfig["WEB3_RPC_NODE_URL"]}`)
+                console.log(`Failed to add provider for ${chainId} and ${coin_name}`)
                 console.log(addError);
                 ReactGA.event({
                     category: "provider",
                     action: "failed_to_add_provider",
-                    label: chainConfig["CHAIN_NAME"],
+                    label: coin_name,
                     nonInteraction: false
                 });
             }
@@ -415,11 +411,21 @@ const encryptCardData = async(keyData, cardData) => {
     return btoa(encrypted);
 }
 
+function countWordsString(string){
+    var counter = 0;
+    string=string.replace(/[\s]+/gim, ' ');
+    string.replace(/(\s+)/g, function (a) {
+       counter++;
+    });
+    return counter;
+}
+
 const blockchains = [
     {value:"Ethereum"},
     {value:"Tron"}
 ];
 
 export {DescriptionPreview, i18nString, GetLanguage, LogIn, initWeb3, checkAuth, initWeb3Modal, clearWeb3Provider,clearTronProvider,
-    getPCIPublicKey, encryptCardData, LogInTron, initTronadapter, checkAuthTron, initTron, getTronWeb, checkEmail, isValidUrl,blockchains};
+    getPCIPublicKey, encryptCardData, LogInTron, initTronadapter, checkAuthTron, initTron, getTronWeb, checkEmail, isValidUrl,blockchains,
+    countWordsString};
 export default Utilities;
