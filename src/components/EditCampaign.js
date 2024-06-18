@@ -99,9 +99,7 @@ class EditCampaign extends React.Component {
         const name = e.target.name
         const value = e.target.value;
         const checked = e.target.checked;
-        if (name === 'fiatPayments')
-        this.setState({fiatPayments: checked});
-        else if (name === 'EtheriumCheckbox')
+        if (name === 'EtheriumCheckbox')
         this.setState({isInEtherium: checked});
         else if (name === 'TronCheckbox')
         this.setState({isInTron: checked});
@@ -214,7 +212,6 @@ class EditCampaign extends React.Component {
             else if(this.state.mainImageURL === "") {
                 this.setState({noCoverImage:true});
                 this.mistake = true;
-               
             }
             
             if(this.mistake === true) this.setState({showModalМistakes:true})
@@ -523,7 +520,7 @@ class EditCampaign extends React.Component {
                             <Col xs lg="1">
                             <Form.Check type="checkbox" checked={this.state.fiatPayments}
                                         value={this.state.fiatPayments} placeholder={this.state.fiatPayments}
-                                        name='fiatPayments' onChange={this.handleChange} onwheel="this.blur()"/>
+                                        name='fiatPayments' onwheel="this.blur()" readOnly = {true}/>
                             </Col>
                             </Row>
                         </Form.Group>
