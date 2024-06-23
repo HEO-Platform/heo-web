@@ -272,18 +272,13 @@ class ServerLib {
     async handleLoadFinishedCampaigns(req, res, Sentry, DB) {
         try{
             let pipeline = [
-                {$lookup: {from :"campaign_wallet", localField: "_id", foreignField: "campaign_id", as : "wallet"}},
-                {$match: {successful: true, 
-                 $or:[{deleted:{ $exists : false}}, {deleted:false}],"wallet":{ $ne : []},"active":true, complete:true}},
-                 {$set: {wallet: {$arrayElemAt: ["$wallet.addres_base58",0]},donate_count:{$arrayElemAt: ["$wallet.donate_count",0]}}},
+                {$match: {$or:[{deleted:{ $exists : false}}, {deleted:false}], complete:true}},
                 {$sort: {donate_count: -1, raisedOnCoinbase: -1, _id: 1}},
                 {$skip : req.body.startRec},
                 { $limit:req.body.compaignsCount}
             ];
             let pipeline1 = [
-                { $lookup: {from :"campaign_wallet", localField: "_id", foreignField: "campaign_id", as : "wallet"}},
-                 { $match: {successful:true, 
-                 $or:[{deleted:{ $exists : false}}, {deleted:false}],"wallet":{ $ne : []},"active":true, complete:true}}
+                { $match: {$or:[{deleted:{ $exists : false}}, {deleted:false}], complete:true}}
             ];   
             let curArr =  await DB.collection('campaigns').aggregate(pipeline).toArray();
             let curArr1 =  await DB.collection('campaigns').aggregate(pipeline1).toArray();
