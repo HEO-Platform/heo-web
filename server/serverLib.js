@@ -272,13 +272,13 @@ class ServerLib {
     async handleLoadFinishedCampaigns(req, res, Sentry, DB) {
         try{
             let pipeline = [
-                {$match: {$or:[{deleted:{ $exists : false}}, {deleted:false}], complete:true}},
+                {$match: {$or:[{deleted:{ $exists : false}}, {deleted:false}], successful:true, active:false}},
                 {$sort: {donate_count: -1, raisedOnCoinbase: -1, _id: 1}},
                 {$skip : req.body.startRec},
                 { $limit:req.body.compaignsCount}
             ];
             let pipeline1 = [
-                { $match: {$or:[{deleted:{ $exists : false}}, {deleted:false}], complete:true}}
+                { $match: {$or:[{deleted:{ $exists : false}}, {deleted:false}], successful:true, active:false}}
             ];   
             let curArr =  await DB.collection('campaigns').aggregate(pipeline).toArray();
             let curArr1 =  await DB.collection('campaigns').aggregate(pipeline1).toArray();
