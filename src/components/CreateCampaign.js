@@ -114,7 +114,6 @@ class CreateCampaign extends React.Component {
                 if((key !== "")&&(this.state.key === "")) this.setState({key: key}); 
             }
         }
-        else if(e.target.name === 'fiatPayments') this.setState({fiatPayments: e.target.checked});
         else if(e.target.name === 'countryCode') this.setState({ countryCode: e.target.value });
         else if(e.target.name === 'campaignURL'){
             help_value = '';  
@@ -586,9 +585,9 @@ class CreateCampaign extends React.Component {
                                 className='redAsterisk'></span></Form.Label>
                             </Col>
                             <Col xs lg="1">
-                            <Form.Check type="checkbox" checked={this.state.fiatPayments}
+                            <Form.Check type="checkbox" checked={false}
                                         value={this.state.fiatPayments} placeholder={this.state.fiatPayments}
-                                        name='fiatPayments' onChange={this.handleChange} onwheel="this.blur()"/>
+                                        name='fiatPayments' onwheel="this.blur()" readOnly = {true}/>
                             </Col>
                             </Row> 
                             </Form.Group>

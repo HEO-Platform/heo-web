@@ -395,7 +395,7 @@ const checkEmail = async(email) => {
 }
 
 const isValidUrl = async(url) => {
-    var objRE = /(^https?:\/\/)?[a-z0-9~_\-.]+\.[a-z]{2,9}(\/|:|\?[!-~]*)?$/i;
+    var objRE = /(^https?:\/\/)?[-a-zA-Zа-яА-Я0-9@:%_.~#?&=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Zа-яА-Я0-9@:%_.~#?&=]*)?/gi;
     return objRE.test(url);
 } 
 
