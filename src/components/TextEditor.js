@@ -571,7 +571,6 @@ class TextEditorRu extends TextEditor{
 
   function setEditorState(storedState, hasContent) {
     if(hasContent) {
-      
       const contentState = convertFromRaw(storedState);
       STOREDSTATE = contentState;
     } else {
@@ -583,6 +582,7 @@ class TextEditorRu extends TextEditor{
     if(hasContent) {
       DESCRIPTIONRAWEN = storedState;
       const contentState = convertFromRaw(storedState);
+      DESCRIPTIONRAWEN = convertToRaw(contentState);
       STOREDSTATEEN = contentState;
     } else {
       STOREDSTATEEN = {};
@@ -592,6 +592,7 @@ class TextEditorRu extends TextEditor{
   function setEditorStateRu(storedState, hasContent) {
     if(hasContent) {
       const contentState = convertFromRaw(storedState);
+      DESCRIPTIONRAWRU = convertToRaw(contentState);
       STOREDSTATERU = contentState;
     } else {
       STOREDSTATERU = {};
