@@ -99,11 +99,7 @@ class EditCampaign extends React.Component {
         const name = e.target.name
         const value = e.target.value;
         const checked = e.target.checked;
-        if (name === 'EtheriumCheckbox')
-        this.setState({isInEtherium: checked});
-        else if (name === 'TronCheckbox')
-        this.setState({isInTron: checked});
-        else if(e.target.name === 'number'){
+       if(e.target.name === 'number'){
             help_value = '';
             for(let i = 0; i < e.target.value.length; i++){
              if ((/^[-0-9]*$/.test(e.target.value[i]) === true)||(e.target.value[i] === ' '))
@@ -368,7 +364,7 @@ class EditCampaign extends React.Component {
         return (
             <div>
                 <Modal size='xl' show={this.state.showModalМistakes} onHide={()=>{}} className='myModal' centered>
-               <Modal.Body className='createFormPlaceHolder'> 
+                <Modal.Body className='createFormPlaceHolder'> 
                 <p className='modalIcon'><ExclamationTriangle/></p>
                 <Row class="justify-content-center">
                 <Col class="my-auto">
@@ -783,10 +779,6 @@ class EditCampaign extends React.Component {
         });
         if (dbCampaignObj.payout_chain) this.setState({blockchain:dbCampaignObj.payout_chain});  
         if (dbCampaignObj.payout_address) this.setState({wallet:dbCampaignObj.payout_address});   
-        if (this.state.addresses[this.state.chainId]) this.setState({isInEtherium:true});
-        else this.setState({isInEtherium:false});
-        if (this.state.addresses[this.state.tronChainId]) this.setState({isInTron:true});
-        else this.setState({isInTron:false});
         if(dbCampaignObj.descriptionEditor.en){
             setEditorStateEn(dbCampaignObj.descriptionEditor.en, true);
             this.setState({updatedEditorStateEn : true});
