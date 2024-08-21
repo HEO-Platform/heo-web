@@ -211,6 +211,7 @@ class ServerLib {
             website: req.body.mydata.website,
             payout_address: req.body.mydata.payout_address,
             payout_chain: req.body.mydata.payout_chain,
+            ethereum_address: req.body.mydata.ethereum_address,
             complete:req.body.mydata.complete,
             new: true
         }
@@ -448,7 +449,7 @@ class ServerLib {
                     campaign_wallets[i].chainId = process.env.TRON_CHAIN.toString();
                     campaign_wallets[i].coin_addres = config_tron.currencyOptions.value;
                 }
-                else if(campaign_wallets[i].wallet_ort === 'Etherium') {
+                else if(campaign_wallets[i].wallet_ort === 'Ethereum') {
                     campaign_wallets[i].chainId = process.env.CHAIN.toString();
                     campaign_wallets[i].coin_addres = config_eth.currencyOptions.value;
                 }

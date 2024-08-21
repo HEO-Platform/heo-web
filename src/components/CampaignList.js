@@ -240,29 +240,29 @@ class CampaignList extends Component {
                 <div class="btn-toolbar" role="toolbar" >
                  <Button disabled={window.curPg === this.state.pages[0]}
                   onClick={async() =>{window.curPg=window.curPg-1; await this.changePage(window.curPg);}}><span><ChevronLeft/></span></Button>
-                 <Button style={{backgroundColor : "white", borderColor : "white"}}></Button>
+                 <Button style={{backgroundColor : "rgba(255,255,255,.1)", borderColor : "rgba(255,255,255,.1)"}}></Button>
                 {((this.state.pages[0] > 1)&&(this.state.pagescount > 9))&&<div class = "btn-group">
                  <Button style={{cursor:"pointer"}} onClick={async()=>{window.curPg=1; await this.changePage(window.curPg - 1);}}>{1}</Button>
-                 <Button style={{backgroundColor : "white", borderColor : "white", color: "#0E161C"}}><span>...</span></Button>}
-                 <Button style={{backgroundColor : "white", borderColor : "white"}}></Button>
+                 <Button style={{backgroundColor : "rgba(255,255,255,.1)", borderColor :"rgba(255,255,255,.1)", color: "#0E161C"}}><span>...</span></Button>}
+                 <Button style={{backgroundColor : "rgba(255,255,255,.1)", borderColor : "rgba(255,255,255,.1)"}}></Button>
                 </div>}
                 {this.state.pages.map((item, i) =><div>
                  <Button style={{cursor:"pointer"}} disabled={window.curPg === item}
                   onClick={async()=>{window.curPg=item; await this.changePage(item,this.state.pages[0]);}}>{item}</Button>
-                 <Button style={{backgroundColor : "white", borderColor : "white"}}></Button>
+                 <Button style={{backgroundColor : "rgba(255,255,255,.1)", borderColor : "rgba(255,255,255,.1)"}}></Button>
                 </div>)}
                 {((this.state.pages[this.state.pages.length - 1] < this.state.pagescount)&&(this.state.pagescount > 9))&&<div class = "btn-group">
-                 <Button style={{backgroundColor : "white", borderColor : "white", color: "#0E161C"}}><span>...</span></Button>
+                 <Button style={{backgroundColor : "rgba(255,255,255,.1)", borderColor : "rgba(255,255,255,.1)", color: "#0E161C"}}><span>...</span></Button>
                  <Button style={{cursor:"pointer"}} onClick={async()=>{window.curPg=this.state.pagescount; await this.changePage(this.state.pagescount);}}>
                     {this.state.pagescount}</Button>
-                 <Button style={{backgroundColor : "white", borderColor : "white"}}></Button>
+                 <Button style={{backgroundColor : "rgba(255,255,255,.1)", borderColor : "rgba(255,255,255,.1)"}}></Button>
                 </div>}
                  <Button disabled={window.curPg===this.state.pagescount} style={{cursor:"pointer"}}
                    onClick={async()=>{window.curPg=window.curPg+1; await this.changePage(window.curPg);}}><span><ChevronRight/></span></Button>
                 </div>
                 </Col>}
                 </Row>
-                <Row><Col><Button style={{backgroundColor : "white", borderColor : "white"}}></Button></Col></Row>
+                <Row><Col><Button style={{backgroundColor : "rgba(255,255,255,.1)", borderColor : "rgba(255,255,255,.1)"}}></Button></Col></Row>
             </div>
 
         );
