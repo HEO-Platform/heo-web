@@ -512,8 +512,6 @@ class CampaignPage extends Component {
                     action: "self_donation_blocked",
                     nonInteraction: false
                 });
-                console.log("Accounts[0]" + accounts[0]);
-                console.log("Beneficiary" + this.state.campaign.beneficiaryId);
                 return;
             }
 
@@ -857,7 +855,20 @@ class CampaignPage extends Component {
         );
     }
 
+    async checkAutorisation(){
+        let result = await axios.post('/api/is_autorisation', {headers: {"Content-Type": "application/json"}});
+        if (result.data !== false) return true;
+        else return false;
+    }
+
     async componentDidMount() {
+        let connected = await this.checkAutorisation();
+        if (connected === false){
+            this.setState({showModal:true, modalButtonVariant: "#E63C36",
+            modalTitle:"attention", modalMessage: "noLogMessage1", modalButtonMessage:"ok",
+            modalIcon: "ExclamationTriangle", goHome: true });  
+            return; 
+        }
         window.scrollTo(0,0);
         var modalMessage = 'failedToLoadCampaign';
         let toks = this.props.location.pathname.split("/");
