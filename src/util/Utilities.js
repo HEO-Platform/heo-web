@@ -350,7 +350,7 @@ const initTronadapter = async(that) => {
 }
 
 const initWeb3Modal = async(chainId) => {
-   
+        console.log("chainId - ", chainId);
         let rpc = [];
         let chains = config.get("CHAINS");
         let chainConfig = chains[chainId];
