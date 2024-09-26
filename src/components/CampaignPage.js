@@ -23,26 +23,9 @@ import { Editor, EditorState, convertFromRaw, CompositeDecorator } from "draft-j
 import '../css/campaignPage.css';
 import '../css/modal.css';
 import ReactGA from "react-ga4";
-import bnbIcon from '../images/binance-coin-bnb-logo.png';
-import busdIcon from '../images/binance-usd-busd-logo.png';
-import usdcIcon from '../images/usd-coin-usdc-logo.png';
-import ethIcon from '../images/eth-diamond-purple.png';
-import cusdIcon from '../images/cusd-celo-logo.png';
-import btcLogo from '../images/bitcoin-logo.png';
-import daiLogo from '../images/dai-logo.png';
-import ltcLogo from '../images/ltc-logo.png'
 import visaMcLogo from '../images/visa-mc-logo.png';
-import usdtLogo from '../images/usdt-logo.png';
 import CCData from '../components/CCData';
 //import TronWeb from "tronweb";
-
-const IMG_MAP = {"BUSD": busdIcon,
-    "BNB": bnbIcon,
-    "USDС": usdcIcon,
-    "USDT": usdtLogo,
-    "ETH": ethIcon,
-    "cUSD": cusdIcon,
-};
 
 const PAYMENT_ERROR_MESSAGES = {
     declined: "cardPaymentDeclined",
@@ -99,7 +82,7 @@ class CampaignPage extends Component {
             recurringFiatPayments: false,
             cur_chain: -1,
             tipForHeo: 0
-        };
+         };
         this.handleGetCCInfo = this.handleGetCCInfo.bind(this);
         this.handleCCInfoCancel = this.handleCCInfoCancel.bind(this);
         this.blockChainOrt = "";
@@ -329,7 +312,7 @@ class CampaignPage extends Component {
         this.setState({showCoinbaseModal: true});
     }
 
-    saveDonateToDb = async (transactionHash, chainId, coinAddress, blockChainOrt) => {
+    saveDonateToDb = async (transactionHash, chainId, coinAddress, blockChainOrt, wallet_id, token_id) => {
         let accounts = this.state.accounts;
         let donateData
         if (blockChainOrt === "ethereum"){
@@ -341,7 +324,9 @@ class CampaignPage extends Component {
                 transactionHash: transactionHash,
                 chainId: chainId,
                 blockChainOrt: "Ethereum",
-                coinAddress: coinAddress
+                coinAddress: coinAddress,
+                wallet_id: wallet_id,
+                token_id: token_id
               };
         } else if (blockChainOrt === "tron"){
             donateData = {
@@ -352,7 +337,9 @@ class CampaignPage extends Component {
                 transactionHash: transactionHash,
                 chainId: chainId,
                 blockChainOrt: "Tron",
-                coinAddress: coinAddress
+                coinAddress: coinAddress,
+                wallet_id: wallet_id,
+                token_id: token_id
               };
         }
         let res = await axios.post('/api/donate/adddanate', {mydata: donateData}, {headers: {"Content-Type": "application/json"}});
@@ -373,15 +360,15 @@ class CampaignPage extends Component {
         }
     }
     
-    handleDonateClick = async(wallet_ort, addres_base58, addres_hex, coin_addres, chain_name, coin_name) =>{
+    handleDonateClick = async(wallet_ort, addres_base58, addres_hex, coin_addres, chain_name, coin_name,
+        wallet_id, token_id) =>{
       if(wallet_ort === "Ethereum"){
         this.blockChainOrt = "ethereum";
-        //if (this.state.campaign.new === false) await this.handleDonateOld(chain_name, addres_hex);
-       await this.handleDonateNew(chain_name, addres_hex, coin_addres, coin_name);
+       await this.handleDonateNew(chain_name, addres_hex, coin_addres, coin_name, wallet_id, token_id);
       }
       else if(wallet_ort === "Tron"){
         this.blockChainOrt = "tron";
-        await this.handleDonateTron(chain_name, addres_base58, coin_addres, coin_name);
+        await this.handleDonateTron(chain_name, addres_base58, coin_addres, coin_name, wallet_id, token_id);
       }
     }
 
@@ -389,7 +376,7 @@ class CampaignPage extends Component {
         return new Promise(resolve => setTimeout(resolve, time));
     }
 
-    handleDonateTron = async (chainId, addres_base58, coinAddress, coin_name) =>{
+    handleDonateTron = async (chainId, addres_base58, coinAddress, coin_name, wallet_id, token_id) =>{
         try{
             await clearTronProvider();
             await initTronadapter();
@@ -415,7 +402,6 @@ class CampaignPage extends Component {
                     action: "self_donation_blocked",
                     nonInteraction: false
                 });
-                console.log("Tronadapter address" + window.tronAdapter.address);
                 return;
             }
             let result = await coinInstance.methods.transfer(addres_base58, toDonate)
@@ -442,7 +428,7 @@ class CampaignPage extends Component {
                    errorIcon: 'CheckCircle', modalButtonMessage: 'closeBtn',
                    modalButtonVariant: '#588157', waitToClose: false
                 });
-                this.saveDonateToDb(txnObject.id, chainId, coinAddress, "tron");
+                this.saveDonateToDb(txnObject.id, chainId, coinAddress, "tron", wallet_id, token_id);
 
             }else {
                 this.setState({
@@ -477,7 +463,7 @@ class CampaignPage extends Component {
     }
 
     //handleDonateNew = async (chainId, coinAddress) => {
-    handleDonateNew =  async (chain_name, addres_hex, coin_addres, coin_name) => {    
+    handleDonateNew =  async (chain_name, addres_hex, coin_addres, coin_name, wallet_id, token_id) => {    
         //TODO: check that this.state.donationAmount is larger than
         try {
             await clearWeb3Provider(this);
@@ -557,7 +543,7 @@ class CampaignPage extends Component {
                                 {from:accounts[0]}
                             ).once('transactionHash', function(transactionHash) {
                                 console.log(`Got donation trnasaction hash ${transactionHash}`);
-                                that.saveDonateToDb(transactionHash, chain_name, coin_addres, "ethereum");
+                                that.saveDonateToDb(transactionHash, chain_name, coin_addres, "ethereum", wallet_id, token_id);
                                 ReactGA.event({
                                     category: "donation",
                                     action: "donation_hash",
@@ -608,7 +594,7 @@ class CampaignPage extends Component {
                         ).once('transactionHash', function(transactionHash) {
                             console.log(`transaction hash for donateERC20 ${transactionHash}`);
                             that.setState({modalMessage: "waitingForNetwork"});
-                            that.saveDonateToDb(transactionHash, chain_name, addres_hex, "ethereum");
+                            that.saveDonateToDb(transactionHash, chain_name, addres_hex, "ethereum", wallet_id, token_id);
                         });
                         if(result.code) {
                             this.setState({
@@ -669,6 +655,8 @@ class CampaignPage extends Component {
         }
     }
 
+    
+
     onModalClose() {
         if(this.state.tryAgainCC) {
             this.setState({showCCinfoModal:true});
@@ -679,7 +667,7 @@ class CampaignPage extends Component {
         return (
             <div>
                 <Modal show={this.state.showModal} onHide={()=>{}} className='myModal' size="md" centered>
-                    <Modal.Body><p className='errorIcon'>
+                    <Modal.Body><p className='modalIcon'>
                         {this.state.errorIcon === 'CheckCircle' && <CheckCircle style={{color:'#588157'}} />}
                         {this.state.errorIcon === 'ExclamationTriangle' && <ExclamationTriangle style={{color: '#E63C36'}}/>}
                         {this.state.errorIcon === 'HourglassSplit' && <HourglassSplit style={{color: 'gold'}}/>}
@@ -764,14 +752,9 @@ class CampaignPage extends Component {
                                     <p><Trans i18nKey='accepting'/>:
                                         {this.state.fiatPaymentEnabled && this.state.campaign.fiatPayments && <span className='coinRewardInfo'><img src={visaMcLogo} witdth={21} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
                                         {this.state.chains_coins.map((item, i) =>
-                                            <span className='coinRewardInfo'><img src={IMG_MAP[item.coin.name]} width={20} height={20}alt='some value'style={{marginRight:5, marginLeft:5}} /> </span>
+                                            <span className='coinRewardInfo'><img src={item.imageURL} width={20} height={20}alt='some value'style={{marginRight:5, marginLeft:5}} /></span>
                                             )}
-                                        {<span className='coinRewardInfo'><img src={ethIcon} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
-                                        {<span className='coinRewardInfo'><img src={btcLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
-                                        {<span className='coinRewardInfo'><img src={daiLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
-                                        {<span className='coinRewardInfo'><img src={usdcIcon} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
-                                        {<span className='coinRewardInfo'><img src={usdtLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
-                                        {<span className='coinRewardInfo'><img src={ltcLogo} width={20} height={20} alt='some value' style={{marginRight:5, marginLeft:5}} /> </span> }
+                                        
                                     </p>
                                 </div>
                             </Row>
@@ -816,11 +799,12 @@ class CampaignPage extends Component {
                                                 }
                                             }
                                             }><img src={visaMcLogo} width={17} height={16} alt='some value' style={{marginRight:5}} />USD</Dropdown.Item> }
-                                             {this.state.campaign_wallets.map((item, i) =>
+                                             {this.state.chains_coins.map((item, i) =>
                                                     
-                                                    <Dropdown.Item key={item.wallet_ort} as="button" onClick={() => 
-                                                      this.handleDonateClick(item.wallet_ort, item.addres_base58, item.addres_hex,item.coin_addres,item.chainId,item.coin_name)}>
-                                                      <img src={IMG_MAP[item.coin_name]} width={16} height={16} alt='some value' style={{marginRight:5}} />{item.coin_name} 
+                                                    <Dropdown.Item key={item._id} as="button" onClick={() => 
+                                                      this.handleDonateClick(item.blockChainOrt, item.addres_base58, item.addres_hex,item.tokenAddress,
+                                                                            item.chainId,item.tokenName,item.wallet_id,item._id)}>
+                                                      <img src={item.imageURL} width={16} height={16} alt='some value' style={{marginRight:5}} />{item.chain_name} 
                                                     </Dropdown.Item>
                                                 )}
                                         </DropdownButton>
@@ -866,7 +850,7 @@ class CampaignPage extends Component {
         if (connected === false){
             this.setState({showModal:true, modalButtonVariant: "#E63C36",
             modalTitle:"attention", modalMessage: "noLogMessage1", modalButtonMessage:"ok",
-            modalIcon: "ExclamationTriangle", goHome: true });  
+            modalIcon: "ExclamationTriangle", goHome: true, errorIcon: 'XCircle' });  
             return; 
         }
         window.scrollTo(0,0);
@@ -985,19 +969,20 @@ class CampaignPage extends Component {
         .then(res => {
             let chains_coins = [];
             for (let i = 0; i <  res.data.length; i++){
+              for(let j = 0; j < campaign.campaign_wallets.length; j++){
                 res.data[i].chain_name = "";
-                if(campaign.addresses[res.data[i].chain])
-                {
-                    for (let j = 0; j < chains.length; j++){
-                     if (chains[j].CHAIN === res.data[i].chain){
-                        res.data[i].chain_name = chains[j].CHAIN_NAME;
-                        break;
-                     }
-                    }
-                    chains_coins.push(res.data[i]);
+                if(campaign.campaign_wallets[j].wallet_ort === res.data[i].blockChainOrt){
+                  if (res.data[i].blockChainOrt === "Tron") res.data[i].chain_name = res.data[i].tokenName + "(TRC20)";
+                  else  if (res.data[i].blockChainOrt === "Ethereum") res.data[i].chain_name = res.data[i].tokenName + "(ERC20)"; 
+                  res.data[i].addres_base58 = campaign.campaign_wallets[j].addres_base58;
+                  res.data[i].addres_hex = campaign.campaign_wallets[j].addres_hex;
+                  res.data[i].wallet_id = campaign.campaign_wallets[j]._id;
+                  chains_coins.push(res.data[i]);  
+                  break;
                 }
+              }  
             }
-            this.setState({chains_coins:chains_coins})
+            this.setState({chains_coins:chains_coins});
         }).catch(err => {
             if (err.response) {
                 modalMessage = 'Failed to load coins. We are having technical difficulties'}
