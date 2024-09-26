@@ -222,6 +222,7 @@
     "noUser" : "There is no such user in the system",
     "badPassword" : "Invalid password",
     "noLogMessage": "You must log in before you can create a company or open a list of your companies.",
+    "noLogMessage1": "You must log in before sending donations.",
     "deployBtn":"Deploy campaign in blockchain networks",
     "findUserCompanies": "Find user companies",
     "waitingForOperation": "We are waiting for the completion of the operation",

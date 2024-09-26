@@ -9,24 +9,8 @@ import { Trans } from 'react-i18next';
 import i18n from '../util/i18n';
 import ReactGA from "react-ga4";
 import { ChevronLeft, ChevronRight} from 'react-bootstrap-icons';
-import bnbIcon from '../images/binance-coin-bnb-logo.png';
-import busdIcon from '../images/binance-usd-busd-logo.png';
-import usdcIcon from '../images/usd-coin-usdc-logo.png';
-import ethIcon from '../images/eth-diamond-purple.png';
-import cusdIcon from '../images/cusd-celo-logo.png';
-import btcLogo from '../images/bitcoin-logo.png';
-import daiLogo from '../images/dai-logo.png';
-import ltcLogo from '../images/ltc-logo.png'
 import visaMcLogo from '../images/visa-mc-logo.png';
-import usdtLogo from '../images/usdt-logo.png';
 import config from "react-global-configuration";
-
-const IMG_MAP = {"BUSD": busdIcon,
-    "BNB": bnbIcon,
-    "USDC": usdcIcon,
-    "USDT": usdtLogo,
-    "ETH": ethIcon,
-    "cUSD": cusdIcon};
 
 ReactGA.initialize("G-C657WZY5VT");
 
@@ -156,17 +140,13 @@ class CampaignList extends Component {
             }
             //dedupe coin names for "accepting" section
             let dedupedCoinNames = [];
-            for(var chain in campaign.addresses){
-             for(let i = 0; i < that.state.coinslist.length; i++){
-              if (that.state.coinslist[i].chain === chain){
-               let coinName = that.state.coinslist[i].coin.name;
-               if(!dedupedCoinNames.includes(coinName)) {
-                dedupedCoinNames.push(coinName);
-               }
-              }
-             }
+            for(let i = 0; i < that.state.coinslist.length; i++){
+             if ((that.state.coinslist[i].blockChainOrt === "Tron")&&(campaign.wallet_tron))   
+                            dedupedCoinNames.push(that.state.coinslist[i].imageURL);
+             else if ((that.state.coinslist[i].blockChainOrt === "Ethereum")&&(campaign.wallet_ethereum))   
+                dedupedCoinNames.push(that.state.coinslist[i].imageURL);           
             }
-            campaign.dedupedCoinNames = dedupedCoinNames;
+           campaign.dedupedCoinNames = dedupedCoinNames;
         })
         return campaigns;
     }
@@ -212,16 +192,11 @@ class CampaignList extends Component {
                                                     <div id='acceptingBtn' className='cardButtons'><p><Trans i18nKey='accepting'/></p>
                                                         <p id='currencyName'>
                                                             {this.state.fiatPaymentEnabled && item.fiatPayments && <span className='coinRewardInfo'><img src={visaMcLogo} width={21} height={20} alt="for sell" style={{marginRight:5, marginLeft:5}} /> </span>}
-                                                            {item.dedupedCoinNames.map((coin, j) =>
-                                                                <span key={item._id + "-" + coin}><img src={IMG_MAP[coin]} width={20} height={20} alt="for sell" style={{marginLeft:5, marginRight:5}} /> </span>
-                                                            )}
 
-                                                            <span className='coinRewardInfo'><img src={ethIcon} width={20} height={20} alt="for sell" style={{marginRight:5, marginLeft:5}} /> </span>
-                                                            <span className='coinRewardInfo'><img src={btcLogo} width={20} height={20} alt="for sell" style={{marginRight:5, marginLeft:5}} /> </span>
-                                                            <span className='coinRewardInfo'><img src={daiLogo} width={20} height={20} alt="for sell" style={{marginRight:5, marginLeft:5}} /> </span>
-                                                            <span className='coinRewardInfo'><img src={usdcIcon} width={20} height={20} alt="for sell" style={{marginRight:5, marginLeft:5}} /> </span>
-                                                            <span className='coinRewardInfo'><img src={usdtLogo} width={20} height={20} alt="for sell" style={{marginRight:5, marginLeft:5}} /> </span>
-                                                            <span className='coinRewardInfo'><img src={ltcLogo} width={20} height={20} alt="for sell" style={{marginRight:5, marginLeft:5}} /> </span>
+                                                            {item.dedupedCoinNames.map((coin, j) =>
+                                                                <span key={item._id + "-" + coin}><img src={coin} width={20} height={20} alt="for sell" style={{marginLeft:5, marginRight:5}} /> </span>
+                                                            )}
+                                                           
 
                                                         </p>
                                                     </div></Col>
